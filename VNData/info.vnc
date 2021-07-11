@@ -1,0 +1,27 @@
+using Game = VN.Game.Game;
+using MarginType = VN.Game.MarginType;
+
+namespace VN.Game
+{
+	public class Initializer
+	{
+		public void Setup (Game game)
+		{
+			// 창 제목
+			game.Title = "라오 미연시 프로젝트";
+
+			// 기본 창 사이즈
+			game.Width = 800;
+			game.Height = 450;
+
+			// 창 사이즈 조절 가능 여부
+			game.Resizable = true;
+
+			// 창 사이즈 조절 시 화면 처리 여부
+			game.MarginType = MarginType.LetterBox;
+
+			// 시작 스크립트
+			game.Entry = "entry.vns";
+		}
+	}
+}
