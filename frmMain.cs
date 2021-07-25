@@ -13,17 +13,31 @@ namespace VN {
 		public frmMain() {
 			InitializeComponent();
 
-			var game = Game.Game.Instance;
-			Game.VNC.Instance.Start(game);
-			this.Text = game.Title;
-			this.FormBorderStyle = game.Resizable
-				? FormBorderStyle.Sizable
-				: FormBorderStyle.FixedSingle;
+			var gameHandler = new Game.Game.Handler();
+			gameHandler.OnTitleRequest += (v) => this.AutoInvoke(() => {
+				this.Text = v;
+			});
+			gameHandler.OnResizableRequest += (v) => this.AutoInvoke(() => {
+				this.FormBorderStyle = v
+					? FormBorderStyle.Sizable
+					: FormBorderStyle.FixedSingle;
+			}); ;
+			gameHandler.OnResizeRequest += (w, h) => this.AutoInvoke(() => {
+				this.ClientSize = new Size((int)w, (int)h);
+			});
 
-			this.ClientSize = new Size(
-				game.Width,
-				game.Height
-			);
+			Game.Game.Instance.Initialize(gameHandler);
+		}
+
+		private void AutoInvoke(Action act) {
+			if (this.InvokeRequired)
+				this.Invoke(act);
+			else
+				act();
+		}
+
+		private void btnStart_Click(object sender, EventArgs e) {
+			Game.Game.Instance.Run();
 		}
 	}
 }

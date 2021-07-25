@@ -56,7 +56,10 @@
     </Compile>
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\MarginType.cs" />
-    <Compile Include="Game\VNC.cs" />
+    <Compile Include="VNScript\VNInterpreter.cs" />
+    <Compile Include="VNScript\VNStatus.cs" />
+    <Compile Include="VNScript\VNType.cs" />
+    <Compile Include="VNScript\VNValue.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
