@@ -72,10 +72,10 @@ namespace VN.VNScript {
 
 				var inst = current.Next(); // instruction
 				switch (inst.Type) {
-					case VNStatus.VNCodeType.NONE: // 0
+					case VNCodeType.NONE: // 0
 						return;
 
-					case VNStatus.VNCodeType.SCRIPT: // 1
+					case VNCodeType.SCRIPT: // 1
 						if (inst.Params.Length != 1)
 							throw ParamLenException("SCRIPT", 1, inst.Params.Length);
 						if (!inst.Params[0].isString)
@@ -84,7 +84,7 @@ namespace VN.VNScript {
 						this.Run(inst.Params[0].AsString);
 						break;
 
-					case VNStatus.VNCodeType.SET: // 2
+					case VNCodeType.SET: // 2
 						if (inst.Params.Length != 2)
 							throw ParamLenException("SET", 2, inst.Params.Length);
 						if (!inst.Params[0].isSymbol)
@@ -93,7 +93,7 @@ namespace VN.VNScript {
 						this.SetValue(inst.Params[0].AsSymbol, inst.Params[1]);
 						break;
 
-					case VNStatus.VNCodeType.UNLOCK: // 3
+					case VNCodeType.UNLOCK: // 3
 						if (inst.Params.Length != 2)
 							throw ParamLenException("UNLOCK", 2, inst.Params.Length);
 						if (!inst.Params[0].isSymbol)
@@ -109,8 +109,8 @@ namespace VN.VNScript {
 						}
 						break;
 
-					case VNStatus.VNCodeType.TEXT: // 4
-					case VNStatus.VNCodeType.SAY: // 5
+					case VNCodeType.TEXT: // 4
+					case VNCodeType.SAY: // 5
 
 					default:
 						throw new Exception($"VNInterpreter 실행 오류 - '{inst.Type}'은(는) 알 수 없는 명령어입니다.");
