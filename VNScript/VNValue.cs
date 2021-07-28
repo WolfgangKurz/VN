@@ -43,35 +43,30 @@ namespace VN.VNScript {
 			}
 		}
 
-		public string AsString {
-			get {
-				if (this.type == VNType.Null) return null;
-				if (this.type == VNType.Symbol) return "";
-				return this.value.ToString();
-			}
-		}
+		public string AsString => this.type == VNType.Null
+			? null
+			: this.type == VNType.Symbol
+				? ""
+				: this.value.ToString();
 
-		public double AsNumber {
-			get {
-				if (this.type == VNType.Number)
-					return (double)this.value;
+		public double AsNumber => this.type == VNType.Number
+			? (double)this.value
+			: double.NaN;
 
-				return double.NaN;
-			}
-		}
+		public string AsSymbol => this.type == VNType.Symbol && ((string)this.value)[0] != '$'
+			? (string)this.value
+			: null;
 
-		public string AsSymbol {
-			get {
-				if (this.type == VNType.Symbol) return (string)this.value;
-				return null;
-			}
-		}
+		public string AsVariable => this.type == VNType.Symbol && ((string)this.value)[0] == '$'
+			? ((string)this.value).Substring(1)
+			: null;
 
 		public string AsSerialize {
 			get {
 				if (this.isNull) return "null";
 				if (this.isString) return $"\"{this.AsString}\"";
 				if (this.isSymbol) return this.AsSymbol;
+				if (this.isVariable) return $"${this.AsVariable}";
 				if (this.isNumber) return this.AsNumber.ToString();
 				if (this.isBool) return this.AsBool.ToString();
 				return this.value.ToString();
@@ -84,7 +79,8 @@ namespace VN.VNScript {
 		public bool isNumber => this.type == VNType.Number;
 		public bool isString => this.type == VNType.String;
 		public bool isBool => this.type == VNType.Boolean;
-		public bool isSymbol => this.type == VNType.Symbol;
+		public bool isSymbol => this.type == VNType.Symbol && ((string)this.value)[0] != '$';
+		public bool isVariable => this.type == VNType.Symbol && !this.isSymbol;
 		#endregion
 
 		public override bool Equals(object obj) => this.Equals(obj as VNValue);

@@ -53,6 +53,8 @@ namespace VN.VNScript {
 			new Exception($"VNInterpreter 실행 오류 - '{type}'의 인자는 '{should}'개여야하지만, '{input}'개였습니다.");
 		private Exception ParamTypeException(string type, int idx, string should, string input) =>
 			new Exception($"VNInterpreter 실행 오류 - '{type}'의 {idx}번째 인자는 '{should}'이어야하지만, '{input}'이었습니다.");
+		private Exception ParamVarNotFoundException(string key) =>
+			new Exception($"VNInterpreter 실행 오류 - 변수 '{key}'를 참조하려고 했지만 존재하지 않았습니다.");
 
 		private void Worker() {
 			while (this.RunningStack.Count > 0) {
@@ -71,40 +73,51 @@ namespace VN.VNScript {
 				}
 
 				var inst = current.Next(); // instruction
+				var param = inst.Params
+					.Select(p => {
+						if (p.isVariable) {
+							var key = p.AsVariable;
+							if (this.Variables.ContainsKey(key)) return this.Variables[key];
+							throw ParamVarNotFoundException(key);
+						}
+						return p;
+					})
+					.ToArray();
+
 				switch (inst.Type) {
 					case VNCodeType.NONE: // 0
 						return;
 
 					case VNCodeType.SCRIPT: // 1
-						if (inst.Params.Length != 1)
-							throw ParamLenException("SCRIPT", 1, inst.Params.Length);
-						if (!inst.Params[0].isString)
-							throw ParamTypeException("SCRIPT", 1, "String", inst.Params[0].type.ToString());
+						if (param.Length != 1)
+							throw ParamLenException("SCRIPT", 1, param.Length);
+						if (!param[0].isString)
+							throw ParamTypeException("SCRIPT", 1, "String", param[0].type.ToString());
 
-						this.Run(inst.Params[0].AsString);
+						this.Run(param[0].AsString);
 						break;
 
 					case VNCodeType.SET: // 2
-						if (inst.Params.Length != 2)
-							throw ParamLenException("SET", 2, inst.Params.Length);
-						if (!inst.Params[0].isSymbol)
-							throw ParamTypeException("SET", 1, "Symbol", inst.Params[0].type.ToString());
+						if (param.Length != 2)
+							throw ParamLenException("SET", 2, param.Length);
+						if (!param[0].isSymbol)
+							throw ParamTypeException("SET", 1, "Symbol", param[0].type.ToString());
 
-						this.SetValue(inst.Params[0].AsSymbol, inst.Params[1]);
+						this.SetValue(param[0].AsSymbol, param[1]);
 						break;
 
 					case VNCodeType.UNLOCK: // 3
-						if (inst.Params.Length != 2)
-							throw ParamLenException("UNLOCK", 2, inst.Params.Length);
-						if (!inst.Params[0].isSymbol)
-							throw ParamTypeException("UNLOCK", 1, "Symbol", inst.Params[0].type.ToString());
-						if (!inst.Params[1].isString)
-							throw ParamTypeException("UNLOCK", 2, "String", inst.Params[1].type.ToString());
+						if (param.Length != 2)
+							throw ParamLenException("UNLOCK", 2, param.Length);
+						if (!param[0].isSymbol)
+							throw ParamTypeException("UNLOCK", 1, "Symbol", param[0].type.ToString());
+						if (!param[1].isString)
+							throw ParamTypeException("UNLOCK", 2, "String", param[1].type.ToString());
 
-						switch (inst.Params[0].AsSymbol) {
+						switch (param[0].AsSymbol) {
 							case "name":
-								if (!this.UnlockedNames.Contains(inst.Params[1].AsString))
-									this.UnlockedNames.Add(inst.Params[1].AsString);
+								if (!this.UnlockedNames.Contains(param[1].AsString))
+									this.UnlockedNames.Add(param[1].AsString);
 								break;
 						}
 						break;

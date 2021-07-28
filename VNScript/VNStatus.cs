@@ -21,9 +21,7 @@ namespace VN.VNScript {
 			this.Cursor = 0;
 		}
 
-		public VNCode Next() {
-			return this.Codes[this.Cursor++];
-		}
+		public VNCode Next() => this.Codes[this.Cursor++];
 
 		public bool EOF => this.Cursor >= this.Codes.Length;
 	}
