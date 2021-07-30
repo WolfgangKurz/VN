@@ -46,6 +46,8 @@
 			this.Name = "frmMain";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "VN";
+			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
+			this.Click += new System.EventHandler(this.frmMain_Click);
 			this.ResumeLayout(false);
 
 		}

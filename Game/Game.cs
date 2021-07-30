@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -57,7 +58,7 @@ namespace VN.Game {
 					this.handler.InvokeResizable(this.Script.GetValue("Game.Resizable").AsBool);
 			};
 
-			s.SetValue("Game", new VNValue(VNType.String, "init.vns"));
+			s.SetValue("Game", new VNValue(VNType.String, "init"));
 			s.SetValue("Game.Title", new VNValue(VNType.String, "VN"));
 			s.SetValue("Game.Width", new VNValue(VNType.Number, 800.0));
 			s.SetValue("Game.Height", new VNValue(VNType.Number, 450.0));
@@ -70,6 +71,31 @@ namespace VN.Game {
 		public void Run() {
 			var entry = this.Script.GetValue("Game").AsString;
 			this.Script.Run(entry);
+		}
+
+		public void Destroy() {
+			this.Script?.Destroy();
+		}
+
+		/// <summary>
+		/// 대사, 서사에서 Block된 상태를 해제 (다음 스크립트로 진행)
+		/// </summary>
+		public void Unblock() {
+			this.Script?.Unblock();
+		}
+
+		/// <summary>
+		/// 렌더러 본문
+		/// </summary>
+		/// <param name="g"><see cref="Graphics"/> 객체</param>
+		public void Render(Graphics g) {
+			if (this.Script == null) return;
+
+			//if (this.Script.CurrentTeller != null)
+			//	g.DrawString(this.Script.CurrentTeller, SystemFonts.DefaultFont, Brushes.White, 10, 10);
+
+			//if (this.Script.CurrentText != null)
+			//	g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.White, 10, 30);
 		}
 	}
 }
