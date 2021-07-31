@@ -91,6 +91,8 @@
     <Compile Include="VNScript\VNCodeType.cs" />
     <Compile Include="VNScript\VNHelper.cs" />
     <Compile Include="VNScript\VNInterpreter.cs" />
+    <Compile Include="VNScript\VNPosition.cs" />
+    <Compile Include="VNScript\VNSCG.cs" />
     <Compile Include="VNScript\VNStatus.cs" />
     <Compile Include="VNScript\VNType.cs" />
     <Compile Include="VNScript\VNValue.cs" />

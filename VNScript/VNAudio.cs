@@ -9,7 +9,7 @@ using NAudio;
 using NAudio.Wave;
 
 namespace VN.VNScript {
-	internal sealed class VNAudio {
+	internal sealed class VNAudio : IDisposable {
 		private class LoopStream : WaveStream {
 			WaveStream sourceStream;
 
@@ -44,6 +44,8 @@ namespace VN.VNScript {
 			}
 		}
 
+		public bool Disposed { get; private set; }
+
 		public string Path { get; private set; }
 
 		private AudioFileReader reader { get; set; }
@@ -52,7 +54,14 @@ namespace VN.VNScript {
 
 		public VNAudio() { }
 
+		public void Dispose() {
+			if (this.Disposed) return;
+			this.Unload();
+			this.Disposed = true;
+		}
+
 		public void Load(string path, bool repeat = false) {
+			if (this.Disposed) return;
 			this.Unload();
 
 			try {
@@ -72,6 +81,7 @@ namespace VN.VNScript {
 		}
 
 		public void Unload() {
+			if (this.Disposed) return;
 			this.Path = null;
 
 			if(this.thread != null) {
@@ -93,7 +103,9 @@ namespace VN.VNScript {
 		}
 
 		public void Play() {
+			if (this.Disposed) return;
 			if (this.waveOut == null) return;
+
 			if (this.thread == null) {
 				this.thread = new Thread(() => {
 					while (this.waveOut.PlaybackState == PlaybackState.Playing)
@@ -109,31 +121,41 @@ namespace VN.VNScript {
 		}
 
 		public void Pause() {
+			if (this.Disposed) return;
 			if (this.waveOut == null) return;
+
 			this.waveOut.Pause();
 		}
 
 		public void Stop() {
+			if (this.Disposed) return;
 			if (this.waveOut == null) return;
+
 			this.waveOut.Stop();
 		}
 
-		public double CurrentTime => this.reader == null
+		public double CurrentTime => this.Disposed || this.reader == null
 			? double.NaN
 			: this.reader.CurrentTime.TotalSeconds;
 
 		public void Seek(double time) {
+			if (this.Disposed) return;
 			if (this.waveOut == null) return;
+
 			this.reader.CurrentTime = TimeSpan.FromSeconds(time);
 		}
 
 		public float Volume {
 			get {
+				if (this.Disposed) return -1;
 				if (this.waveOut == null) return -1;
+
 				return this.waveOut.Volume;
 			}
 			set {
+				if (this.Disposed) return;
 				if (this.waveOut == null) return;
+
 				this.waveOut.Volume = Math.Min(Math.Max(value, 0), 1);
 			}
 		}

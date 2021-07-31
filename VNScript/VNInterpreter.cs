@@ -43,7 +43,7 @@ namespace VN.VNScript {
 		public Image CurrentBG { get; private set; }
 
 		// 현재 표시되는 Standing CG(캐릭터) - 좌, 중앙, 우
-		public Image[] CurrentSCG { get; private set; }
+		public VNSCG[] CurrentSCG { get; private set; }
 
 		public bool Running { get; private set; }
 
@@ -54,7 +54,21 @@ namespace VN.VNScript {
 			this.UnlockedNames = new List<string>();
 			this.RunningStack = new ConcurrentStack<VNStatus>();
 
-			this.CurrentSCG = new Image[3];
+			this.CurrentSCG = new VNSCG[3];
+		}
+
+		~VNInterpreter() {
+			if(this.InterpreterThread != null && this.InterpreterThread.IsAlive) {
+				this.InterpreterThread.Abort();
+				this.InterpreterThread.Join();
+				this.InterpreterThread = null;
+			}
+
+			foreach (var scg in this.CurrentSCG)
+				scg.Dispose();
+
+			this.CurrentBG.Dispose();
+			this.CurrentBGM.Dispose();
 		}
 
 		public void Run(string script) {
@@ -270,7 +284,10 @@ namespace VN.VNScript {
 
 							try {
 								var iid = (int)id;
-								this.CurrentSCG[iid] = Image.FromFile(Path.Combine("VNData", "SCG", param[1].AsString + ".png"));
+								this.CurrentSCG[iid] = new VNSCG(
+									Image.FromFile(Path.Combine("VNData", "SCG", param[1].AsString + ".png")),
+									VNHelper.AsPosition(pos)
+								);
 							}
 							catch {
 								throw new Exception($"VNInterpreter 실행 오류 - SCG '{param[1].AsString}'을(를) 찾을 수 없습니다.");
