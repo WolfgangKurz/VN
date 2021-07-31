@@ -201,27 +201,27 @@ namespace VN.VNScript {
 						break;
 
 					case VNCodeType.BGM: // 7
-						if (param.Length < 1) throw ParamLenMinException("BGM", 1, param.Length);
-						if (param.Length > 3) throw ParamLenMaxException("BGM", 3, param.Length);
-
-						if (!param[0].isString)
-							throw ParamTypeException("BGM", 1, "String", param[0].type.ToString());
-						if (param.Length >= 2 && !param[1].isSymbol)
-							throw ParamTypeException("BGM", 2, "Symbol", param[1].type.ToString());
-						if (param.Length >= 3 && !param[2].isNumber)
-							throw ParamTypeException("BGM", 3, "Number", param[1].type.ToString());
+						if (param.Length != 1)
+							throw ParamLenException("BGM", 1, param.Length);
+						if (!param[0].isString && !param[0].isNull)
+							throw ParamTypeException("BGM", 1, "String or Null", param[0].type.ToString());
 
 						try {
 							var bgm = param[0];
-
-							var path = Path.Combine("VNData", "BGM", bgm.AsString + ".mp3");
-							if (path != this.CurrentBGM.Path) {
-								this.CurrentBGM.Load(path);
-
-								if (this.GetValue("BGM") != bgm)
-									this.SetValue("BGM", bgm, false);
+							if (bgm.isNull) {
+								this.CurrentBGM.Stop();
+								this.CurrentBGM.Unload();
 							}
-							this.CurrentBGM.Play();
+							else {
+								var path = Path.Combine("VNData", "BGM", bgm.AsString + ".mp3");
+								if (path != this.CurrentBGM.Path) {
+									this.CurrentBGM.Load(path);
+
+									if (this.GetValue("BGM") != bgm)
+										this.SetValue("BGM", bgm, false);
+								}
+								this.CurrentBGM.Play();
+							}
 						}
 						catch {
 							throw new Exception($"VNInterpreter 실행 오류 - 배경음악 '{param[0].AsString}'을(를) 찾을 수 없습니다.");
