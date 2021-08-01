@@ -17,6 +17,7 @@ namespace VN.VNScript {
 		BG,
 		SCG,
 		FX,
-		WAIT,
+		FREEZE,
+		TRANSITION,
 	}
 }

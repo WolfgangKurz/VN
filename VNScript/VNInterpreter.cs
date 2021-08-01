@@ -43,7 +43,7 @@ namespace VN.VNScript {
 		public Image CurrentBG { get; private set; }
 
 		// 현재 표시되는 Standing CG(캐릭터) - 좌, 중앙, 우
-		public VNSCG[] CurrentSCG { get; private set; }
+		public Dictionary<int, VNSCG> CurrentSCG { get; private set; }
 
 		public bool Running { get; private set; }
 
@@ -54,7 +54,7 @@ namespace VN.VNScript {
 			this.UnlockedNames = new List<string>();
 			this.RunningStack = new ConcurrentStack<VNStatus>();
 
-			this.CurrentSCG = new VNSCG[3];
+			this.CurrentSCG = new Dictionary<int, VNSCG>();
 		}
 
 		~VNInterpreter() {
@@ -65,7 +65,7 @@ namespace VN.VNScript {
 			}
 
 			foreach (var scg in this.CurrentSCG)
-				scg.Dispose();
+				scg.Value.Dispose();
 
 			this.CurrentBG.Dispose();
 			this.CurrentBGM.Dispose();
@@ -210,8 +210,8 @@ namespace VN.VNScript {
 						break;
 
 					case VNCodeType.SEL: // 6
-										 // TODO
 						this.Blocking = true;
+						// TODO
 						break;
 
 					case VNCodeType.BGM: // 7
@@ -229,7 +229,7 @@ namespace VN.VNScript {
 							else {
 								var path = Path.Combine("VNData", "BGM", bgm.AsString + ".mp3");
 								if (path != this.CurrentBGM.Path) {
-									this.CurrentBGM.Load(path);
+									this.CurrentBGM.Load(path, true);
 
 									if (this.GetValue("BGM") != bgm)
 										this.SetValue("BGM", bgm, false);
@@ -245,13 +245,19 @@ namespace VN.VNScript {
 					case VNCodeType.BG: // 8
 						if (param.Length != 1)
 							throw ParamLenException("BG", 1, param.Length);
-						if (!param[0].isString)
-							throw ParamTypeException("BG", 1, "String", param[0].type.ToString());
+						if (!param[0].isString && !param[0].isNull)
+							throw ParamTypeException("BG", 1, "String or Null", param[0].type.ToString());
 
 						try {
 							var bg = param[0];
 							if (this.GetValue("BG") != bg) {
-								this.CurrentBG = Image.FromFile(Path.Combine("VNData", "BG", bg.AsString + ".png"));
+								if (this.CurrentBG != null) {
+									this.CurrentBG.Dispose();
+									this.CurrentBG = null;
+								}
+
+								if (!bg.isNull)
+									this.CurrentBG = Image.FromFile(Path.Combine("VNData", "BG", bg.AsString + ".png"));
 								this.SetValue("BG", bg, false);
 							}
 						}
@@ -261,7 +267,7 @@ namespace VN.VNScript {
 						break;
 
 					case VNCodeType.SCG: // 9
-						if (param.Length < 1) throw ParamLenMinException("SCG", 2, param.Length);
+						if (param.Length < 2) throw ParamLenMinException("SCG", 2, param.Length);
 						if (param.Length > 3) throw ParamLenMaxException("SCG", 3, param.Length);
 
 						if (!param[0].isNumber)
@@ -284,6 +290,12 @@ namespace VN.VNScript {
 
 							try {
 								var iid = (int)id;
+
+								if (this.CurrentSCG.ContainsKey(iid)) { // 이미 있었다면 해제
+									this.CurrentSCG[iid].Dispose();
+									this.CurrentSCG.Remove(iid);
+								}
+
 								this.CurrentSCG[iid] = new VNSCG(
 									Image.FromFile(Path.Combine("VNData", "SCG", param[1].AsString + ".png")),
 									VNHelper.AsPosition(pos)
@@ -299,11 +311,12 @@ namespace VN.VNScript {
 
 							var id = param[0].AsNumber;
 							if (!VNHelper.IsInteger(id)) throw ParamIntegerException("SCG", 1);
-							if (id < 1 || id > 3) throw ParamRangeException("SCG", 1, 1, 3, id);
 
 							var iid = (int)id;
-							this.CurrentSCG[iid].Dispose();
-							this.CurrentSCG[iid] = null;
+							if (this.CurrentSCG.ContainsKey(iid)) {
+								this.CurrentSCG[iid].Dispose();
+								this.CurrentSCG.Remove(iid);
+							}
 						}
 						break;
 
@@ -311,7 +324,11 @@ namespace VN.VNScript {
 						// TODO
 						break;
 
-					case VNCodeType.WAIT: // 11
+					case VNCodeType.FREEZE: // 11
+						// TODO
+						break;
+
+					case VNCodeType.TRANSITION: // 12
 						// TODO
 						break;
 
