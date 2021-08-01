@@ -11,8 +11,52 @@ using System.Drawing;
 
 namespace VN.VNScript {
 	internal class VNInterpreter {
+		public delegate void BlockedEvent();
 		public delegate void VariableChangedEvent(string name, VNValue value);
+
+		public delegate void TextLogEvent(string text);
+		public delegate void SayLogEvent(string teller, string text);
+
+		public delegate void SelectionRequestEvent(string[] selections);
+		public delegate void FreezeRequestEvent();
+		public delegate void TransitionRequestEvent(string reference);
+
+		/// <summary>
+		/// 다음 스크립트 구문으로 진행하지 않는 상태가 되었을 경우에 호출됩니다.
+		/// </summary>
+		public event BlockedEvent Blocked;
+
+		/// <summary>
+		/// 엔진 내 또는 스크립트에서 변수의 값이 변경되면 호출됩니다.
+		/// </summary>
 		public event VariableChangedEvent VariableChanged;
+
+		/// <summary>
+		/// 화자가 없는 대사가 표현되면 호출됩니다.
+		/// </summary>
+		public event TextLogEvent TextLog;
+
+
+		/// <summary>
+		/// 화자가 있는 대사가 표현되면 호출됩니다.
+		/// </summary>
+		public event SayLogEvent SayLog;
+
+		/// <summary>
+		/// 선택지를 표현해야할 때 호출됩니다.
+		/// </summary>
+		public event SelectionRequestEvent SelectionRequest;
+
+		/// <summary>
+		/// 화면을 고정해야할 때 호출됩니다.
+		/// </summary>
+		public event FreezeRequestEvent FreezeRequest;
+
+		/// <summary>
+		/// 화면 고정을 해제하고 전환해야할 때 호출됩니다.
+		/// reference 값은 null일 수 있으며, null인 경우 Fade 효과가 사용됩니다.
+		/// </summary>
+		public event TransitionRequestEvent TransitionRequest;
 
 		private string ScriptPath { get; } = Path.Combine(
 			Path.GetDirectoryName(Assembly.GetEntryAssembly().Location),
@@ -193,7 +237,7 @@ namespace VN.VNScript {
 							throw ParamTypeException("TEXT", 1, "String", param[0].type.ToString());
 
 						this.CurrentText = param[0].AsString;
-						this.Blocking = true;
+						this.Block();
 						break;
 
 					case VNCodeType.SAY: // 5
@@ -206,12 +250,23 @@ namespace VN.VNScript {
 
 						this.CurrentTeller = param[0].AsString;
 						this.CurrentText = param[1].AsString;
-						this.Blocking = true;
+						this.Block();
 						break;
 
 					case VNCodeType.SEL: // 6
-						this.Blocking = true;
-						// TODO
+						if (param.Length == 0)
+							throw ParamLenMinException("SEL", 1, 0);
+
+						this.Block();
+						this.SelectionRequest.Invoke(
+							param
+								.Select((x, i) => {
+									if (!x.isString)
+										throw ParamTypeException("SEL", i + 1, "String", x.type.ToString());
+
+									return x.AsString;
+								}).ToArray()
+						);
 						break;
 
 					case VNCodeType.BGM: // 7
@@ -425,6 +480,11 @@ namespace VN.VNScript {
 			if (this.Variables.ContainsKey(name))
 				return this.Variables[name];
 			return null;
+		}
+
+		protected void Block() {
+			this.Blocking = true;
+			this.Blocked.Invoke();
 		}
 	}
 }

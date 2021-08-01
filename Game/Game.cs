@@ -58,6 +58,31 @@ namespace VN.Game {
 					this.handler.InvokeResizable(this.Script.GetValue("Game.Resizable").AsBool);
 			};
 
+			s.SelectionRequest += (sel) => {
+				// TODO
+
+
+				/*
+				 * 선택 후 다음 명령으로 선택 번호 지정 (번호는 1부터 시작)
+				 * s.SetValue("SEL", new VNValue(VNType.Number, 번호));
+				 * s.Unblock();
+				 */
+			};
+
+			s.TextLog += (text) => {
+				// TODO : 로그 추가
+			};
+			s.SayLog += (teller, text) => {
+				// TODO : 로그 추가
+			};
+
+			s.FreezeRequest += () => {
+				// TODO : 화면 고정
+			};
+			s.TransitionRequest += (r) => {
+				// TODO : 화면 전환
+			};
+
 			s.SetValue("Game", new VNValue(VNType.String, "init"));
 			s.SetValue("Game.Title", new VNValue(VNType.String, "VN"));
 			s.SetValue("Game.Width", new VNValue(VNType.Number, 800.0));
