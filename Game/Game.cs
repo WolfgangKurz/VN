@@ -96,6 +96,7 @@ namespace VN.Game {
 
 			//if (this.Script.CurrentText != null)
 			//	g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.White, 10, 30);
+			// 잘 되면 남아있는거
 		}
 	}
 }
