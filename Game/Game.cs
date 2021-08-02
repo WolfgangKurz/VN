@@ -118,6 +118,9 @@ namespace VN.Game {
 		/// <param name="g"><see cref="Graphics"/> 객체</param>
 		public void Render(Graphics g) {
 			if (this.Script == null) return;
+			
+			if (this.Script.CurrentTeller != null)
+				g.DrawImage(this.Script.CurrentBG, 10, 10);
 
 			//if (this.Script.CurrentTeller != null)
 			//	g.DrawString(this.Script.CurrentTeller, SystemFonts.DefaultFont, Brushes.White, 10, 10);
