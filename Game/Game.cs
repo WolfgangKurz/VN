@@ -119,7 +119,7 @@ namespace VN.Game {
 		public void Render(Graphics g) {
 			if (this.Script == null) return;
 			
-			if (this.Script.CurrentTeller != null)
+			if (this.Script.CurrentBG != null)
 				g.DrawImage(this.Script.CurrentBG, 10, 10);
 
 			//if (this.Script.CurrentTeller != null)
