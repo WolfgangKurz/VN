@@ -237,6 +237,7 @@ namespace VN.VNScript {
 							throw ParamTypeException("TEXT", 1, "String", param[0].type.ToString());
 
 						this.CurrentText = param[0].AsString;
+						this.TextLog?.Invoke(this.CurrentText);
 						this.Block();
 						break;
 
@@ -250,6 +251,7 @@ namespace VN.VNScript {
 
 						this.CurrentTeller = param[0].AsString;
 						this.CurrentText = param[1].AsString;
+						this.SayLog?.Invoke(this.CurrentTeller, this.CurrentText);
 						this.Block();
 						break;
 
@@ -258,7 +260,7 @@ namespace VN.VNScript {
 							throw ParamLenMinException("SEL", 1, 0);
 
 						this.Block();
-						this.SelectionRequest.Invoke(
+						this.SelectionRequest?.Invoke(
 							param
 								.Select((x, i) => {
 									if (!x.isString)
@@ -380,11 +382,26 @@ namespace VN.VNScript {
 						break;
 
 					case VNCodeType.FREEZE: // 11
-						// TODO
+						if (param.Length > 0) throw ParamLenMaxException("FREEZE", 0, param.Length);
+
+						this.FreezeRequest?.Invoke();
 						break;
 
 					case VNCodeType.TRANSITION: // 12
-						// TODO
+						if (param.Length < 1) throw ParamLenMinException("TRANSITION", 1, param.Length);
+						if (param.Length > 2) throw ParamLenMaxException("TRANSITION", 2, param.Length);
+
+						if (!param[0].isNumber)
+							throw ParamTypeException("TRANSITION", 1, "Number", param[0].type.ToString());
+
+						if (param.Length == 2) {
+							if (!param[1].isString)
+								throw ParamTypeException("TRANSITION", 2, "String", param[0].type.ToString());
+
+							this.TransitionRequest?.Invoke(param[1].AsString);
+						}
+						else
+							this.TransitionRequest?.Invoke(null);
 						break;
 
 					default:
@@ -468,7 +485,7 @@ namespace VN.VNScript {
 				this.AssertValue(name, value);
 
 			this.Variables[name] = value;
-			this.VariableChanged.Invoke(name, value);
+			this.VariableChanged?.Invoke(name, value);
 		}
 
 		/// <summary>
@@ -484,7 +501,7 @@ namespace VN.VNScript {
 
 		protected void Block() {
 			this.Blocking = true;
-			this.Blocked.Invoke();
+			this.Blocked?.Invoke();
 		}
 	}
 }
