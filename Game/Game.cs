@@ -31,6 +31,8 @@ namespace VN.Game {
 
 		private Handler handler { get; set; }
 
+		private Size canvasSize { get; set; }
+
 
 		// private로 해야 new로 생성하는 것을 방지할 수 있음
 		private Game() { }
@@ -48,9 +50,10 @@ namespace VN.Game {
 					var width = this.Script.GetValue("Game.Width");
 					var height = this.Script.GetValue("Game.Height");
 					if (width != null && height != null) {
+						this.canvasSize = new Size((int)width.AsNumber, (int)height.AsNumber);
 						this.handler.InvokeResize(
-							this.Script.GetValue("Game.Width").AsNumber,
-							this.Script.GetValue("Game.Height").AsNumber
+							width.AsNumber,
+							height.AsNumber
 						);
 					}
 				}
