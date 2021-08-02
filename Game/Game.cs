@@ -121,13 +121,9 @@ namespace VN.Game {
 			
 			if (this.Script.CurrentBG != null)
 				g.DrawImage(this.Script.CurrentBG, 10, 10);
-
-			//if (this.Script.CurrentTeller != null)
-			//	g.DrawString(this.Script.CurrentTeller, SystemFonts.DefaultFont, Brushes.White, 10, 10);
-
-			//if (this.Script.CurrentText != null)
-			//	g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.White, 10, 30);
-			// 잘 되면 남아있는거
+			
+			if (this.Script.CurrentText != null)
+				g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.Black, 10, 10);
 		}
 	}
 }
