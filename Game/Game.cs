@@ -120,7 +120,7 @@ namespace VN.Game {
 			if (this.Script == null) return;
 
 			if (this.Script.CurrentBG != null)
-				g.DrawImage(this.Script.CurrentBG, 10, 10);
+				g.DrawImage(this.Script.CurrentBG, 0, 0, canvasSize.Width, canvasSize.Height);
 
 			if (this.Script.CurrentSCG != null)
 			{
@@ -129,13 +129,13 @@ namespace VN.Game {
 					switch (currentSCG.Position)
 					{
 						case VNPosition.Left:
-							g.DrawImage(currentSCG.Image, 10, 100);
+							g.DrawImage(currentSCG.Image, (canvasSize.Width / 15), (canvasSize.Height / 15), (canvasSize.Width / 45) * 11, canvasSize.Height);
 							break;
 						case VNPosition.Center:
-							g.DrawImage(currentSCG.Image, 200, 100);
+							g.DrawImage(currentSCG.Image, (canvasSize.Width / 45) * 14, (canvasSize.Height / 15), (canvasSize.Width / 45) * 11, canvasSize.Height);
 							break;
 						case VNPosition.Right:
-							g.DrawImage(currentSCG.Image, 500, 100);
+							g.DrawImage(currentSCG.Image, (canvasSize.Width / 45) * 31, (canvasSize.Height / 15), (canvasSize.Width / 45) * 11, canvasSize.Height);
 							break;
 					}
 				}
