@@ -126,11 +126,13 @@ namespace VN.Game {
 			{
 				foreach (var currentSCG in this.Script.CurrentSCG)
 				{
-					if (currentSCG.Value.Position.ToString() == "Left")
+					var currentSCG_Value = currentSCG.Value.Position;
+
+					if (currentSCG_Value == VNPosition.Left)
 						g.DrawImage(currentSCG.Value.Image, 10, 100);
-					else if (currentSCG.Value.Position.ToString() == "Center")
+					else if (currentSCG_Value == VNPosition.Center)
 						g.DrawImage(currentSCG.Value.Image, 200, 100);
-					else if (currentSCG.Value.Position.ToString() == "Right")
+					else if (currentSCG_Value == VNPosition.Right)
 						g.DrawImage(currentSCG.Value.Image, 500, 100);
 				}
 			}
@@ -139,7 +141,7 @@ namespace VN.Game {
 				g.DrawString(this.Script.CurrentTeller, SystemFonts.DefaultFont, Brushes.White, 10, 10);
 
 			if (this.Script.CurrentText != null)
-				g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.White, 10, 30
+				g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.White, 10, 30);
 		}
 	}
 }
