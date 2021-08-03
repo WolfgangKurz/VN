@@ -120,21 +120,24 @@ namespace VN.Game {
 			if (this.Script == null) return;
 
 			if (this.Script.CurrentBG != null)
-				g.DrawImage(this.Script.CurrentBG, 0, 0);
+				g.DrawImage(this.Script.CurrentBG, 0, 0, canvasSize.Width, canvasSize.Height);
 
 			if (this.Script.CurrentSCG != null)
 			{
-				var currentSCGs = this.Script.CurrentSCG.ToList();
-
-				for (int i = 0; i < this.Script.CurrentSCG.Count; ++i)
+				foreach (var currentSCG in this.Script.CurrentSCG.Values)
 				{
-					// SCG 출력하는데 Left, Center, Right 위치에 따라 임의로 위치를 주었음.
-					if (currentSCGs[i].Value.Position.ToString() == "Left")
-						g.DrawImage(currentSCGs[i].Value.Image, 10, 100);
-					else if (currentSCGs[i].Value.Position.ToString() == "Center")
-						g.DrawImage(currentSCGs[i].Value.Image, 200, 100);
-					else if (currentSCGs[i].Value.Position.ToString() == "Right")
-						g.DrawImage(currentSCGs[i].Value.Image, 500, 100);
+					switch (currentSCG.Position)
+					{
+						case VNPosition.Left:
+							g.DrawImage(currentSCG.Image, (canvasSize.Width / 6) - (currentSCG.Image.Width / 2), (canvasSize.Height / 6) - (currentSCG.Image.Height / 2));
+							break;
+						case VNPosition.Center:
+							g.DrawImage(currentSCG.Image, (canvasSize.Width / 3) - (currentSCG.Image.Width / 2), (canvasSize.Height / 3) - (currentSCG.Image.Height / 2));
+							break;
+						case VNPosition.Right:
+							g.DrawImage(currentSCG.Image, (canvasSize.Width / 3) * 2 - (currentSCG.Image.Width / 2), (canvasSize.Height / 3) * 2 - (currentSCG.Image.Height / 2));
+							break;
+					}
 				}
 			}
 
