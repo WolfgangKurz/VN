@@ -120,7 +120,7 @@ namespace VN.Game {
 			if (this.Script == null) return;
 
 			if (this.Script.CurrentBG != null)
-				g.DrawImage(this.Script.CurrentBG, 10, 10);
+				g.DrawImage(this.Script.CurrentBG, 0, 0);
 
 			if (this.Script.CurrentSCG != null)
 			{
@@ -142,7 +142,7 @@ namespace VN.Game {
 				g.DrawString(this.Script.CurrentTeller, SystemFonts.DefaultFont, Brushes.White, 10, 10);
 
 			if (this.Script.CurrentText != null)
-				g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.White, 10, 30
+				g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.Black, canvasSize.Width/15, (canvasSize.Height/3)*2);
 		}
 	}
 }
