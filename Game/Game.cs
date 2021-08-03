@@ -91,11 +91,30 @@ namespace VN.Game {
 		public void Render(Graphics g) {
 			if (this.Script == null) return;
 
-			//if (this.Script.CurrentTeller != null)
-			//	g.DrawString(this.Script.CurrentTeller, SystemFonts.DefaultFont, Brushes.White, 10, 10);
+			if (this.Script.CurrentBG != null)
+				g.DrawImage(this.Script.CurrentBG, 10, 10);
 
-			//if (this.Script.CurrentText != null)
-			//	g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.White, 10, 30);
+			if (this.Script.CurrentSCG != null)
+			{
+				var currentSCGs = this.Script.CurrentSCG.ToList();
+
+				for (int i = 0; i < this.Script.CurrentSCG.Count; ++i)
+				{
+					// SCG 출력하는데 Left, Center, Right 위치에 따라 임의로 위치를 주었음.
+					if (currentSCGs[i].Value.Position.ToString() == "Left")
+						g.DrawImage(currentSCGs[i].Value.Image, 10, 100);
+					else if (currentSCGs[i].Value.Position.ToString() == "Center")
+						g.DrawImage(currentSCGs[i].Value.Image, 200, 100);
+					else if (currentSCGs[i].Value.Position.ToString() == "Right")
+						g.DrawImage(currentSCGs[i].Value.Image, 500, 100);
+				}
+			}
+
+			if (this.Script.CurrentTeller != null)
+				g.DrawString(this.Script.CurrentTeller, SystemFonts.DefaultFont, Brushes.White, 10, 10);
+
+			if (this.Script.CurrentText != null)
+				g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.White, 10, 30);
 			// 잘 되면 남아있는거
 		}
 	}
