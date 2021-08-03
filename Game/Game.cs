@@ -122,23 +122,26 @@ namespace VN.Game {
 			if (this.Script.CurrentBG != null)
 				g.DrawImage(this.Script.CurrentBG, 0, 0, canvasSize.Width, canvasSize.Height);
 
-			if (this.Script.CurrentSCG != null)
+			foreach (var currentSCG in this.Script.CurrentSCG.Values)
 			{
-				foreach (var currentSCG in this.Script.CurrentSCG.Values)
+				var x = 0;
+				var y = (canvasSize.Height * 0.8) - img.Height; // 전체 높이의 80% 위치에서 "서있게"
+				var areaWidth = canvasSize.Width / 3;
+				var img = currentSCG.Image;
+
+				switch (currentSCG.Position)
 				{
-					switch (currentSCG.Position)
-					{
-						case VNPosition.Left:
-							g.DrawImage(currentSCG.Image, (canvasSize.Width / 6) - (currentSCG.Image.Width / 2), (canvasSize.Height / 6) - (currentSCG.Image.Height / 2));
-							break;
-						case VNPosition.Center:
-							g.DrawImage(currentSCG.Image, (canvasSize.Width / 3) - (currentSCG.Image.Width / 2), (canvasSize.Height / 3) - (currentSCG.Image.Height / 2));
-							break;
-						case VNPosition.Right:
-							g.DrawImage(currentSCG.Image, (canvasSize.Width / 3) * 2 - (currentSCG.Image.Width / 2), (canvasSize.Height / 3) * 2 - (currentSCG.Image.Height / 2));
-							break;
-					}
+					case VNPosition.Left:
+						x = (areaWidth / 2) - (img.Width / 2); // 좌측 영역의 중앙
+						break;
+					case VNPosition.Center:
+						x = areaWidth + (areaWidth / 2) - (img.Width / 2); // 가운데 영역의 중앙
+						break;
+					case VNPosition.Right:
+						x = areaWidth * 2 + (areaWidth / 2) - (img.Width / 2); // 우측 영역의 중앙
+						break;
 				}
+				g.DrawImage(img, x, y);
 			}
 
 			if (this.Script.CurrentTeller != null)
