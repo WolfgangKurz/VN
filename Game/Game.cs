@@ -129,13 +129,13 @@ namespace VN.Game {
 					switch (currentSCG.Position)
 					{
 						case VNPosition.Left:
-							g.DrawImage(currentSCG.Image, (canvasSize.Width / 15), (canvasSize.Height / 15), (canvasSize.Width / 45) * 11, canvasSize.Height);
+							g.DrawImage(currentSCG.Image, (canvasSize.Width / 6) - (currentSCG.Image.Width / 2), (canvasSize.Height / 6) - (currentSCG.Image.Height / 2));
 							break;
 						case VNPosition.Center:
-							g.DrawImage(currentSCG.Image, (canvasSize.Width / 45) * 14, (canvasSize.Height / 15), (canvasSize.Width / 45) * 11, canvasSize.Height);
+							g.DrawImage(currentSCG.Image, (canvasSize.Width / 3) - (currentSCG.Image.Width / 2), (canvasSize.Height / 3) - (currentSCG.Image.Height / 2));
 							break;
 						case VNPosition.Right:
-							g.DrawImage(currentSCG.Image, (canvasSize.Width / 45) * 31, (canvasSize.Height / 15), (canvasSize.Width / 45) * 11, canvasSize.Height);
+							g.DrawImage(currentSCG.Image, (canvasSize.Width / 3) * 2 - (currentSCG.Image.Width / 2), (canvasSize.Height / 3) * 2 - (currentSCG.Image.Height / 2));
 							break;
 					}
 				}
