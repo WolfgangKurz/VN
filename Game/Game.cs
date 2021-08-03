@@ -124,16 +124,20 @@ namespace VN.Game {
 
 			if (this.Script.CurrentSCG != null)
 			{
-				foreach (var currentSCG in this.Script.CurrentSCG)
+				foreach (var currentSCG in this.Script.CurrentSCG.Values)
 				{
-					var currentSCG_Value = currentSCG.Value.Position;
-
-					if (currentSCG_Value == VNPosition.Left)
-						g.DrawImage(currentSCG.Value.Image, 10, 100);
-					else if (currentSCG_Value == VNPosition.Center)
-						g.DrawImage(currentSCG.Value.Image, 200, 100);
-					else if (currentSCG_Value == VNPosition.Right)
-						g.DrawImage(currentSCG.Value.Image, 500, 100);
+					switch (currentSCG.Position)
+					{
+						case VNPosition.Left:
+							g.DrawImage(currentSCG.Image, 10, 100);
+							break;
+						case VNPosition.Center:
+							g.DrawImage(currentSCG.Image, 200, 100);
+							break;
+						case VNPosition.Right:
+							g.DrawImage(currentSCG.Image, 500, 100);
+							break;
+					}
 				}
 			}
 
