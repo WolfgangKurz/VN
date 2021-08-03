@@ -124,17 +124,14 @@ namespace VN.Game {
 
 			if (this.Script.CurrentSCG != null)
 			{
-				var currentSCGs = this.Script.CurrentSCG.ToList();
-
-				for (int i = 0; i < this.Script.CurrentSCG.Count; ++i)
+				foreach (var currentSCG in this.Script.CurrentSCG)
 				{
-					// SCG 출력하는데 Left, Center, Right 위치에 따라 임의로 위치를 주었음.
-					if (currentSCGs[i].Value.Position.ToString() == "Left")
-						g.DrawImage(currentSCGs[i].Value.Image, 10, 100);
-					else if (currentSCGs[i].Value.Position.ToString() == "Center")
-						g.DrawImage(currentSCGs[i].Value.Image, 200, 100);
-					else if (currentSCGs[i].Value.Position.ToString() == "Right")
-						g.DrawImage(currentSCGs[i].Value.Image, 500, 100);
+					if (currentSCG.Value.Position.ToString() == "Left")
+						g.DrawImage(currentSCG.Value.Image, 10, 100);
+					else if (currentSCG.Value.Position.ToString() == "Center")
+						g.DrawImage(currentSCG.Value.Image, 200, 100);
+					else if (currentSCG.Value.Position.ToString() == "Right")
+						g.DrawImage(currentSCG.Value.Image, 500, 100);
 				}
 			}
 
