@@ -112,7 +112,8 @@ namespace VN.VNScript {
 				case "BG": return VNCodeType.BG;
 				case "SCG": return VNCodeType.SCG;
 				case "FX": return VNCodeType.FX;
-				case "WAIT": return VNCodeType.WAIT;
+				case "FREEZE": return VNCodeType.FREEZE;
+				case "TRANSITION": return VNCodeType.TRANSITION;
 			}
 			return VNCodeType.NONE;
 		}

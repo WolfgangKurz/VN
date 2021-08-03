@@ -10,16 +10,15 @@ FX Shake_Fadeout
 # 현재 BGM 페이드아웃
 FX BGM_Fadeout
 
-# 화면 효과가 끝날 때 까지 스크립트 대기
-WAIT FX
+# 페이드 아웃
+FREEZE
+BG null
+TRANSITION 2
 
-# 화면 전환
-FX Fadeout
-WAIT FX
-
+# 페이드 인
+FREEZE
 BG "BG_Airport"
-FX Fadein
-WAIT FX
+TRANSITION 2
 
 TEXT "창가에 기댄 손에 턱을 괴고 홀연히 창밖을 바라보며 사색에 잠기자, 곧 비행기는 목적지에 다다랐다."
 

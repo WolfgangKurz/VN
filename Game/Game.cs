@@ -31,6 +31,8 @@ namespace VN.Game {
 
 		private Handler handler { get; set; }
 
+		private Size canvasSize { get; set; }
+
 
 		// private로 해야 new로 생성하는 것을 방지할 수 있음
 		private Game() { }
@@ -48,14 +50,40 @@ namespace VN.Game {
 					var width = this.Script.GetValue("Game.Width");
 					var height = this.Script.GetValue("Game.Height");
 					if (width != null && height != null) {
+						this.canvasSize = new Size((int)width.AsNumber, (int)height.AsNumber);
 						this.handler.InvokeResize(
-							this.Script.GetValue("Game.Width").AsNumber,
-							this.Script.GetValue("Game.Height").AsNumber
+							width.AsNumber,
+							height.AsNumber
 						);
 					}
 				}
 				else if (name == "Game.Resizable")
 					this.handler.InvokeResizable(this.Script.GetValue("Game.Resizable").AsBool);
+			};
+
+			s.SelectionRequest += (sel) => {
+				// TODO
+
+
+				/*
+				 * 선택 후 다음 명령으로 선택 번호 지정 (번호는 1부터 시작)
+				 * s.SetValue("SEL", new VNValue(VNType.Number, 번호));
+				 * s.Unblock();
+				 */
+			};
+
+			s.TextLog += (text) => {
+				// TODO : 로그 추가
+			};
+			s.SayLog += (teller, text) => {
+				// TODO : 로그 추가
+			};
+
+			s.FreezeRequest += () => {
+				// TODO : 화면 고정
+			};
+			s.TransitionRequest += (r) => {
+				// TODO : 화면 전환
 			};
 
 			s.SetValue("Game", new VNValue(VNType.String, "init"));
@@ -114,8 +142,7 @@ namespace VN.Game {
 				g.DrawString(this.Script.CurrentTeller, SystemFonts.DefaultFont, Brushes.White, 10, 10);
 
 			if (this.Script.CurrentText != null)
-				g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.White, 10, 30);
-			// 잘 되면 남아있는거
+				g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.White, 10, 30
 		}
 	}
 }
