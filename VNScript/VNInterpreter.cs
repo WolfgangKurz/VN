@@ -363,16 +363,35 @@ namespace VN.VNScript {
 							}
 						}
 						else {
-							if (!param[1].isNull)
-								throw ParamTypeException("SCG", 2, "Null", param[1].type.ToString());
-
 							var id = param[0].AsNumber;
 							if (!VNHelper.IsInteger(id)) throw ParamIntegerException("SCG", 1);
 
 							var iid = (int)id;
-							if (this.CurrentSCG.ContainsKey(iid)) {
-								this.CurrentSCG[iid].Dispose();
-								this.CurrentSCG.Remove(iid);
+							if (param[1].isNull) {
+								if (this.CurrentSCG.ContainsKey(iid)) {
+									this.CurrentSCG[iid].Dispose();
+									this.CurrentSCG.Remove(iid);
+								}
+							}
+							else {
+								string pos;
+								if (!this.CurrentSCG.ContainsKey(iid)) {
+									if (!param[2].isSymbol)
+										throw ParamTypeException("SCG", 3, "Symbol", param[2].type.ToString());
+
+									pos = param[2].AsSymbol;
+								}
+								else {
+									pos = this.CurrentSCG[iid].Position.ToString();
+
+									this.CurrentSCG[iid].Dispose();
+									this.CurrentSCG.Remove(iid);
+								}
+
+								this.CurrentSCG[iid] = new VNSCG(
+									Image.FromFile(Path.Combine("VNData", "SCG", param[1].AsString + ".png")),
+									VNHelper.AsPosition(pos)
+								);
 							}
 						}
 						break;
