@@ -20,6 +20,7 @@ namespace VN.VNScript {
 		public delegate void SelectionRequestEvent(string[] selections);
 		public delegate void FreezeRequestEvent();
 		public delegate void TransitionRequestEvent(string reference);
+		public delegate void HandleFXEvent(string name, VNValue[] parameters);
 
 		/// <summary>
 		/// 다음 스크립트 구문으로 진행하지 않는 상태가 되었을 경우에 호출됩니다.
@@ -57,6 +58,11 @@ namespace VN.VNScript {
 		/// reference 값은 null일 수 있으며, null인 경우 Fade 효과가 사용됩니다.
 		/// </summary>
 		public event TransitionRequestEvent TransitionRequest;
+
+		/// <summary>
+		/// FX 명령어를 처리합니다.
+		/// </summary>
+		public event HandleFXEvent HandleFX;
 
 		private string ScriptPath { get; } = Path.Combine(
 			Path.GetDirectoryName(Assembly.GetEntryAssembly().Location),
@@ -583,7 +589,11 @@ namespace VN.VNScript {
 						break;
 
 					case VNCodeType.FX:
-						// TODO
+						if (param.Length < 1) throw VNException.ParamLenMinException("FX", 1, param.Length);
+						if (!param[0].isSymbol)
+							throw VNException.ParamTypeException("FX", 1, "Symbol", param[0].type.ToString());
+
+						this.HandleFX?.Invoke(param[0].AsSymbol, param.Skip(1).ToArray());
 						break;
 
 					case VNCodeType.FREEZE:
@@ -704,7 +714,7 @@ namespace VN.VNScript {
 			return null;
 		}
 
-		protected void Block() {
+		public void Block() {
 			this.Blocking = true;
 			this.Blocked?.Invoke();
 		}

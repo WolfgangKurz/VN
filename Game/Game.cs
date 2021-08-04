@@ -86,6 +86,10 @@ namespace VN.Game {
 				// TODO : 화면 전환
 			};
 
+			s.HandleFX += (n, p) => {
+				// TODO : FX 처리
+			};
+
 			s.SetValue("Game", new VNValue(VNType.String, "init"));
 			s.SetValue("Game.Title", new VNValue(VNType.String, "VN"));
 			s.SetValue("Game.Width", new VNValue(VNType.Number, 800.0));
