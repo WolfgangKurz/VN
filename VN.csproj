@@ -89,6 +89,7 @@
     <Compile Include="VNScript\VNAudio.cs" />
     <Compile Include="VNScript\VNCode.cs" />
     <Compile Include="VNScript\VNCodeType.cs" />
+    <Compile Include="VNScript\VNException.cs" />
     <Compile Include="VNScript\VNHelper.cs" />
     <Compile Include="VNScript\VNInterpreter.cs" />
     <Compile Include="VNScript\VNPosition.cs" />

@@ -139,23 +139,6 @@ namespace VN.VNScript {
 			this.Blocking = false;
 		}
 
-		private Exception ParamLenException(string type, int should, int input) =>
-			new Exception($"VNInterpreter 실행 오류 - '{type}'의 인자는 '{should}'개여야하지만, '{input}'개였습니다.");
-		private Exception ParamLenMinException(string type, int should, int input) =>
-			new Exception($"VNInterpreter 실행 오류 - '{type}'의 인자는 최소 '{should}'개여야하지만, '{input}'개였습니다.");
-		private Exception ParamLenMaxException(string type, int should, int input) =>
-			new Exception($"VNInterpreter 실행 오류 - '{type}'의 인자는 최대 '{should}'개여야하지만, '{input}'개였습니다.");
-		private Exception ParamTypeException(string type, int idx, string should, string input) =>
-			new Exception($"VNInterpreter 실행 오류 - '{type}'의 {idx}번째 인자는 '{should}'이어야하지만, '{input}'이었습니다.");
-		private Exception ParamVarNotFoundException(string key) =>
-			new Exception($"VNInterpreter 실행 오류 - 변수 '{key}'를 참조하려고 했지만 존재하지 않았습니다.");
-		private Exception ParamIntegerException(string type, int idx) =>
-			new Exception($"VNInterpreter 실행 오류 - '{type}'의 {idx}번째 인자는 정수형이어야합니다.");
-		private Exception ParamRangeException(string type, int idx, int min, int max, double value) =>
-			new Exception($"VNInterpreter 실행 오류 - '{type}'의 {idx}번째 인자는 '{min}'이상 '{max}'이하여야하지만, '{value}'였습니다.");
-		private Exception ParamListException(string type, int idx, string[] list, string value) =>
-			new Exception($"VNInterpreter 실행 오류 - '{type}'의 {idx}번째 인자는 '{string.Join(", ", list)}' 중 하나여야하지만 '{value}'였습니다.");
-
 		private void Worker() {
 			while (this.Running && this.RunningStack.Count > 0) {
 				VNStatus current;
@@ -186,41 +169,210 @@ namespace VN.VNScript {
 						if (p.isVariable) {
 							var key = p.AsVariable;
 							if (this.Variables.ContainsKey(key)) return this.Variables[key];
-							throw ParamVarNotFoundException(key);
+							throw VNException.ParamVarNotFoundException(key);
 						}
 						return p;
 					})
 					.ToArray();
 
 				switch (inst.Type) {
-					case VNCodeType.NONE: // 0
-						return;
-
-					case VNCodeType.SCRIPT: // 1
+					case VNCodeType.SCRIPT:
 						if (param.Length != 1)
-							throw ParamLenException("SCRIPT", 1, param.Length);
+							throw VNException.ParamLenException("SCRIPT", 1, param.Length);
 						if (!param[0].isString)
-							throw ParamTypeException("SCRIPT", 1, "String", param[0].type.ToString());
+							throw VNException.ParamTypeException("SCRIPT", 1, "String", param[0].type.ToString());
 
 						this.Run(param[0].AsString);
 						break;
 
-					case VNCodeType.SET: // 2
+					case VNCodeType.SET:
 						if (param.Length != 2)
-							throw ParamLenException("SET", 2, param.Length);
+							throw VNException.ParamLenException("SET", 2, param.Length);
 						if (!param[0].isSymbol)
-							throw ParamTypeException("SET", 1, "Symbol", param[0].type.ToString());
+							throw VNException.ParamTypeException("SET", 1, "Symbol", param[0].type.ToString());
 
 						this.SetValue(param[0].AsSymbol, param[1]);
 						break;
 
-					case VNCodeType.UNLOCK: // 3
+					case VNCodeType.ADD:
+					case VNCodeType.SUB:
+					case VNCodeType.MUL:
+					case VNCodeType.DIV:
+					case VNCodeType.MOD:
 						if (param.Length != 2)
-							throw ParamLenException("UNLOCK", 2, param.Length);
+							throw VNException.ParamLenException(inst.Type.ToString(), 2, param.Length);
 						if (!param[0].isSymbol)
-							throw ParamTypeException("UNLOCK", 1, "Symbol", param[0].type.ToString());
+							throw VNException.ParamTypeException(inst.Type.ToString(), 1, "Symbol", param[0].type.ToString());
+						if (!param[1].isNumber)
+							throw VNException.ParamTypeException(inst.Type.ToString(), 2, "Number", param[1].type.ToString());
+
+						; {
+							var name = param[0].AsSymbol;
+							var var = this.GetValue(name);
+							if (var == null)
+								throw VNException.ParamVarNotFoundException(name);
+							if (!var.isNumber)
+								throw VNException.VarTypeException(name, "Number", param[1].type.ToString());
+
+							switch (inst.Type) {
+								case VNCodeType.ADD:
+									this.SetValue(name, new VNValue(VNType.Number, var.AsNumber + param[1].AsNumber));
+									break;
+								case VNCodeType.SUB:
+									this.SetValue(name, new VNValue(VNType.Number, var.AsNumber - param[1].AsNumber));
+									break;
+								case VNCodeType.MUL:
+									this.SetValue(name, new VNValue(VNType.Number, var.AsNumber * param[1].AsNumber));
+									break;
+								case VNCodeType.DIV:
+									this.SetValue(name, new VNValue(VNType.Number, var.AsNumber / param[1].AsNumber));
+									break;
+								case VNCodeType.MOD:
+									this.SetValue(name, new VNValue(VNType.Number, var.AsNumber % param[1].AsNumber));
+									break;
+							}
+						}
+						break;
+
+					case VNCodeType.STRING:
+						if (param.Length != 1)
+							throw VNException.ParamLenException("STRING", 1, param.Length);
+						if (!param[0].isSymbol)
+							throw VNException.ParamTypeException("STRING", 1, "Symbol", param[0].type.ToString());
+
+						; {
+							var name = param[0].AsSymbol;
+							var var = this.GetValue(name);
+							var value = "";
+
+							switch(var.type) {
+								case VNType.Null:
+									value = "null";
+									break;
+								case VNType.Symbol:
+									value = var.AsSymbol;
+									break;
+								case VNType.String:
+									value = var.AsString;
+									break;
+								case VNType.Number:
+									value = var.AsNumber.ToString();
+									break;
+								case VNType.Boolean:
+									value = var.AsBool.ToString();
+									break;
+							}
+							this.SetValue(name, new VNValue(VNType.String, value));
+						}
+						break;
+
+					case VNCodeType.FLOOR:
+					case VNCodeType.ROUND:
+					case VNCodeType.CEIL:
+						if (param.Length != 1)
+							throw VNException.ParamLenException(inst.Type.ToString(), 1, param.Length);
+						if (!param[0].isSymbol)
+							throw VNException.ParamTypeException(inst.Type.ToString(), 1, "Symbol", param[0].type.ToString());
+
+						; {
+							var name = param[0].AsSymbol;
+							var var = this.GetValue(name);
+							if(!var.isNumber)
+								throw VNException.VarTypeException(name, "Number", param[1].type.ToString());
+
+							switch (inst.Type) {
+								case VNCodeType.FLOOR:
+									this.SetValue(name, new VNValue(VNType.Number, Math.Floor(var.AsNumber)));
+									break;
+								case VNCodeType.ROUND:
+									this.SetValue(name, new VNValue(VNType.Number, Math.Round(var.AsNumber)));
+									break;
+								case VNCodeType.CEIL:
+									this.SetValue(name, new VNValue(VNType.Number, Math.Ceiling(var.AsNumber)));
+									break;
+							}
+						}
+						break;
+
+					case VNCodeType.IF:
+						if (param.Length != 3)
+							throw VNException.ParamLenException("IF", 3, param.Length);
+						if (!param[1].isSymbol)
+							throw VNException.ParamTypeException("IF", 2, "Symbol", param[1].type.ToString());
+
+						; {
+							var match = false;
+							var oper = param[1].AsSymbol;
+							switch(oper) {
+								case "==":
+									if (param[0] == param[2]) match = true;
+									break;
+								case "!=":
+									if (param[0] != param[2]) match = true;
+									break;
+								case ">":
+									if (param[0] > param[2]) match = true;
+									break;
+								case "<":
+									if (param[0] < param[2]) match = true;
+									break;
+								case ">=":
+									if (param[0] >= param[2]) match = true;
+									break;
+								case "<=":
+									if (param[0] <= param[2]) match = true;
+									break;
+								default:
+									throw VNException.ParamListException("IF", 2, new string[] { "==", "!=", ">", "<", ">=", "<=" }, oper);
+							}
+
+							if (match) break;
+
+							var depth = 1;
+							while(!current.EOF) {
+								var _inst = current.Next();
+								switch (_inst.Type) {
+									case VNCodeType.IF:
+										depth++;
+										break;
+									case VNCodeType.END:
+										depth--;
+										break;
+								}
+								if (depth == 0) break;
+							}
+							if (depth > 0)
+								throw VNException.IFENDNotFound();
+						}
+						break;
+					case VNCodeType.END:
+						break; // 무시
+
+					case VNCodeType.LABEL:
+						break; // 무시
+
+					case VNCodeType.GOTO:
+						if (param.Length != 1)
+							throw VNException.ParamLenException("GOTO", 1, param.Length);
+						if (!param[0].isSymbol)
+							throw VNException.ParamTypeException("GOTO", 1, "Symbol", param[0].type.ToString());
+
+						; {
+							var label = param[0].AsSymbol;
+							if (current.Labels.ContainsKey(label))
+								current.Seek(current.Labels[label]);
+							else
+								throw VNException.LabelNotFound(label);
+						}
+						break;
+
+					case VNCodeType.UNLOCK:
+						if (param.Length != 2)
+							throw VNException.ParamLenException("UNLOCK", 2, param.Length);
+						if (!param[0].isSymbol)
+							throw VNException.ParamTypeException("UNLOCK", 1, "Symbol", param[0].type.ToString());
 						if (!param[1].isString)
-							throw ParamTypeException("UNLOCK", 2, "String", param[1].type.ToString());
+							throw VNException.ParamTypeException("UNLOCK", 2, "String", param[1].type.ToString());
 
 						switch (param[0].AsSymbol) {
 							case "name":
@@ -230,24 +382,24 @@ namespace VN.VNScript {
 						}
 						break;
 
-					case VNCodeType.TEXT: // 4
+					case VNCodeType.TEXT:
 						if (param.Length != 1)
-							throw ParamLenException("TEXT", 1, param.Length);
+							throw VNException.ParamLenException("TEXT", 1, param.Length);
 						if (!param[0].isString)
-							throw ParamTypeException("TEXT", 1, "String", param[0].type.ToString());
+							throw VNException.ParamTypeException("TEXT", 1, "String", param[0].type.ToString());
 
 						this.CurrentText = param[0].AsString;
 						this.TextLog?.Invoke(this.CurrentText);
 						this.Block();
 						break;
 
-					case VNCodeType.SAY: // 5
+					case VNCodeType.SAY:
 						if (param.Length != 2)
-							throw ParamLenException("TEXT", 1, param.Length);
+							throw VNException.ParamLenException("TEXT", 1, param.Length);
 						if (!param[0].isString)
-							throw ParamTypeException("TEXT", 1, "String", param[0].type.ToString());
+							throw VNException.ParamTypeException("TEXT", 1, "String", param[0].type.ToString());
 						if (!param[1].isString)
-							throw ParamTypeException("TEXT", 2, "String", param[1].type.ToString());
+							throw VNException.ParamTypeException("TEXT", 2, "String", param[1].type.ToString());
 
 						this.CurrentTeller = param[0].AsString;
 						this.CurrentText = param[1].AsString;
@@ -255,27 +407,27 @@ namespace VN.VNScript {
 						this.Block();
 						break;
 
-					case VNCodeType.SEL: // 6
+					case VNCodeType.SEL:
 						if (param.Length == 0)
-							throw ParamLenMinException("SEL", 1, 0);
+							throw VNException.ParamLenMinException("SEL", 1, 0);
 
 						this.Block();
 						this.SelectionRequest?.Invoke(
 							param
 								.Select((x, i) => {
 									if (!x.isString)
-										throw ParamTypeException("SEL", i + 1, "String", x.type.ToString());
+										throw VNException.ParamTypeException("SEL", i + 1, "String", x.type.ToString());
 
 									return x.AsString;
 								}).ToArray()
 						);
 						break;
 
-					case VNCodeType.BGM: // 7
+					case VNCodeType.BGM:
 						if (param.Length != 1)
-							throw ParamLenException("BGM", 1, param.Length);
+							throw VNException.ParamLenException("BGM", 1, param.Length);
 						if (!param[0].isString && !param[0].isNull)
-							throw ParamTypeException("BGM", 1, "String or Null", param[0].type.ToString());
+							throw VNException.ParamTypeException("BGM", 1, "String or Null", param[0].type.ToString());
 
 						try {
 							var bgm = param[0];
@@ -295,15 +447,15 @@ namespace VN.VNScript {
 							}
 						}
 						catch {
-							throw new Exception($"VNInterpreter 실행 오류 - 배경음악 '{param[0].AsString}'을(를) 찾을 수 없습니다.");
+							throw VNException.BGMFileNotFound(param[0].AsString);
 						}
 						break;
 
-					case VNCodeType.BG: // 8
+					case VNCodeType.BG:
 						if (param.Length != 1)
-							throw ParamLenException("BG", 1, param.Length);
+							throw VNException.ParamLenException("BG", 1, param.Length);
 						if (!param[0].isString && !param[0].isNull)
-							throw ParamTypeException("BG", 1, "String or Null", param[0].type.ToString());
+							throw VNException.ParamTypeException("BG", 1, "String or Null", param[0].type.ToString());
 
 						try {
 							var bg = param[0];
@@ -319,31 +471,31 @@ namespace VN.VNScript {
 							}
 						}
 						catch {
-							throw new Exception($"VNInterpreter 실행 오류 - 배경 '{param[0].AsString}'을(를) 찾을 수 없습니다.");
+							throw VNException.BGFileNotFound(param[0].AsString);
 						}
 						break;
 
-					case VNCodeType.SCG: // 9
-						if (param.Length < 2) throw ParamLenMinException("SCG", 2, param.Length);
-						if (param.Length > 3) throw ParamLenMaxException("SCG", 3, param.Length);
+					case VNCodeType.SCG:
+						if (param.Length < 2) throw VNException.ParamLenMinException("SCG", 2, param.Length);
+						if (param.Length > 3) throw VNException.ParamLenMaxException("SCG", 3, param.Length);
 
 						if (!param[0].isNumber)
-							throw ParamTypeException("SCG", 1, "Number", param[0].type.ToString());
+							throw VNException.ParamTypeException("SCG", 1, "Number", param[0].type.ToString());
 
 						if (param.Length == 3) {
 							if (!param[1].isString)
-								throw ParamTypeException("SCG", 2, "String", param[1].type.ToString());
+								throw VNException.ParamTypeException("SCG", 2, "String", param[1].type.ToString());
 							if (!param[2].isSymbol)
-								throw ParamTypeException("SCG", 3, "Symbol", param[2].type.ToString());
+								throw VNException.ParamTypeException("SCG", 3, "Symbol", param[2].type.ToString());
 
 							var id = param[0].AsNumber;
-							if (!VNHelper.IsInteger(id)) throw ParamIntegerException("SCG", 1);
-							if (id < 1 || id > 3) throw ParamRangeException("SCG", 1, 1, 3, id);
+							if (!VNHelper.IsInteger(id)) throw VNException.ParamIntegerException("SCG", 1);
+							if (id < 1 || id > 3) throw VNException.ParamRangeException("SCG", 1, 1, 3, id);
 
 							var pos = param[2].AsSymbol;
 							var list = new string[] { "left", "center", "right" };
 							if (!list.Any(x => x == pos.ToLower()))
-								throw ParamListException("SCG", 3, list, pos);
+								throw VNException.ParamListException("SCG", 3, list, pos);
 
 							try {
 								var iid = (int)id;
@@ -359,12 +511,12 @@ namespace VN.VNScript {
 								);
 							}
 							catch {
-								throw new Exception($"VNInterpreter 실행 오류 - SCG '{param[1].AsString}'을(를) 찾을 수 없습니다.");
+								throw VNException.SCGFileNotFound(param[1].AsString);
 							}
 						}
 						else {
 							var id = param[0].AsNumber;
-							if (!VNHelper.IsInteger(id)) throw ParamIntegerException("SCG", 1);
+							if (!VNHelper.IsInteger(id)) throw VNException.ParamIntegerException("SCG", 1);
 
 							var iid = (int)id;
 							if (param[1].isNull) {
@@ -377,7 +529,7 @@ namespace VN.VNScript {
 								string pos;
 								if (!this.CurrentSCG.ContainsKey(iid)) {
 									if (!param[2].isSymbol)
-										throw ParamTypeException("SCG", 3, "Symbol", param[2].type.ToString());
+										throw VNException.ParamTypeException("SCG", 3, "Symbol", param[2].type.ToString());
 
 									pos = param[2].AsSymbol;
 								}
@@ -396,26 +548,26 @@ namespace VN.VNScript {
 						}
 						break;
 
-					case VNCodeType.FX: // 10
+					case VNCodeType.FX:
 						// TODO
 						break;
 
-					case VNCodeType.FREEZE: // 11
-						if (param.Length > 0) throw ParamLenMaxException("FREEZE", 0, param.Length);
+					case VNCodeType.FREEZE:
+						if (param.Length > 0) throw VNException.ParamLenMaxException("FREEZE", 0, param.Length);
 
 						this.FreezeRequest?.Invoke();
 						break;
 
-					case VNCodeType.TRANSITION: // 12
-						if (param.Length < 1) throw ParamLenMinException("TRANSITION", 1, param.Length);
-						if (param.Length > 2) throw ParamLenMaxException("TRANSITION", 2, param.Length);
+					case VNCodeType.TRANSITION:
+						if (param.Length < 1) throw VNException.ParamLenMinException("TRANSITION", 1, param.Length);
+						if (param.Length > 2) throw VNException.ParamLenMaxException("TRANSITION", 2, param.Length);
 
 						if (!param[0].isNumber)
-							throw ParamTypeException("TRANSITION", 1, "Number", param[0].type.ToString());
+							throw VNException.ParamTypeException("TRANSITION", 1, "Number", param[0].type.ToString());
 
 						if (param.Length == 2) {
 							if (!param[1].isString)
-								throw ParamTypeException("TRANSITION", 2, "String", param[0].type.ToString());
+								throw VNException.ParamTypeException("TRANSITION", 2, "String", param[0].type.ToString());
 
 							this.TransitionRequest?.Invoke(param[1].AsString);
 						}
@@ -424,7 +576,7 @@ namespace VN.VNScript {
 						break;
 
 					default:
-						throw new Exception($"VNInterpreter 실행 오류 - '{inst.Type}'은(는) 알 수 없는 명령어입니다.");
+						throw VNException.UnknownCommand(inst.Type.ToString());
 				}
 			}
 			

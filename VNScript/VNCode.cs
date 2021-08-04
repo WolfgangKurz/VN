@@ -93,28 +93,25 @@ namespace VN.VNScript {
 			if (stage == 5) // 문자열 파싱 도중에 끝을 만남
 				throw new Exception("VNCode 구문 분석 실패 - 예상하지 못한 끝입니다.");
 
-			if (sb.Length > 0)
-				p.Add(this.GetValue(sb.ToString()));
+			if (sb.Length > 0) {
+				if (this.Type == VNCodeType.NONE) {
+					this.Type = this.GetCodeType(sb.ToString());
+					if (this.Type == VNCodeType.NONE)
+						throw new Exception("VNCode 구문 분석 실패 - 알 수 없는 명령어입니다.");
+				}
+				else
+					p.Add(this.GetValue(sb.ToString()));
+			}
 
 			this.Params = p.ToArray();
 		}
 
 		protected VNCodeType GetCodeType(string code) {
-			var c = code.ToUpper();
-			switch (c) {
-				case "SCRIPT": return VNCodeType.SCRIPT;
-				case "SET": return VNCodeType.SET;
-				case "UNLOCK": return VNCodeType.UNLOCK;
-				case "TEXT": return VNCodeType.TEXT;
-				case "SAY": return VNCodeType.SAY;
-				case "SEL": return VNCodeType.SEL;
-				case "BGM": return VNCodeType.BGM;
-				case "BG": return VNCodeType.BG;
-				case "SCG": return VNCodeType.SCG;
-				case "FX": return VNCodeType.FX;
-				case "FREEZE": return VNCodeType.FREEZE;
-				case "TRANSITION": return VNCodeType.TRANSITION;
-			}
+			VNCodeType type;
+
+			if (Enum.TryParse<VNCodeType>(code.ToUpper(), out type))
+				return type;
+
 			return VNCodeType.NONE;
 		}
 

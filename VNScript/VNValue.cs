@@ -104,5 +104,27 @@ namespace VN.VNScript {
 			return a.Equals(b);
 		}
 		public static bool operator !=(VNValue a, VNValue b) => !(a == b);
+
+		public static bool operator >(VNValue a, VNValue b) {
+			if (a is null || b is null) return false;
+			if (!a.isNumber || !b.isNumber) return false;
+			return a.AsNumber > b.AsNumber;
+		}
+		public static bool operator <(VNValue a, VNValue b) {
+			if (a is null || b is null) return false;
+			if (!a.isNumber || !b.isNumber) return false;
+			return a.AsNumber < b.AsNumber;
+		}
+
+		public static bool operator >=(VNValue a, VNValue b) {
+			if (a is null || b is null) return false;
+			if (!a.isNumber || !b.isNumber) return false;
+			return a.AsNumber >= b.AsNumber;
+		}
+		public static bool operator <=(VNValue a, VNValue b) {
+			if (a is null || b is null) return false;
+			if (!a.isNumber || !b.isNumber) return false;
+			return a.AsNumber <= b.AsNumber;
+		}
 	}
 }
