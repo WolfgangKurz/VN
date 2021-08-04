@@ -52,6 +52,11 @@ p1 변수의 값을 String 타입으로 변경합니다.
 각 타입에 맞는 문자열로 변경됩니다.
 
 
+- CONCAT [p1: Symbol], [p2: String]
+p1 변수의 값에 p2 문자열을 잇습니다.
+p1 변수는 String 타입일 필요는 없습니다.
+
+
 - IF [p1: any], [p2: Symbol], [p3: any]
 - END
 p1 값과 p3 값을 p2 연산자로 비교합니다.

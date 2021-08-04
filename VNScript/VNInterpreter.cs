@@ -234,6 +234,34 @@ namespace VN.VNScript {
 						}
 						break;
 
+					case VNCodeType.FLOOR:
+					case VNCodeType.ROUND:
+					case VNCodeType.CEIL:
+						if (param.Length != 1)
+							throw VNException.ParamLenException(inst.Type.ToString(), 1, param.Length);
+						if (!param[0].isSymbol)
+							throw VNException.ParamTypeException(inst.Type.ToString(), 1, "Symbol", param[0].type.ToString());
+
+						; {
+							var name = param[0].AsSymbol;
+							var var = this.GetValue(name);
+							if (!var.isNumber)
+								throw VNException.VarTypeException(name, "Number", param[1].type.ToString());
+
+							switch (inst.Type) {
+								case VNCodeType.FLOOR:
+									this.SetValue(name, new VNValue(VNType.Number, Math.Floor(var.AsNumber)));
+									break;
+								case VNCodeType.ROUND:
+									this.SetValue(name, new VNValue(VNType.Number, Math.Round(var.AsNumber)));
+									break;
+								case VNCodeType.CEIL:
+									this.SetValue(name, new VNValue(VNType.Number, Math.Ceiling(var.AsNumber)));
+									break;
+							}
+						}
+						break;
+
 					case VNCodeType.STRING:
 						if (param.Length != 1)
 							throw VNException.ParamLenException("STRING", 1, param.Length);
@@ -266,31 +294,37 @@ namespace VN.VNScript {
 						}
 						break;
 
-					case VNCodeType.FLOOR:
-					case VNCodeType.ROUND:
-					case VNCodeType.CEIL:
-						if (param.Length != 1)
-							throw VNException.ParamLenException(inst.Type.ToString(), 1, param.Length);
+					case VNCodeType.CONCAT:
+						if (param.Length != 2)
+							throw VNException.ParamLenException("CONCAT", 2, param.Length);
 						if (!param[0].isSymbol)
-							throw VNException.ParamTypeException(inst.Type.ToString(), 1, "Symbol", param[0].type.ToString());
+							throw VNException.ParamTypeException("CONCAT", 1, "Symbol", param[0].type.ToString());
+						if (!param[1].isString)
+							throw VNException.ParamTypeException("CONCAT", 2, "String", param[1].type.ToString());
 
 						; {
 							var name = param[0].AsSymbol;
 							var var = this.GetValue(name);
-							if(!var.isNumber)
-								throw VNException.VarTypeException(name, "Number", param[1].type.ToString());
+							var value = "";
 
-							switch (inst.Type) {
-								case VNCodeType.FLOOR:
-									this.SetValue(name, new VNValue(VNType.Number, Math.Floor(var.AsNumber)));
+							switch (var.type) {
+								case VNType.Null:
+									value = "null";
 									break;
-								case VNCodeType.ROUND:
-									this.SetValue(name, new VNValue(VNType.Number, Math.Round(var.AsNumber)));
+								case VNType.Symbol:
+									value = var.AsSymbol;
 									break;
-								case VNCodeType.CEIL:
-									this.SetValue(name, new VNValue(VNType.Number, Math.Ceiling(var.AsNumber)));
+								case VNType.String:
+									value = var.AsString;
+									break;
+								case VNType.Number:
+									value = var.AsNumber.ToString();
+									break;
+								case VNType.Boolean:
+									value = var.AsBool.ToString();
 									break;
 							}
+							this.SetValue(name, new VNValue(VNType.String, value + param[1].AsString));
 						}
 						break;
 

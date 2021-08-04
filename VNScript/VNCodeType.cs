@@ -18,7 +18,9 @@ namespace VN.VNScript {
 		FLOOR,
 		ROUND,
 		CEIL,
+
 		STRING,
+		CONCAT,
 
 		IF,
 		END,
