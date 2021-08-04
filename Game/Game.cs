@@ -124,11 +124,11 @@ namespace VN.Game {
 
 			foreach (var currentSCG in this.Script.CurrentSCG.Values)
 			{
+				var img = currentSCG.Image;
 				var x = 0;
 				var y = (canvasSize.Height * 0.8) - img.Height; // 전체 높이의 80% 위치에서 "서있게"
 				var areaWidth = canvasSize.Width / 3;
-				var img = currentSCG.Image;
-
+			
 				switch (currentSCG.Position)
 				{
 					case VNPosition.Left:
@@ -141,14 +141,18 @@ namespace VN.Game {
 						x = areaWidth * 2 + (areaWidth / 2) - (img.Width / 2); // 우측 영역의 중앙
 						break;
 				}
-				g.DrawImage(img, x, y);
+				g.DrawImage(img, x, (float)y);
 			}
 
+			Font tellerFont = new Font("나눔스퀘어라운드 Bold", 20);	// 화자의 폰트
+			Font textFont = new Font("나눔스퀘어라운드 Bold", 15);		// 대사의 폰트
+
 			if (this.Script.CurrentTeller != null)
-				g.DrawString(this.Script.CurrentTeller, SystemFonts.DefaultFont, Brushes.White, 10, 10);
+				g.DrawString(this.Script.CurrentTeller, tellerFont, Brushes.White, (canvasSize.Width / 4) * 3, canvasSize.Height / 12 * 7);
 
 			if (this.Script.CurrentText != null)
-				g.DrawString(this.Script.CurrentText, SystemFonts.DefaultFont, Brushes.Black, canvasSize.Width/15, (canvasSize.Height/3)*2);
+				g.DrawString(this.Script.CurrentText, textFont, Brushes.Black, canvasSize.Width / 15, (canvasSize.Height / 3) * 2);
+			
 		}
 	}
 }
