@@ -122,26 +122,28 @@ namespace VN.Game {
 			if (this.Script.CurrentBG != null)
 				g.DrawImage(this.Script.CurrentBG, 0, 0, canvasSize.Width, canvasSize.Height);
 
-			foreach (var currentSCG in this.Script.CurrentSCG.Values)
 			{
-				var img = currentSCG.Image;
-				var x = 0;
-				var y = (canvasSize.Height * 0.8) - img.Height; // 전체 높이의 80% 위치에서 "서있게"
+				var SCGs = this.Script.CurrentSCG.Values;
 				var areaWidth = canvasSize.Width / 3;
-			
-				switch (currentSCG.Position)
-				{
-					case VNPosition.Left:
-						x = (areaWidth / 2) - (img.Width / 2); // 좌측 영역의 중앙
-						break;
-					case VNPosition.Center:
-						x = areaWidth + (areaWidth / 2) - (img.Width / 2); // 가운데 영역의 중앙
-						break;
-					case VNPosition.Right:
-						x = areaWidth * 2 + (areaWidth / 2) - (img.Width / 2); // 우측 영역의 중앙
-						break;
+
+				foreach (var currentSCG in SCGs) {
+					var img = currentSCG.Image;
+					var x = (areaWidth / 2) - (img.Width / 2);
+					var y = (int)(canvasSize.Height * 0.8) - img.Height; // 전체 높이의 80% 위치에서 "서있게"
+
+					switch (currentSCG.Position) {
+						case VNPosition.Left:
+							x += 0; // 좌측 영역의 중앙
+							break;
+						case VNPosition.Center:
+							x += areaWidth; // 가운데 영역의 중앙
+							break;
+						case VNPosition.Right:
+							x += areaWidth * 2; // 우측 영역의 중앙
+							break;
+					}
+					g.DrawImage(img, x, y);
 				}
-				g.DrawImage(img, x, (float)y);
 			}
 
 			Font tellerFont = new Font("나눔스퀘어라운드 Bold", 20);	// 화자의 폰트
