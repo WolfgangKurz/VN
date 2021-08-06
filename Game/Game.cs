@@ -188,7 +188,6 @@ namespace VN.Game {
 				}
 				textFont.Dispose();
 			}
-
 		}
 	}
 }
