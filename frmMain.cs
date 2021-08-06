@@ -124,6 +124,7 @@ namespace VN {
 		}
 
 		private void frmMain_Click(object sender, EventArgs e) {
+			Game.Game.Instance.Clickcheck = true;
 			Game.Game.Instance.Unblock();
 		}
 	}
