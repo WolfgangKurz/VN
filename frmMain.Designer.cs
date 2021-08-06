@@ -50,7 +50,6 @@
             this.Text = "VN";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
             this.Click += new System.EventHandler(this.frmMain_Click);
-            this.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseDoubleClick);
             this.ResumeLayout(false);
 
 		}

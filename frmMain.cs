@@ -127,10 +127,5 @@ namespace VN {
 			Game.Game.Instance.Clickcheck = true;
 			Game.Game.Instance.Unblock();
 		}
-
-        private void frmMain_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-			Game.Game.Instance.doubleClickOn = true;
-		}
     }
 }

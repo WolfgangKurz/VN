@@ -33,9 +33,9 @@ namespace VN.Game {
 
 		private Size canvasSize { get; set; }
 
-		private DateTime startTime;     // 대사를 출력하기 시작한 시간
+		private DateTime currentTime; //대사 출력 기준시간
 
-		public bool doubleClickOn;      // 더블클릭 시 true
+		public bool Clickcheck; //클릭 이벤트 체크
 
 
 		// private로 해야 new로 생성하는 것을 방지할 수 있음
@@ -78,8 +78,8 @@ namespace VN.Game {
 
 			s.TextLog += (text) => {
 				// TODO : 로그 추가
-				startTime = DateTime.Now;
-				doubleClickOn = false;
+				currentTime = DateTime.Now;
+				Clickcheck = false;
 			};
 			s.SayLog += (teller, text) => {
 				// TODO : 로그 추가
@@ -167,25 +167,25 @@ namespace VN.Game {
 			if (this.Script.CurrentText != null)
 			{
 				Font textFont = new Font("나눔스퀘어라운드 Bold", 15);      // 대사의 폰트
-
-				TimeSpan interval = DateTime.Now - startTime;               // 대사를 읽기 시작한 시간과 현재 시간의 차이
+				TimeSpan interval = DateTime.Now - currentTime;             // 대사를 읽기 시작한 시간과 현재 시간의 차이
 				int textLen = interval.Seconds;                             // 출력할 대사의 길이
 				string currentText = this.Script.CurrentText.Substring(0);  // 반복문에서 자른 대본을 저장할 변수
 
-				while (textLen < this.Script.CurrentText.Length)
+				for (int i = 0; i < this.Script.CurrentText.Length; i++)
 				{
-					currentText = this.Script.CurrentText.Substring(0, interval.Seconds);
-					g.DrawString(currentText, textFont, Brushes.Black, canvasSize.Width / 15, canvasSize.Height / 3 * 2);
-
-					interval = DateTime.Now - startTime;
+					interval = DateTime.Now - currentTime;
 					textLen += interval.Seconds;
 
-					if (doubleClickOn)
+					currentText = this.Script.CurrentText.Substring(0, interval.Seconds);
+					g.DrawString(currentText, textFont, Brushes.Black, canvasSize.Width / 15, (canvasSize.Height / 3) * 2);
+
+					if (Clickcheck)
 					{
 						g.DrawString(this.Script.CurrentText, textFont, Brushes.Black, canvasSize.Width / 15, canvasSize.Height / 3 * 2);
 						break;
 					}
 				}
+
 				textFont.Dispose();
 			}
 		}
