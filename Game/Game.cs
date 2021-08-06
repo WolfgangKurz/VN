@@ -157,8 +157,17 @@ namespace VN.Game {
 				g.DrawString(this.Script.CurrentTeller, tellerFont, Brushes.White, (canvasSize.Width / 4) * 3, canvasSize.Height / 12 * 7);
 
 			if (this.Script.CurrentText != null)
-				g.DrawString(this.Script.CurrentText, textFont, Brushes.Black, canvasSize.Width / 15, (canvasSize.Height / 3) * 2);
-			
+			{
+				for (int i = 0; i < this.Script.CurrentText.Length; i++)
+				{
+					var Timecheck = DateTime.Now.AddSeconds(500);
+					if (Timecheck == DateTime.Now);
+                   			{
+						var currentText = this.Script.CurrentText.Substring(0, i);
+						g.DrawString(currentText, textFont, Brushes.Black, canvasSize.Width / 15, (canvasSize.Height / 3) * 2);
+					}
+				}
+			}
 		}
 	}
 }
