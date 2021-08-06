@@ -150,22 +150,36 @@ namespace VN.Game {
 				}
 			}
 
-			Font tellerFont = new Font("나눔스퀘어라운드 Bold", 20);	// 화자의 폰트
-			Font textFont = new Font("나눔스퀘어라운드 Bold", 15);		// 대사의 폰트
-
+			Font tellerFont = new Font("나눔스퀘어라운드 Bold", 20);
 			if (this.Script.CurrentTeller != null)
+			{
 				g.DrawString(this.Script.CurrentTeller, tellerFont, Brushes.White, (canvasSize.Width / 4) * 3, canvasSize.Height / 12 * 7);
-
+				tellerFont.Dispose();
+			}
+			
 			if (this.Script.CurrentText != null)
 			{
+				Font textFont = new Font("나눔스퀘어라운드 Bold", 15);       // 대사의 폰트
+
+				TimeSpan interval = DateTime.Now - currentTime;		    // 대사를 읽기 시작한 시간과 현재 시간의 차이
+				int textLen = interval.Seconds;                             // 출력할 대사의 길이
+				string currentText = this.Script.CurrentText.Substring(0);  // 반복문에서 자른 대본을 저장할 변수
+				
 				for (int i = 0; i < this.Script.CurrentText.Length; i++)
 				{
-					var Timecheck = DateTime.Now.AddSeconds(500);
-					if (Timecheck == DateTime.Now);
-                   			{
-						var currentText = this.Script.CurrentText.Substring(0, i);
-						g.DrawString(currentText, textFont, Brushes.Black, canvasSize.Width / 15, (canvasSize.Height / 3) * 2);
+					interval = DateTime.Now - currentTime;
+					textLen += interval.Seconds;
+
+					currentText = this.Script.CurrentText.Substring(0, interval.Seconds);
+					g.DrawString(currentText, textFont, Brushes.Black, canvasSize.Width / 15, (canvasSize.Height / 3) * 2);
+					
+					if (Clickcheck)
+					{
+						g.DrawString(this.Script.CurrentText, textFont, Brushes.Black, canvasSize.Width / 15, canvasSize.Height / 3 * 2);
+						break;
 					}
+					
+					textFont.Dispose();
 				}
 			}
 		}
