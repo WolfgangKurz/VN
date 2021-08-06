@@ -33,6 +33,10 @@ namespace VN.Game {
 
 		private Size canvasSize { get; set; }
 
+		private DateTime startTime;     // 대사를 출력하기 시작한 시간
+
+		public bool doubleClickOn;      // 더블클릭 시 true
+
 
 		// private로 해야 new로 생성하는 것을 방지할 수 있음
 		private Game() { }
@@ -74,6 +78,8 @@ namespace VN.Game {
 
 			s.TextLog += (text) => {
 				// TODO : 로그 추가
+				startTime = DateTime.Now;
+				doubleClickOn = false;
 			};
 			s.SayLog += (teller, text) => {
 				// TODO : 로그 추가
@@ -150,23 +156,37 @@ namespace VN.Game {
 				}
 			}
 
-			Font tellerFont = new Font("나눔스퀘어라운드 Bold", 20);	// 화자의 폰트
-			Font textFont = new Font("나눔스퀘어라운드 Bold", 15);		// 대사의 폰트
-
+			Font tellerFont = new Font("나눔스퀘어라운드 Bold", 20);    // 화자의 폰트
 			if (this.Script.CurrentTeller != null)
+			{
 				g.DrawString(this.Script.CurrentTeller, tellerFont, Brushes.White, (canvasSize.Width / 4) * 3, canvasSize.Height / 12 * 7);
+				tellerFont.Dispose();
+			}
+
 
 			if (this.Script.CurrentText != null)
 			{
-				for (int i = 0; i < this.Script.CurrentText.Length; i++)
+				Font textFont = new Font("나눔스퀘어라운드 Bold", 15);      // 대사의 폰트
+
+				TimeSpan interval = DateTime.Now - startTime;               // 대사를 읽기 시작한 시간과 현재 시간의 차이
+				int textLen = interval.Seconds;                             // 출력할 대사의 길이
+				string currentText = this.Script.CurrentText.Substring(0);  // 반복문에서 자른 대본을 저장할 변수
+
+				while (textLen < this.Script.CurrentText.Length)
 				{
-					var Timecheck = DateTime.Now.AddSeconds(500);
-					if (Timecheck == DateTime.Now);
-                   			{
-						var currentText = this.Script.CurrentText.Substring(0, i);
-						g.DrawString(currentText, textFont, Brushes.Black, canvasSize.Width / 15, (canvasSize.Height / 3) * 2);
+					currentText = this.Script.CurrentText.Substring(0, interval.Seconds);
+					g.DrawString(currentText, textFont, Brushes.Black, canvasSize.Width / 15, canvasSize.Height / 3 * 2);
+
+					interval = DateTime.Now - startTime;
+					textLen += interval.Seconds;
+
+					if (doubleClickOn)
+					{
+						g.DrawString(this.Script.CurrentText, textFont, Brushes.Black, canvasSize.Width / 15, canvasSize.Height / 3 * 2);
+						break;
 					}
 				}
+				textFont.Dispose();
 			}
 		}
 	}
