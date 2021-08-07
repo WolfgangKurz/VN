@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using System.Drawing.Drawing2D;
 using VN.VNScript;
 
 namespace VN.Game {
@@ -166,27 +166,41 @@ namespace VN.Game {
 
 			if (this.Script.CurrentText != null)
 			{
-				Font textFont = new Font("나눔스퀘어라운드 Bold", 15);      // 대사의 폰트
+				FontFamily currentTextfont = new FontFamily("나눔스퀘어라운드 Bold"); // 폰트 패밀리로 수정 08-07
 				TimeSpan interval = DateTime.Now - currentTime;             // 대사를 읽기 시작한 시간과 현재 시간의 차이
 				int textLen = interval.Seconds;                             // 출력할 대사의 길이
 				string currentText = this.Script.CurrentText.Substring(0);  // 반복문에서 자른 대본을 저장할 변수
+				Point currentTextpoint = new Point(canvasSize.Width / 15, canvasSize.Height / 3 * 2); // 대사 출력 위치 08-07
 
 				for (int i = 0; i < this.Script.CurrentText.Length; i++)
 				{
-					interval = DateTime.Now - currentTime;
-					textLen += interval.Seconds;
+                    using (Pen pen = new Pen(Brushes.Black, 4)) // 테두리 색 지정, 굵기 지정
+                    {
+						using(GraphicsPath graphicsPath = new GraphicsPath())
+                        {
+							using(Brush fillBrush = new SolidBrush(Color.White)) // 내부 색 지정, color로 지정 요망
+                            {
+								currentText = this.Script.CurrentText.Substring(0, interval.Seconds);
 
-					currentText = this.Script.CurrentText.Substring(0, interval.Seconds);
-					g.DrawString(currentText, textFont, Brushes.Black, canvasSize.Width / 15, (canvasSize.Height / 3) * 2);
+								interval = DateTime.Now - currentTime;
+								textLen += interval.Seconds;
 
-					if (Clickcheck)
-					{
-						g.DrawString(this.Script.CurrentText, textFont, Brushes.Black, canvasSize.Width / 15, canvasSize.Height / 3 * 2);
-						break;
-					}
+								graphicsPath.AddString(currentText, currentTextfont, 1, 20, currentTextpoint, StringFormat.GenericTypographic);
+								g.DrawPath(pen, graphicsPath);
+								g.FillPath(fillBrush, graphicsPath);
+
+								if (Clickcheck)
+                                {
+									graphicsPath.AddString(this.Script.CurrentText, currentTextfont, 1, 20, currentTextpoint, StringFormat.GenericTypographic);
+									g.DrawPath(pen, graphicsPath);
+									g.FillPath(fillBrush, graphicsPath);
+								}
+							}
+                        }
+                    }
 				}
 
-				textFont.Dispose();
+				currentTextfont.Dispose();
 			}
 		}
 	}
