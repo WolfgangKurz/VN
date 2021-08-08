@@ -37,9 +37,10 @@ namespace VN.Game {
 
 		public bool Clickcheck; //클릭 이벤트 체크
 
-		public bool hideUI;		// 마우스 오른쪽 버튼(혹은 UI숨김) 눌렀을 경우 true
+		public bool hideUI;     // 마우스 오른쪽 버튼(혹은 UI숨김) 눌렀을 경우 true
 								// 그리고 이 때 마우스 왼쪽 버튼을 누르면 false
 
+		public int textSpeed;	// Render 함수에서 텍스트 출력하기 위한 시간에 나눠서 사용함.
 
 		// private로 해야 new로 생성하는 것을 방지할 수 있음
 		private Game() { }
@@ -159,10 +160,10 @@ namespace VN.Game {
 					g.DrawImage(img, x, y);
 				}
 			}
-			
-			// 만약 마우스 오른쪽 버튼(혹은 UI숨김 버튼)을 눌르지 않았을 경우
-			if(!hideUI)
-            {
+
+			// 만약 마우스 오른쪽 버튼(혹은 UI숨김 버튼)을 누르지 않으면 UI, 대사 출력
+			if (!hideUI)
+			{
 				Font tellerFont = new Font("나눔스퀘어라운드 Bold", 20);    // 화자의 폰트
 				if (this.Script.CurrentTeller != null)
 				{
@@ -179,7 +180,7 @@ namespace VN.Game {
 					string currentText = this.Script.CurrentText.Substring(0);  // 반복문에서 자른 대본을 저장할 변수
 					Point currentTextpoint = new Point(canvasSize.Width / 15, canvasSize.Height / 3 * 2); // 대사 출력 위치 08-07
 
-					for (int i = 0; i < this.Script.CurrentText.Length; i++)
+					for (int i = 0; i < this.Script.CurrentText.Length; ++i)
 					{
 						using (Pen pen = new Pen(Brushes.Black, 4)) // 테두리 색 지정, 굵기 지정
 						{
@@ -189,13 +190,14 @@ namespace VN.Game {
 								{
 									// UI, 텍스트를 숨긴 후 오랜 시간 지나고 다시 시작하면, interval.Seconds의 값이 길이를 넘어가버려 에러가 생김
 									// 그래서 이를 막기 위해 조건문 if를 이용해 interval.Seconds가 대본 길이를 넘어가지 못하게 막음
-									if (interval.Seconds < this.Script.CurrentText.Length)
-										currentText = this.Script.CurrentText.Substring(0, interval.Seconds);
-									else
-										currentText = this.Script.CurrentText;
 
 									interval = DateTime.Now - currentTime;
-									textLen += interval.Seconds;
+									textLen = ((interval.Seconds * 1000 + interval.Milliseconds) / 20) / textSpeed;
+
+									if (textLen < this.Script.CurrentText.Length)
+										currentText = this.Script.CurrentText.Substring(0, textLen);
+									else
+										currentText = this.Script.CurrentText;
 
 									graphicsPath.AddString(currentText, currentTextfont, 1, 20, currentTextpoint, StringFormat.GenericTypographic);
 									g.DrawPath(pen, graphicsPath);
@@ -215,7 +217,7 @@ namespace VN.Game {
 					currentTextfont.Dispose();
 				}
 			}
-
+		
 		}
 	}
 }

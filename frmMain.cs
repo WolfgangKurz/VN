@@ -111,7 +111,8 @@ namespace VN {
 			Game.Game.Instance.Run();
 			this.btnStart.Visible = false;
 
-			Game.Game.Instance.hideUI = false;	// 시작할 때 false로 맞춰 준다.
+			Game.Game.Instance.hideUI = false;  // 시작할 때 false로 맞춰 준다.
+			Game.Game.Instance.textSpeed = 10;
 
 			this.Running = true;
 			this.RenderThread.Start();
@@ -144,6 +145,20 @@ namespace VN {
 
 			if (e.Button == MouseButtons.Right)
 				Game.Game.Instance.hideUI = true;		// 마우스 오른쪽 버튼 누르면 대사, UI 숨김
+        }
+
+        private void 텍스트속도업_MouseClick(object sender, MouseEventArgs e)
+        {
+			// 텍스트 속도는 최대 10까지(임시)
+			if (Game.Game.Instance.textSpeed > 1)
+				--Game.Game.Instance.textSpeed;
+        }
+
+        private void 텍스트속도다운_MouseClick(object sender, MouseEventArgs e)
+        {
+			// 텍스트 속도는 최저 1까지(임시)
+			if (Game.Game.Instance.textSpeed < 10)
+				++Game.Game.Instance.textSpeed;
         }
     }
 }
