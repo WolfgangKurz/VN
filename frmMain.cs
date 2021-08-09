@@ -111,6 +111,9 @@ namespace VN {
 			Game.Game.Instance.Run();
 			this.btnStart.Visible = false;
 
+			Game.Game.Instance.hideUI = false;  // 시작할 때 false로 맞춰 준다.
+			Game.Game.Instance.textSpeed = 10;
+
 			this.Running = true;
 			this.RenderThread.Start();
 		}
@@ -124,13 +127,38 @@ namespace VN {
 		}
 
 		private void frmMain_Click(object sender, EventArgs e) {
-			Game.Game.Instance.Clickcheck = true;
-			Game.Game.Instance.Unblock();
+			// 마우스 오른쪽 버튼, 왼쪽 버튼의 구분이 필요해 
+			// 밑의 frmMain_MouseClick 함수로 옮겼음
+
+			//Game.Game.Instance.Clickcheck = true;
+			//Game.Game.Instance.Unblock();
 		}
 
-        private void frmMain_MouseDoubleClick(object sender, MouseEventArgs e)
+        private void frmMain_MouseClick(object sender, MouseEventArgs e)
         {
-			Game.Game.Instance.doubleClickOn = true;
-		}
+			if (e.Button == MouseButtons.Left)
+			{
+				Game.Game.Instance.hideUI = false;		// 마우스 왼쪽 버튼 누르면 진행이므로 false
+				Game.Game.Instance.Clickcheck = true;
+				Game.Game.Instance.Unblock();
+			}
+
+			if (e.Button == MouseButtons.Right)
+				Game.Game.Instance.hideUI = true;		// 마우스 오른쪽 버튼 누르면 대사, UI 숨김
+        }
+
+        private void 텍스트속도업_MouseClick(object sender, MouseEventArgs e)
+        {
+			// 텍스트 속도는 최대 10까지(임시)
+			if (Game.Game.Instance.textSpeed > 1)
+				--Game.Game.Instance.textSpeed;
+        }
+
+        private void 텍스트속도다운_MouseClick(object sender, MouseEventArgs e)
+        {
+			// 텍스트 속도는 최저 1까지(임시)
+			if (Game.Game.Instance.textSpeed < 10)
+				++Game.Game.Instance.textSpeed;
+        }
     }
 }

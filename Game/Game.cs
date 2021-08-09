@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using System.Drawing.Drawing2D;
 using VN.VNScript;
 
 namespace VN.Game {
@@ -33,10 +33,14 @@ namespace VN.Game {
 
 		private Size canvasSize { get; set; }
 
-		private DateTime startTime;     // 대사를 출력하기 시작한 시간
+		private DateTime currentTime; //대사 출력 기준시간
 
-		public bool doubleClickOn;      // 더블클릭 시 true
+		public bool Clickcheck; //클릭 이벤트 체크
 
+		public bool hideUI;     // 마우스 오른쪽 버튼(혹은 UI숨김) 눌렀을 경우 true
+								// 그리고 이 때 마우스 왼쪽 버튼을 누르면 false
+
+		public int textSpeed;	// Render 함수에서 텍스트 출력하기 위한 시간에 나눠서 사용함.
 
 		// private로 해야 new로 생성하는 것을 방지할 수 있음
 		private Game() { }
@@ -78,8 +82,8 @@ namespace VN.Game {
 
 			s.TextLog += (text) => {
 				// TODO : 로그 추가
-				startTime = DateTime.Now;
-				doubleClickOn = false;
+				currentTime = DateTime.Now;
+				Clickcheck = false;
 			};
 			s.SayLog += (teller, text) => {
 				// TODO : 로그 추가
@@ -129,6 +133,7 @@ namespace VN.Game {
 		public void Render(Graphics g) {
 			if (this.Script == null) return;
 
+		
 			if (this.Script.CurrentBG != null)
 				g.DrawImage(this.Script.CurrentBG, 0, 0, canvasSize.Width, canvasSize.Height);
 
@@ -156,38 +161,91 @@ namespace VN.Game {
 				}
 			}
 
-			Font tellerFont = new Font("나눔스퀘어라운드 Bold", 20);    // 화자의 폰트
-			if (this.Script.CurrentTeller != null)
+			// 만약 마우스 오른쪽 버튼(혹은 UI숨김 버튼)을 누르지 않으면 UI, 대사 출력
+			if (!hideUI)
 			{
-				g.DrawString(this.Script.CurrentTeller, tellerFont, Brushes.White, (canvasSize.Width / 4) * 3, canvasSize.Height / 12 * 7);
-				tellerFont.Dispose();
-			}
-
-
-			if (this.Script.CurrentText != null)
-			{
-				Font textFont = new Font("나눔스퀘어라운드 Bold", 15);      // 대사의 폰트
-
-				TimeSpan interval = DateTime.Now - startTime;               // 대사를 읽기 시작한 시간과 현재 시간의 차이
-				int textLen = interval.Seconds;                             // 출력할 대사의 길이
-				string currentText = this.Script.CurrentText.Substring(0);  // 반복문에서 자른 대본을 저장할 변수
-
-				while (textLen < this.Script.CurrentText.Length)
+				Font tellerFont = new Font("나눔스퀘어라운드 Bold", 20);    // 화자의 폰트
+				if (this.Script.CurrentTeller != null)
 				{
-					currentText = this.Script.CurrentText.Substring(0, interval.Seconds);
-					g.DrawString(currentText, textFont, Brushes.Black, canvasSize.Width / 15, canvasSize.Height / 3 * 2);
-
-					interval = DateTime.Now - startTime;
-					textLen += interval.Seconds;
-
-					if (doubleClickOn)
-					{
-						g.DrawString(this.Script.CurrentText, textFont, Brushes.Black, canvasSize.Width / 15, canvasSize.Height / 3 * 2);
-						break;
-					}
+					g.DrawString(this.Script.CurrentTeller, tellerFont, Brushes.White, (canvasSize.Width / 4) * 3, canvasSize.Height / 12 * 7);
+					tellerFont.Dispose();
 				}
-				textFont.Dispose();
+
+
+				if (this.Script.CurrentText != null)
+				{
+					FontFamily currentTextfont = new FontFamily("나눔스퀘어라운드 Bold"); // 폰트 패밀리로 수정 08-07
+					TimeSpan interval = DateTime.Now - currentTime;             // 대사를 읽기 시작한 시간과 현재 시간의 차이
+					int textLen = interval.Seconds;                             // 출력할 대사의 길이
+					string currentText = this.Script.CurrentText.Substring(0);  // 반복문에서 자른 대본을 저장할 변수
+					Point currentTextpoint = new Point(canvasSize.Width / 15, canvasSize.Height / 3 * 2); // 대사 출력 위치 08-07
+
+					for (int i = 0; i < this.Script.CurrentText.Length; ++i)
+					{
+						using (Pen pen = new Pen(Brushes.Black, 4)) // 테두리 색 지정, 굵기 지정
+						{
+							using (GraphicsPath graphicsPath = new GraphicsPath())
+							{
+								using (Brush fillBrush = new SolidBrush(Color.White)) // 내부 색 지정, color로 지정 요망
+								{
+									// UI, 텍스트를 숨긴 후 오랜 시간 지나고 다시 시작하면, interval.Seconds의 값이 길이를 넘어가버려 에러가 생김
+									// 그래서 이를 막기 위해 조건문 if를 이용해 interval.Seconds가 대본 길이를 넘어가지 못하게 막음
+
+									interval = DateTime.Now - currentTime;
+									textLen = ((interval.Seconds * 1000 + interval.Milliseconds) / 20) / textSpeed;
+
+									if (textLen >= this.Script.CurrentText.Length)
+										textLen = this.Script.CurrentText.Length;
+
+									List<string> currentTexts = new List<string> { };	// 대사를 끊어서 출력하기 위해
+																						// 끊은 대사를 저장할 리스트
+
+									int from = 0;			// 대사를 끊기 시작할 출발점(인덱스)
+									int cur_len = 0;		// 대사를 끊을 길이
+
+									if (textLen >= 40)		// 만약 현재 출력할 대사가 40 이상이면
+										cur_len = 40;		// 40만큼 끊는다
+									else					// 40도 되지 않는다면
+										cur_len = textLen;	// 그냥 그 길이만큼 끊는다
+
+									// 대사를 40씩 끊는 반복문
+									while (from <= textLen) 
+                                    {
+										currentTexts.Add(this.Script.CurrentText.Substring(from, cur_len));
+
+										from += 40;						// 대사를 끊기 시작할 출발점을 갱신
+										if (from + 40 > textLen)		// 만약 새롭게 갱신한 출발점에서 40만큼 끊었을 때 총 대사 길이를 초과하면
+											cur_len = textLen - from;	// 끊을 길이를 조절한다
+                                    }
+
+									// 리스트에 있는 대사를 전부 출력한다.
+									for (int k = 0; k < currentTexts.Count; ++k) 
+									{
+										int degreeOfLowering = k * 30;		// 대사를 낮추는 정도
+																			// 다음 대사로 넘어갈 때마다 30씩 내린다
+
+										Point currentTextpoint_temp = new Point(canvasSize.Width / 15, canvasSize.Height / 3 * 2 + degreeOfLowering); // 대사 출력 위치 08-07
+										graphicsPath.AddString(currentTexts[k], currentTextfont, 1, 20, currentTextpoint_temp, StringFormat.GenericTypographic);
+									}
+
+									g.DrawPath(pen, graphicsPath);
+									g.FillPath(fillBrush, graphicsPath);
+
+									if (Clickcheck)
+									{
+										graphicsPath.AddString(this.Script.CurrentText, currentTextfont, 1, 20, currentTextpoint, StringFormat.GenericTypographic);
+										g.DrawPath(pen, graphicsPath);
+										g.FillPath(fillBrush, graphicsPath);
+									}
+								}
+							}
+						}
+					}
+
+					currentTextfont.Dispose();
+				}
 			}
+		
 		}
 	}
 }
