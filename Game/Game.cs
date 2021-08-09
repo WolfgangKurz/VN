@@ -194,12 +194,40 @@ namespace VN.Game {
 									interval = DateTime.Now - currentTime;
 									textLen = ((interval.Seconds * 1000 + interval.Milliseconds) / 20) / textSpeed;
 
-									if (textLen < this.Script.CurrentText.Length)
-										currentText = this.Script.CurrentText.Substring(0, textLen);
-									else
-										currentText = this.Script.CurrentText;
+									if (textLen >= this.Script.CurrentText.Length)
+										textLen = this.Script.CurrentText.Length;
 
-									graphicsPath.AddString(currentText, currentTextfont, 1, 20, currentTextpoint, StringFormat.GenericTypographic);
+									List<string> currentTexts = new List<string> { };	// 대사를 끊어서 출력하기 위해
+																						// 끊은 대사를 저장할 리스트
+
+									int from = 0;			// 대사를 끊기 시작할 출발점(인덱스)
+									int cur_len = 0;		// 대사를 끊을 길이
+
+									if (textLen >= 40)		// 만약 현재 출력할 대사가 40 이상이면
+										cur_len = 40;		// 40만큼 끊는다
+									else					// 40도 되지 않는다면
+										cur_len = textLen;	// 그냥 그 길이만큼 끊는다
+
+									// 대사를 40씩 끊는 반복문
+									while (from <= textLen) 
+                                    {
+										currentTexts.Add(this.Script.CurrentText.Substring(from, cur_len));
+
+										from += 40;						// 대사를 끊기 시작할 출발점을 갱신
+										if (from + 40 > textLen)		// 만약 새롭게 갱신한 출발점에서 40만큼 끊었을 때 총 대사 길이를 초과하면
+											cur_len = textLen - from;	// 끊을 길이를 조절한다
+                                    }
+
+									// 리스트에 있는 대사를 전부 출력한다.
+									for (int k = 0; k < currentTexts.Count; ++k) 
+									{
+										int degreeOfLowering = k * 30;		// 대사를 낮추는 정도
+																			// 다음 대사로 넘어갈 때마다 30씩 내린다
+
+										Point currentTextpoint_temp = new Point(canvasSize.Width / 15, canvasSize.Height / 3 * 2 + degreeOfLowering); // 대사 출력 위치 08-07
+										graphicsPath.AddString(currentTexts[k], currentTextfont, 1, 20, currentTextpoint_temp, StringFormat.GenericTypographic);
+									}
+
 									g.DrawPath(pen, graphicsPath);
 									g.FillPath(fillBrush, graphicsPath);
 
