@@ -1,24 +1,24 @@
-BGM "Rattle"
-BG "BG_Cloud_Window"
-FX Shake_Week
+bgm "Rattle"
+bg "BG_Cloud_Window"
+call "Shake_Week"
 
-TEXT "호주의 하늘이라고 한국과 다를 것은 없다."
-TEXT "그저 조금 더 푸를 뿐이다."
+text "호주의 하늘이라고 한국과 다를 것은 없다."
+text "그저 조금 더 푸를 뿐이다."
 
 # 흔들림 점차 줄이기
-FX Shake_Fadeout
+fx "Shake_Fadeout"
 # 현재 BGM 페이드아웃
-FX BGM_Fadeout
+fx "BGM_Fadeout"
 
 # 페이드 아웃
-FREEZE
-BG null
-TRANSITION 2
+freeze
+bg null
+transition 2
 
 # 페이드 인
-FREEZE
-BG "BG_Airport"
-TRANSITION 2
+freeze
+bg "BG_Airport"
+transition 2
 
 TEXT "창가에 기댄 손에 턱을 괴고 홀연히 창밖을 바라보며 사색에 잠기자, 곧 비행기는 목적지에 다다랐다."
 

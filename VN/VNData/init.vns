@@ -1,0 +1,7 @@
+GameTitle "남십자성이 보이는 하늘 아래"
+GameSize 800, 450
+GameResizable true
+GameMargin 0 // LetterBox
+
+// 첫 스크립트 이름 (확장자 제외)
+$Startup = "0"

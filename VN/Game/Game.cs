@@ -164,7 +164,7 @@ namespace VN.Game {
 			// 만약 마우스 오른쪽 버튼(혹은 UI숨김 버튼)을 누르지 않으면 UI, 대사 출력
 			if (!hideUI)
 			{
-				Font tellerFont = new Font("나눔스퀘어라운드 Bold", 20);    // 화자의 폰트
+				Font tellerFont = new Font("맑은 고딕", 20);    // 화자의 폰트
 				if (this.Script.CurrentTeller != null)
 				{
 					g.DrawString(this.Script.CurrentTeller, tellerFont, Brushes.White, (canvasSize.Width / 4) * 3, canvasSize.Height / 12 * 7);
@@ -174,7 +174,7 @@ namespace VN.Game {
 
 				if (this.Script.CurrentText != null)
 				{
-					FontFamily currentTextfont = new FontFamily("나눔스퀘어라운드 Bold"); // 폰트 패밀리로 수정 08-07
+					FontFamily currentTextfont = new FontFamily("맑은 고딕"); // 폰트 패밀리로 수정 08-07
 					TimeSpan interval = DateTime.Now - currentTime;             // 대사를 읽기 시작한 시간과 현재 시간의 차이
 					int textLen = interval.Seconds;                             // 출력할 대사의 길이
 					string currentText = this.Script.CurrentText.Substring(0);  // 반복문에서 자른 대본을 저장할 변수
