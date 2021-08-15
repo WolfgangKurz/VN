@@ -76,8 +76,15 @@ namespace VNScript.Lexer {
 						break;
 
 					case '.':
-						Lexer.ProcBuffer(state, sb, list, ref offset);
-						list.Add(new Token(TokenType.DOT, ".", state.Offset, 1));
+						if (state.Peek() == '.') {
+							Lexer.ProcBuffer(state, sb, list, ref offset);
+							list.Add(new Token(TokenType.DOT2, "..", state.Offset, 2));
+							state.Next();
+						}
+						else {
+							if (offset < 0) offset = state.Offset;
+							sb.Append(c);
+						}
 						break;
 					case '=':
 						Lexer.ProcBuffer(state, sb, list, ref offset);
@@ -260,8 +267,7 @@ namespace VNScript.Lexer {
 						list.Add(new Token(TokenType.COMMA, ",", state.Offset, 1));
 						break;
 
-					case '"':
-						sb.Append(c); {
+					case '"': {
 							var escape = false;
 							while (!state.EOF) {
 								var _ = state.Next();
@@ -290,10 +296,8 @@ namespace VNScript.Lexer {
 								}
 								else if (_ == '\\')
 									escape = true;
-								else if (_ == '"') {
-									sb.Append(_);
+								else if (_ == '"')
 									break;
-								}
 								else
 									sb.Append(_);
 							}

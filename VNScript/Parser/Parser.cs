@@ -937,7 +937,7 @@ namespace VNScript.Parser {
 			var matchTokens = new Lexer.TokenType[] {
 				Lexer.TokenType.PLUS,
 				Lexer.TokenType.MINUS,
-				Lexer.TokenType.DOT,
+				Lexer.TokenType.DOT2,
 			};
 
 			var sc0 = cursor; // StartCursor
@@ -969,7 +969,7 @@ namespace VNScript.Parser {
 											return new AST.Addition(left, right);
 										case Lexer.TokenType.MINUS:
 											return new AST.Subtraction(left, right);
-										case Lexer.TokenType.DOT:
+										case Lexer.TokenType.DOT2:
 											return new AST.Concatenate(left, right);
 										default:
 											throw new Exception("VNScript ParserError - Invalid token at parsing");

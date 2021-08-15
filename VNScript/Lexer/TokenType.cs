@@ -31,7 +31,7 @@ namespace VNScript.Lexer {
 		BITWISE_NOT, // ~
 		PLUS, // +
 		MINUS, // -
-		DOT, // .
+		DOT2, // ..
 		MULTIPLICATION, // *
 		DIVISION, // /
 		REMAINDER, // %

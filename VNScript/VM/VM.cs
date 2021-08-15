@@ -45,13 +45,16 @@ namespace VNScript.VM {
 				throw new Exception("VMScript VMError - Already Running");
 
 			while (this.States.Count > 0) {
+				var stateSize = this.States.Count;
 				var state = this.States.Peek();
 
-				while (!state.EOS)
+				if (!state.EOS)
 					state.Next(this.Stack, this.Storage, this.BlockStack, this.Funcs);
 
-				this.Storage.Down();
-				this.States.Pop();
+				if (stateSize == this.States.Count && state.EOS) {
+					this.Storage.Down();
+					this.States.Pop();
+				}
 			}
 		}
 	}

@@ -72,7 +72,7 @@ $DecPostfix = $Dec-- // 4
 $Func = Add(1, 2) // 3
 Test $Func // Print 3
 
-$Concat = @A . @B // ""1010""
+$Concat = @A .. @B // ""1010""
 
 $AssignAdd = $AssignSub = $AssignMul = $AssignDiv = $AssignRem = $AssignPow = $AssignOr = $AssignXor = $AssignAnd = $AssignLShift = $AssignRShift = @A
 $AssignAdd += @C // 13

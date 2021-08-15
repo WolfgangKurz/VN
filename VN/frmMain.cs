@@ -61,6 +61,9 @@ namespace VN {
 						buffer = this.backBuffer[cursor];
 
 					using (var g = Graphics.FromImage(buffer)) {
+						g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+						g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
+
 						g.Clear(Color.Black);
 						game.Render(g);
 					}
@@ -111,9 +114,6 @@ namespace VN {
 			Game.Game.Instance.Run();
 			this.btnStart.Visible = false;
 
-			Game.Game.Instance.hideUI = false;  // 시작할 때 false로 맞춰 준다.
-			Game.Game.Instance.textSpeed = 10;
-
 			this.Running = true;
 			this.RenderThread.Start();
 		}
@@ -134,31 +134,26 @@ namespace VN {
 			//Game.Game.Instance.Unblock();
 		}
 
-        private void frmMain_MouseClick(object sender, MouseEventArgs e)
-        {
-			if (e.Button == MouseButtons.Left)
-			{
-				Game.Game.Instance.hideUI = false;		// 마우스 왼쪽 버튼 누르면 진행이므로 false
-				Game.Game.Instance.Clickcheck = true;
-				Game.Game.Instance.Unblock();
+		private void frmMain_MouseClick(object sender, MouseEventArgs e) {
+			var instance = Game.Game.Instance;
+
+			if (e.Button == MouseButtons.Left) {
+				if (instance.UIHide) // UI를 감춘 상태라면
+					instance.UIHide = false; // UI 감추기만 해제
+
+				else if (instance.UnblockReady) // 다음 대사/명령으로 넘어갈 준비가 되었다면
+					instance.Unblock(); // 대기를 해제
+
+				else // 모두 아니라면
+					instance.InstantText(); // 현재 대사를 즉시 전부 표시
 			}
+			else if (e.Button == MouseButtons.Right)
+				instance.UIHide = !instance.UIHide; // 우클릭 시 UI 감추기 토글
+		}
 
-			if (e.Button == MouseButtons.Right)
-				Game.Game.Instance.hideUI = true;		// 마우스 오른쪽 버튼 누르면 대사, UI 숨김
-        }
-
-        private void 텍스트속도업_MouseClick(object sender, MouseEventArgs e)
-        {
-			// 텍스트 속도는 최대 10까지(임시)
-			if (Game.Game.Instance.textSpeed > 1)
-				--Game.Game.Instance.textSpeed;
-        }
-
-        private void 텍스트속도다운_MouseClick(object sender, MouseEventArgs e)
-        {
-			// 텍스트 속도는 최저 1까지(임시)
-			if (Game.Game.Instance.textSpeed < 10)
-				++Game.Game.Instance.textSpeed;
-        }
-    }
+		private void frmMain_MouseDoubleClick(object sender, MouseEventArgs e) {
+			// 더블 클릭 이벤트 무시
+			this.frmMain_MouseClick(sender, e);
+		}
+	}
 }

@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 using NAudio;
 using NAudio.Wave;
 
-namespace VN.VNScript {
-	internal sealed class VNAudio : IDisposable {
+namespace VN.Game {
+	internal sealed class Audio : IDisposable {
 		private class LoopStream : WaveStream {
 			WaveStream sourceStream;
 
@@ -52,7 +52,7 @@ namespace VN.VNScript {
 		private WaveOutEvent waveOut { get; set; }
 		private Thread thread { get; set; }
 
-		public VNAudio() { }
+		public Audio() { }
 
 		public void Dispose() {
 			if (this.Disposed) return;
@@ -86,6 +86,7 @@ namespace VN.VNScript {
 
 			if(this.thread != null) {
 				this.thread.Abort();
+				this.thread.Join();
 				this.thread = null;
 			}
 
@@ -109,7 +110,7 @@ namespace VN.VNScript {
 			if (this.thread == null) {
 				this.thread = new Thread(() => {
 					while (this.waveOut.PlaybackState == PlaybackState.Playing)
-						Thread.Sleep(500);
+						Thread.Sleep(100);
 
 					this.thread = null;
 				});

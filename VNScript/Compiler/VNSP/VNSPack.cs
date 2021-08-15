@@ -15,7 +15,7 @@ namespace VNScript.Compiler.VNSP {
 
 		public CodeChunk[] Codes { get; }
 
-		internal VNSPack (byte[] packed) {
+		public VNSPack (byte[] packed) {
 			this.stream = new MemoryStream(packed);
 
 			if (this.stream.Length < 8)

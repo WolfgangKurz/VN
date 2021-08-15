@@ -84,19 +84,11 @@
     <Compile Include="frmMain.Designer.cs">
       <DependentUpon>frmMain.cs</DependentUpon>
     </Compile>
+    <Compile Include="Game\Audio.cs" />
+    <Compile Include="Game\FX.cs" />
     <Compile Include="Game\Game.cs" />
     <Compile Include="Game\MarginType.cs" />
-    <Compile Include="VNScript\VNAudio.cs" />
-    <Compile Include="VNScript\VNCode.cs" />
-    <Compile Include="VNScript\VNCodeType.cs" />
-    <Compile Include="VNScript\VNException.cs" />
-    <Compile Include="VNScript\VNHelper.cs" />
-    <Compile Include="VNScript\VNInterpreter.cs" />
-    <Compile Include="VNScript\VNPosition.cs" />
-    <Compile Include="VNScript\VNSCG.cs" />
-    <Compile Include="VNScript\VNStatus.cs" />
-    <Compile Include="VNScript\VNType.cs" />
-    <Compile Include="VNScript\VNValue.cs" />
+    <Compile Include="Game\SCG.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -107,6 +99,12 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VNScript\VNScript.csproj">
+      <Project>{fdc899ce-42a8-40e6-b7ef-768284b0e283}</Project>
+      <Name>VNScript</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
