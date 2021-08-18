@@ -14,6 +14,8 @@ namespace VNCompiler {
 		private static string CurrentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
 		static void Main(string[] args) {
+			VNScript.Test.Run();
+
 			var inputDir = Path.Combine(
 				CurrentDirectory, // Solution\VNCompiler\bin\Debug\
 				"..", "..", "..", // Solution\

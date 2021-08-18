@@ -7,12 +7,11 @@ using System.Threading.Tasks;
 namespace VNScript {
 	using VMValue = VNScript.VM.VMValue;
 
-	static class Program {
+	public class Test {
 		/// <summary>
 		/// 해당 애플리케이션의 주 진입점입니다.
 		/// </summary>
-		[STAThread]
-		static void Main() {
+		public static void Run() {
 			var code = @"@A = 10, @B = @A, @C = 3, @D = 0, @E = true, @F = false, @G = -13
 
 $Add = @A + @B // 20
@@ -92,7 +91,7 @@ $AssignRShift >>= @C // 1
 			var p = VNScript.Compiler.Compiler.Pack(
 				new KeyValuePair<string, byte[]>("test", r)
 			);
-			// File.WriteAllBytes("compiled.vnc", p.ToArray());
+			// System.IO.File.WriteAllBytes("test.vnc", p.ToArray());
 
 			var vm = new VNScript.VM.VM();
 			vm.Load(p.Codes[0]);

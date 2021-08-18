@@ -15,7 +15,7 @@ namespace VNScript.Compiler {
 
 		public static byte[] Compile(AST.Node node) {
 			var instance = new Compiler();
-			instance.Travel(node);
+			instance.Travel(node, 0);
 			return instance.ToArray();
 		}
 
@@ -105,11 +105,13 @@ namespace VNScript.Compiler {
 		private Compiler WriteLengthed1(byte[] data) => this.Write((byte)data.Length).Write(data);
 		#endregion
 
-		public void Travel(AST.Node node, bool f1 = false) {
+		private void Travel(AST.Node node, int depth) {
 			switch (node.Type()) {
 				#region Value, Program, Block, List, Call
 				case AST.Type.Literal:
 				case AST.Type.Keyword:
+					if (depth == 0) break;
+
 					this.Write((byte)ByteCodeType.Push);
 					if (node.Type() == AST.Type.Literal) {
 						var literal = (node as AST.Literal).Value;
@@ -139,19 +141,22 @@ namespace VNScript.Compiler {
 					break;
 
 				case AST.Type.Program:
-					foreach (var n in (node as AST.Program).Body) this.Travel(n);
+					foreach (var n in (node as AST.Program).Body)
+						this.Travel(n, 0); // Block 및 Program은 Depth 초기화
 					break;
 
 				case AST.Type.Block:
 					this.Write((byte)ByteCodeType.EnterBlock);
 
-					foreach (var n in (node as AST.Block).Body) this.Travel(n);
+					foreach (var n in (node as AST.Block).Body)
+						this.Travel(n, 0); // Block 및 Program은 Depth 초기화
 
 					this.Write((byte)ByteCodeType.ExitBlock);
 					break;
 
 				case AST.Type.List:
-					foreach (var n in (node as AST.List).Nodes) this.Travel(n);
+					foreach (var n in (node as AST.List).Nodes)
+						this.Travel(n, depth);
 					break;
 
 				case AST.Type.Call: {
@@ -159,10 +164,10 @@ namespace VNScript.Compiler {
 
 						if (n.Arguments != null) {
 							foreach (var arg in n.Arguments)
-								this.Travel(arg);
+								this.Travel(arg, depth + 1);
 						}
 
-						this.Travel(n.Callee);
+						this.Travel(n.Callee, depth + 1);
 						this.Write((byte)ByteCodeType.Call, (byte)(n.Arguments?.Length ?? 0));
 					}
 					break;
@@ -177,10 +182,10 @@ namespace VNScript.Compiler {
 						var addressCursor = this.stream.Position;
 						this.WriteLengthed1(BitConverter.GetBytes((int)0)); // Jump to
 
-						this.Travel(n.Condition);
+						this.Travel(n.Condition, depth + 1);
 						this.Write((byte)ByteCodeType.Test);
 
-						this.Travel(n.Body);
+						this.Travel(n.Body, depth + 1);
 
 						var currentCursor = this.stream.Position;
 						this.stream.Seek(addressCursor, SeekOrigin.Begin);
@@ -198,10 +203,10 @@ namespace VNScript.Compiler {
 						var addressCursor = this.stream.Position;
 						this.WriteLengthed1(BitConverter.GetBytes((int)0)); // Jump to
 
-						this.Travel(n.Condition);
+						this.Travel(n.Condition, depth + 1);
 						this.Write((byte)ByteCodeType.Test);
 
-						this.Travel(n.Body);
+						this.Travel(n.Body, depth + 1);
 
 						this.Write((byte)ByteCodeType.Push, 5);
 						this.WriteLengthed1(BitConverter.GetBytes((int)startCursor)); // Repeat Jump
@@ -218,65 +223,65 @@ namespace VNScript.Compiler {
 				#region Assign
 				case AST.Type.Assign: {
 						var n = node as AST.Assign;
-						this.Travel(n.Value);
-						this.Travel(n.Target);
+						this.Travel(n.Value, depth + 1);
+						this.Travel(n.Target, depth + 1);
 						this.Write((byte)ByteCodeType.Assign);
-						if(!f1) this.Travel(n.Target);
+						if (depth > 0) this.Travel(n.Target, depth + 1);
 					}
 					break;
-				case AST.Type.AssignAddition: {
+				case AST.Type.AssignAddition: { // 축약 연산자이므로 같은 깊이
 						var n = node as AST.AssignAddition;
-						this.Travel(new AST.Assign(n.Target, new AST.Addition(n.Target, n.Value)), f1);
+						this.Travel(new AST.Assign(n.Target, new AST.Addition(n.Target, n.Value)), depth);
 					}
 					break;
 				case AST.Type.AssignSubtraction: {
 						var n = node as AST.AssignSubtraction;
-						this.Travel(new AST.Assign(n.Target, new AST.Subtraction(n.Target, n.Value)), f1);
+						this.Travel(new AST.Assign(n.Target, new AST.Subtraction(n.Target, n.Value)), depth);
 					}
 					break;
 				case AST.Type.AssignMultiplication: {
 						var n = node as AST.AssignMultiplication;
-						this.Travel(new AST.Assign(n.Target, new AST.Multiplication(n.Target, n.Value)), f1);
+						this.Travel(new AST.Assign(n.Target, new AST.Multiplication(n.Target, n.Value)), depth);
 					}
 					break;
 				case AST.Type.AssignDivision: {
 						var n = node as AST.AssignDivision;
-						this.Travel(new AST.Assign(n.Target, new AST.Division(n.Target, n.Value)), f1);
+						this.Travel(new AST.Assign(n.Target, new AST.Division(n.Target, n.Value)), depth);
 					}
 					break;
 				case AST.Type.AssignRemainder: {
 						var n = node as AST.AssignRemainder;
-						this.Travel(new AST.Assign(n.Target, new AST.Remainder(n.Target, n.Value)), f1);
+						this.Travel(new AST.Assign(n.Target, new AST.Remainder(n.Target, n.Value)), depth);
 					}
 					break;
 				case AST.Type.AssignPower: {
 						var n = node as AST.AssignPower;
-						this.Travel(new AST.Assign(n.Target, new AST.Power(n.Target, n.Value)), f1);
+						this.Travel(new AST.Assign(n.Target, new AST.Power(n.Target, n.Value)), depth);
 					}
 					break;
 				case AST.Type.AssignBitwiseLeftShift: {
 						var n = node as AST.AssignBitwiseLeftShift;
-						this.Travel(new AST.Assign(n.Target, new AST.BitwiseLeftShift(n.Target, n.Value)), f1);
+						this.Travel(new AST.Assign(n.Target, new AST.BitwiseLeftShift(n.Target, n.Value)), depth);
 					}
 					break;
 				case AST.Type.AssignBitwiseRightShift: {
 						var n = node as AST.AssignBitwiseRightShift;
-						this.Travel(new AST.Assign(n.Target, new AST.BitwiseRightShift(n.Target, n.Value)), f1);
+						this.Travel(new AST.Assign(n.Target, new AST.BitwiseRightShift(n.Target, n.Value)), depth);
 					}
 					break;
 				case AST.Type.AssignBitwiseAnd: {
 						var n = node as AST.AssignBitwiseAnd;
-						this.Travel(new AST.Assign(n.Target, new AST.BitwiseAnd(n.Target, n.Value)), f1);
+						this.Travel(new AST.Assign(n.Target, new AST.BitwiseAnd(n.Target, n.Value)), depth);
 					}
 					break;
 				case AST.Type.AssignBitwiseXor: {
 						var n = node as AST.AssignBitwiseXor;
-						this.Travel(new AST.Assign(n.Target, new AST.BitwiseXor(n.Target, n.Value)), f1);
+						this.Travel(new AST.Assign(n.Target, new AST.BitwiseXor(n.Target, n.Value)), depth);
 					}
 					break;
 				case AST.Type.AssignBitwiseOr: {
 						var n = node as AST.AssignBitwiseOr;
-						this.Travel(new AST.Assign(n.Target, new AST.BitwiseOr(n.Target, n.Value)), f1);
+						this.Travel(new AST.Assign(n.Target, new AST.BitwiseOr(n.Target, n.Value)), depth);
 					}
 					break;
 				#endregion
@@ -284,36 +289,36 @@ namespace VNScript.Compiler {
 				#region Logical/Bitwise
 				case AST.Type.LogicalOr: {
 						var n = node as AST.LogicalOr;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.LogicalOr);
 					}
 					break;
 				case AST.Type.LogicalAnd: {
 						var n = node as AST.LogicalAnd;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.LogicalAnd);
 					}
 					break;
 				case AST.Type.BitwiseOr: {
 						var n = node as AST.BitwiseOr;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.BitwiseOr);
 					}
 					break;
 				case AST.Type.BitwiseXor: {
 						var n = node as AST.BitwiseXor;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.BitwiseXor);
 					}
 					break;
 				case AST.Type.BitwiseAnd: {
 						var n = node as AST.BitwiseAnd;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.BitwiseAnd);
 					}
 					break;
@@ -322,43 +327,43 @@ namespace VNScript.Compiler {
 				#region Compare
 				case AST.Type.Equal: {
 						var n = node as AST.Equal;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.Equal);
 					}
 					break;
 				case AST.Type.NotEqual: {
 						var n = node as AST.NotEqual;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.NotEqual);
 					}
 					break;
 				case AST.Type.Lesser: {
 						var n = node as AST.Lesser;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.Lesser);
 					}
 					break;
 				case AST.Type.LesserEqual: {
 						var n = node as AST.LesserEqual;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.LesserEqual);
 					}
 					break;
 				case AST.Type.Greater: {
 						var n = node as AST.Greater;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.Greater);
 					}
 					break;
 				case AST.Type.GreaterEqual: {
 						var n = node as AST.GreaterEqual;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.GreaterEqual);
 					}
 					break;
@@ -367,15 +372,15 @@ namespace VNScript.Compiler {
 				#region Bitshift
 				case AST.Type.BitwiseLeftShift: {
 						var n = node as AST.BitwiseLeftShift;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.BitwiseLeftShift);
 					}
 					break;
 				case AST.Type.BitwiseRightShift: {
 						var n = node as AST.BitwiseRightShift;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.BitwiseRightShift);
 					}
 					break;
@@ -384,43 +389,43 @@ namespace VNScript.Compiler {
 				#region Mathmatics
 				case AST.Type.Addition: {
 						var n = node as AST.Addition;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.Addition);
 					}
 					break;
 				case AST.Type.Subtraction: {
 						var n = node as AST.Subtraction;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.Subtraction);
 					}
 					break;
 				case AST.Type.Multiplication: {
 						var n = node as AST.Multiplication;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.Multiplication);
 					}
 					break;
 				case AST.Type.Division: {
 						var n = node as AST.Division;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.Division);
 					}
 					break;
 				case AST.Type.Remainder: {
 						var n = node as AST.Remainder;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.Remainder);
 					}
 					break;
 				case AST.Type.Power: {
 						var n = node as AST.Power;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.Power);
 					}
 					break;
@@ -428,8 +433,8 @@ namespace VNScript.Compiler {
 
 				case AST.Type.Concatenate: {
 						var n = node as AST.Concatenate;
-						this.Travel(n.Right);
-						this.Travel(n.Left);
+						this.Travel(n.Right, depth + 1);
+						this.Travel(n.Left, depth + 1);
 						this.Write((byte)ByteCodeType.Concatenate);
 					}
 					break;
@@ -443,19 +448,19 @@ namespace VNScript.Compiler {
 									n.Target,
 									new AST.Addition(n.Target, Compiler.Number1Node)
 								),
-								true
+								0 // Unary Increment/Decrement는 stack에 push하지 않음
 							);
-							this.Travel(n.Target);
+							this.Travel(n.Target, depth + 1);
 						}
 						else { // target++
-							this.Travel(n.Target);
+							this.Travel(n.Target, depth + 1);
 							this.Write((byte)ByteCodeType.Evaluate);
 							this.Travel(
 								new AST.Assign( // target = target + 1
 									n.Target,
 									new AST.Addition(n.Target, Compiler.Number1Node)
 								),
-								true
+								0 // Unary Increment/Decrement는 stack에 push하지 않음
 							);
 						}
 					}
@@ -468,48 +473,48 @@ namespace VNScript.Compiler {
 									n.Target,
 									new AST.Subtraction(n.Target, Compiler.Number1Node)
 								),
-								true
+								0 // Unary Increment/Decrement는 stack에 push하지 않음
 							);
-							this.Travel(n.Target);
+							this.Travel(n.Target, depth + 1);
 						}
 						else { // target--
-							this.Travel(n.Target);
+							this.Travel(n.Target, depth + 1);
 							this.Write((byte)ByteCodeType.Evaluate);
 							this.Travel(
 								new AST.Assign( // target = target - 1
 									n.Target,
 									new AST.Subtraction(n.Target, Compiler.Number1Node)
 								),
-								true
+								0 // Unary Increment/Decrement는 stack에 push하지 않음
 							);
 						}
 					}
 					break;
 				case AST.Type.UnaryPositive: {
 						var n = node as AST.UnaryPositive;
-						this.Travel(n.Target);
+						this.Travel(n.Target, depth + 1);
 						this.Write((byte)ByteCodeType.UnaryPositive);
 					}
 					break;
 				case AST.Type.UnaryNegative: {
 						var n = node as AST.UnaryNegative;
-						this.Travel(n.Target);
+						this.Travel(n.Target, depth + 1);
 						this.Write((byte)ByteCodeType.UnaryNegative);
 					}
 					break;
 				case AST.Type.LogicalNot: {
 						var n = node as AST.LogicalNot;
-						this.Travel(n.Target);
+						this.Travel(n.Target, depth + 1);
 						this.Write((byte)ByteCodeType.LogicalNot);
 					}
 					break;
 				case AST.Type.BitwiseNot: {
 						var n = node as AST.BitwiseNot;
-						this.Travel(n.Target);
+						this.Travel(n.Target, depth + 1);
 						this.Write((byte)ByteCodeType.BitwiseNot);
 					}
 					break;
-				#endregion
+					#endregion
 			}
 		}
 	}
