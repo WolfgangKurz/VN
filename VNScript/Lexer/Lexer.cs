@@ -10,8 +10,11 @@ namespace VNScript.Lexer {
 		private static Regex NumberRegex { get; } = new Regex(@"^[0-9]+(\.[0-9]+)?$", RegexOptions.Compiled);
 		private static Regex BooleanRegex { get; } = new Regex(@"^(true|false)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		private static Regex NullRegex { get; } = new Regex(@"^null$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		private static Regex IfRegex { get; } = new Regex(@"^if$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		private static Regex WhileRegex { get; } = new Regex(@"^while$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static string[] ReservedList { get; } = new string[] {
+			"if",
+			"while", "for",
+			"func", "return",
+		};
 		private static Regex KeywordRegex { get; } = new Regex(@"^[@\$]?[a-zA-Z_].*$", RegexOptions.Compiled);
 
 		private static Token LexBuffer(State state, string buffer, ref int offset) {
@@ -29,12 +32,14 @@ namespace VNScript.Lexer {
 			else if (NullRegex.IsMatch(buffer))
 				return new Token(TokenType.NULL, buffer, _offset, buffer.Length);
 
-			else if (IfRegex.IsMatch(buffer))
-				return new Token(TokenType.IF, buffer, _offset, buffer.Length);
+			else if (ReservedList.Any(x => x.Equals(buffer, StringComparison.OrdinalIgnoreCase))) {
+				var keyword = buffer.ToUpper();
+				TokenType tokenType;
+				if (!Enum.TryParse<TokenType>(keyword, out tokenType))
+					throw new Exception("VNScript SyntaxError - Unknown reserved keyword");
 
-			else if (WhileRegex.IsMatch(buffer))
-				return new Token(TokenType.WHILE, buffer, _offset, buffer.Length);
-
+				return new Token(tokenType, buffer, _offset, buffer.Length);
+			}
 			else if (KeywordRegex.IsMatch(buffer))
 				return new Token(TokenType.IDENTIFIER, buffer, _offset, buffer.Length);
 
@@ -262,6 +267,10 @@ namespace VNScript.Lexer {
 							list.Add(new Token(TokenType.XOR, "^", state.Offset, 1));
 						break;
 
+					case ';':
+						Lexer.ProcBuffer(state, sb, list, ref offset);
+						list.Add(new Token(TokenType.SEMICOLON, ";", state.Offset, 1));
+						break;
 					case ',':
 						Lexer.ProcBuffer(state, sb, list, ref offset);
 						list.Add(new Token(TokenType.COMMA, ",", state.Offset, 1));

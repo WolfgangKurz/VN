@@ -14,9 +14,13 @@ namespace VNScript.AST {
 
 		Call,
 		List,
+		KeywordList,
 
 		If,
 		While,
+		For,
+		Func,
+		Return,
 
 		Assign,
 		AssignAddition,
@@ -109,6 +113,43 @@ namespace VNScript.AST {
 		public While(Node Condition, Node Body) {
 			this.Condition = Condition;
 			this.Body = Body;
+		}
+	}
+	public class For : Node {
+		public override Type Type() => AST.Type.For;
+
+		public Node Initialize { get; }
+		public Node Condition { get; }
+		public Node Loop { get; }
+		public Node Body { get; }
+
+		public For(Node Initialize, Node Condition, Node Loop, Node Body) {
+			this.Initialize = Initialize;
+			this.Condition = Condition;
+			this.Loop = Loop;
+			this.Body = Body;
+		}
+	}
+	public class Func : Node {
+		public override Type Type() => AST.Type.Func;
+
+		public Keyword Name { get; }
+		public KeywordList Arguments { get; }
+		public Node Body { get; }
+
+		public Func(Keyword Name, KeywordList Arguments, Node Body) {
+			this.Name = Name;
+			this.Arguments = Arguments;
+			this.Body = Body;
+		}
+	}
+	public class Return : Node {
+		public override Type Type() => AST.Type.Return;
+
+		public Node Value { get; }
+
+		public Return(Node Value) {
+			this.Value = Value;
 		}
 	}
 
@@ -571,6 +612,15 @@ namespace VNScript.AST {
 
 		public List(Node[] nodes) {
 			this.Nodes = nodes;
+		}
+	}
+	public class KeywordList : Node {
+		public override Type Type() => AST.Type.KeywordList;
+
+		public Keyword[] Keywords { get; }
+
+		public KeywordList(Keyword[] keywords) {
+			this.Keywords = keywords;
 		}
 	}
 }

@@ -8,14 +8,14 @@ using VNScript.Compiler.VNSP;
 
 namespace VNScript.VM {
 	public sealed class VM {
-		public delegate VMValue VMFunc(VMValue[] arguments, VMStorage storage);
+		public delegate VMValue VMNativeFunc(VMValue[] arguments, VMStorage storage);
 
 		public ReadOnlyStack<VMState> States { get; private set; }
 		public ReadOnlyStack<VMValue> Stack { get; private set; }
 		public VMStorage Storage { get; }
 
-		private ReadOnlyStack<int> BlockStack { get; }
-		private Dictionary<string, VMFunc> Funcs { get; }
+		internal Dictionary<string, VMNativeFunc> NativeFuncs { get; }
+		internal Dictionary<string, VMRuntimeFunc> RuntimeFuncs { get; }
 
 		private bool Running = false;
 
@@ -23,23 +23,22 @@ namespace VNScript.VM {
 			this.States = new ReadOnlyStack<VMState>();
 			this.Storage = new VMStorage();
 
-			this.BlockStack = new ReadOnlyStack<int>();
-			this.Funcs = new Dictionary<string, VMFunc>();
+			this.NativeFuncs = new Dictionary<string, VMNativeFunc>();
+			this.RuntimeFuncs = new Dictionary<string, VMRuntimeFunc>();
 		}
 
 		public void Load(CodeChunk chunk) {
-			this.States.Push(new VMState(chunk));
+			this.States.Push(new VMState(chunk, this.Storage.CurrentLevel));
 			this.Storage.Up();
 		}
 
-		public VM Register(string FuncName, VMFunc FuncBody) {
-			this.Funcs[FuncName] = FuncBody;
+		public VM Register(string FuncName, VMNativeFunc FuncBody) {
+			this.NativeFuncs[FuncName] = FuncBody;
 			return this;
 		}
 
 		public void Run() {
 			this.Stack = new ReadOnlyStack<VMValue>();
-			this.BlockStack.Clear();
 
 			if (this.Running)
 				throw new Exception("VMScript VMError - Already Running");
@@ -48,11 +47,13 @@ namespace VNScript.VM {
 				var stateSize = this.States.Count;
 				var state = this.States.Peek();
 
-				if (!state.EOS)
-					state.Next(this.Stack, this.Storage, this.BlockStack, this.Funcs);
+				if (!state.Ended)
+					state.Next(this);
+				else {
+					var level = state.StorageLevel;
+					while (this.Storage.CurrentLevel > level)
+						this.Storage.Down();
 
-				if (stateSize == this.States.Count && state.EOS) {
-					this.Storage.Down();
 					this.States.Pop();
 				}
 			}

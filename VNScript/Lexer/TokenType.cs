@@ -62,10 +62,17 @@ namespace VNScript.Lexer {
 		RSHIFT, // >>
 
 		COMMA, // ,
+		SEMICOLON, // ;
 
 		COMMENT, // //
 
+
 		IF, // IF
+
 		WHILE, // WHILE
+		FOR, // FOR
+
+		FUNC, // FUNC
+		RETURN, // RETURN
 	}
 }

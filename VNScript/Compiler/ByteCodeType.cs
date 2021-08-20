@@ -8,9 +8,9 @@ namespace VNScript.Compiler {
 	internal enum ByteCodeType : byte {
 		/// <summary>
 		/// [0]
-		/// 아무것도 하지 않음
+		/// 아무것도 하지 않음 (예약됨)
 		/// </summary>
-		None = 0,
+		Reserved = 0,
 
 		/// <summary>
 		/// [1]
@@ -37,7 +37,7 @@ namespace VNScript.Compiler {
 		Jump = 4,
 
 		/// <summary>
-		/// [5] [t:1] [n:1] [... * n]
+		/// [5] [t:1] [n:1] [...:n]
 		/// [n] 바이트만큼 읽어서 [t] 형식으로 스택에 추가
 		///   t = VMValueType
 		/// </summary>
@@ -50,26 +50,22 @@ namespace VNScript.Compiler {
 		Pop = 6,
 
 		/// <summary>
-		/// [7] [argc:1]
-		/// {stack:0} 이름을 가지는 함수를 {stack:argc} 파라메터로 전달
-		///   인자는 스택에서 역순 꺼냄
-		///   첫번째 인자 -> {stack:-n+1}
-		///   두번째 인자 -> {stack:-n+2} ...
-		/// 결과를 Push 하며, 결과가 없어도 Null을 Push
+		/// [7]
+		/// {stack:0}에 {stack:-1}을 대입 후 {stack:0}을 다시 Push
 		/// </summary>
-		Call = 7,
+		Assign = 7,
 
 		/// <summary>
 		/// [8]
-		/// {stack:0}에 {stack:-1}을 대입 후 {stack:0}을 다시 Push
-		/// </summary>
-		Assign = 8,
-
-		/// <summary>
-		/// [9]
 		/// {stack:0}을 꺼내서 Keyword를 평가하여 값을 Push
 		/// </summary>
-		Evaluate = 9,
+		Evaluate = 8,
+
+		/// <summary>
+		/// [9] [n:1] [name:n] [len:4] [...:len]
+		/// [...] 바이트코드를 [name] 이름을 가지는 함수로 정의
+		/// </summary>
+		Define = 9,
 
 
 		/// <summary>
@@ -218,5 +214,31 @@ namespace VNScript.Compiler {
 		/// {stack:0}를 Integer로 변환하고 비트를 반전 후 Number를 Push
 		/// </summary>
 		BitwiseNot = 64,
+
+
+		/// <summary>
+		/// [71] [argc:1]
+		/// {stack:0} 이름을 가지는 함수를 {stack:argc} 파라메터로 전달
+		///   인자는 스택에서 역순 꺼냄
+		///   첫번째 인자 -> {stack:-n+1}
+		///   두번째 인자 -> {stack:-n+2} ...
+		/// 결과를 Push 하며, 결과가 없어도 Null을 Push
+		/// </summary>
+		Call = 71,
+
+		/// <summary>
+		/// [72] [argc:1]
+		/// Call과 동일하며, 결과를 Push함 (Native Function의 경우에만)
+		/// </summary>
+		CallPush = 72,
+
+		/// <summary>
+		/// [72]
+		/// 현재 실행중인 State를 종료
+		/// </summary>
+		EndOfState = 73,
+	}
+
+	internal enum ReservedCodeType: byte {
 	}
 }

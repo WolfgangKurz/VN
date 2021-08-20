@@ -65,6 +65,7 @@
     <Compile Include="Test.cs" />
     <Compile Include="VM\ReadOnlyStack.cs" />
     <Compile Include="VM\VM.cs" />
+    <Compile Include="VM\VMRuntimeFunc.cs" />
     <Compile Include="VM\VMState.cs" />
     <Compile Include="VM\VMStorage.cs" />
     <Compile Include="VM\VMStorageValue.cs" />

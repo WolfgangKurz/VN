@@ -47,13 +47,19 @@ if (@E != @F) { // If Test Block
 	$IfTest2 = true
 }
 
-// While Test
+// While Test (1~5 sum)
 @a = 0, @b = 0, @c = 5
 while (@a < @c) {
 	@a ++
 	@b += @a
 }
 $WhileTest = @b
+
+// For Test (!5 Factorial)
+for (@a = 1, @b = 1, @c = 5; @a <= @c; @a++) {
+	@b *= @a
+}
+$ForTest = @b
 
 $Positive = +@G // -13
 $Negative = -@G // 13
@@ -67,9 +73,6 @@ $IncPostfix = $Inc++ // 6
 $DecPrefix = --$Dec // 4
 $DecPostfix = $Dec-- // 4
 // $Dec == 3
-
-$Func = Add(1, 2) // 3
-Test $Func // Print 3
 
 $Concat = @A .. @B // ""1010""
 
@@ -85,13 +88,23 @@ $AssignXor ^= @C // 9
 $AssignAnd &= @C // 2
 $AssignLShift <<= @C // 80
 $AssignRShift >>= @C // 1
+
+$NativeFunc = Add(1, 2) // 3
+Test $NativeFunc // Print 3
+
+func max(@a, @b) {
+	if (@a > @b)
+		return @a
+	return @b
+}
+$RuntimeFunc = max(10, 20) // 20
 ";
 
 			var r = VNScript.Compiler.Compiler.Compile(VNScript.Parser.Parser.Parse(code));
 			var p = VNScript.Compiler.Compiler.Pack(
 				new KeyValuePair<string, byte[]>("test", r)
 			);
-			// System.IO.File.WriteAllBytes("test.vnc", p.ToArray());
+			System.IO.File.WriteAllBytes("test.vnc", p.ToArray());
 
 			var vm = new VNScript.VM.VM();
 			vm.Load(p.Codes[0]);
@@ -139,6 +152,7 @@ $AssignRShift >>= @C // 1
 			Assert("$IfTest1", true);
 			Assert("$IfTest2", true);
 			Assert("$WhileTest", 15);
+			Assert("$ForTest", 120);
 
 			Assert("$Positive", -13);
 			Assert("$Negative", 13);
@@ -150,8 +164,6 @@ $AssignRShift >>= @C // 1
 			Assert("$DecPrefix", 4);
 			Assert("$DecPostfix", 4);
 			Assert("$Dec", 3);
-
-			Assert("$Func", 3);
 
 			Assert("$Concat", "1010");
 
@@ -166,6 +178,9 @@ $AssignRShift >>= @C // 1
 			Assert("$AssignAnd", 2);
 			Assert("$AssignLShift", 80);
 			Assert("$AssignRShift", 1);
+
+			Assert("$NativeFunc", 3);
+			Assert("$RuntimeFunc", 20);
 		}
 	}
 }

@@ -22,7 +22,7 @@ namespace VNScript.Parser {
 		public AST.Program Run(Lexer.Token[] tokens) {
 			var state = new Cursor(tokens);
 			this.storage = new Dictionary<CacheKey, IResult<AST.Node>>();
-			
+
 			var ret = this.Program(ref state);
 			return this.ValueOrDefault(ret);
 		}
@@ -124,18 +124,19 @@ namespace VNScript.Parser {
 			IResult<AST.Node> r0 = null;
 
 			var sc0 = cursor;
-			var r1 = this.ParseToken(ref cursor, Lexer.TokenType.LPARA);
-			if (r1 != null) {
-				var r2 = this.Program(ref cursor);
-				var exp = this.ValueOrDefault(r2);
 
-				if (r2 != null) {
-					var r3 = this.ParseToken(ref cursor, Lexer.TokenType.RPARA);
-					if (r3 != null)
-						r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state => new AST.Block(exp.Body));
-					else
-						cursor = sc0;
-				}
+			while (true) // Skip newlines
+				if (this.ParseToken(ref cursor, Lexer.TokenType.NEWLINE) == null)
+					break;
+
+			if (this.ParseToken(ref cursor, Lexer.TokenType.LPARA) != null) {
+				var r1 = this.Program(ref cursor);
+				var exp = this.ValueOrDefault(r1);
+
+				if (r1 != null && this.ParseToken(ref cursor, Lexer.TokenType.RPARA) != null)
+					r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state => new AST.Block(exp.Body));
+				else
+					cursor = sc0;
 			}
 			else
 				cursor = sc0;
@@ -144,11 +145,22 @@ namespace VNScript.Parser {
 		}
 
 		private IResult<AST.Node> Root(ref Cursor cursor) {
+			var sc0 = cursor;
+
+			while (true) // Skip newlines
+				if (this.ParseToken(ref cursor, Lexer.TokenType.NEWLINE) == null)
+					break;
+
 			IResult<AST.Node> r0 = null;
 			if (r0 == null) r0 = this.If(ref cursor);
 			if (r0 == null) r0 = this.While(ref cursor);
+			if (r0 == null) r0 = this.For(ref cursor);
+			if (r0 == null) r0 = this.Func(ref cursor);
+			if (r0 == null) r0 = this.Return(ref cursor);
 			if (r0 == null) r0 = this.RootCall(ref cursor);
 			if (r0 == null) r0 = this.Expression(ref cursor);
+
+			if (r0 == null) cursor = sc0;
 			return r0;
 		}
 
@@ -157,20 +169,83 @@ namespace VNScript.Parser {
 
 			var sc0 = cursor;
 
-			var r1 = this.ParseToken(ref cursor, Lexer.TokenType.IF);
-			if (r1 != null) {
-				if (this.ParseToken(ref cursor, Lexer.TokenType.LPAREN) != null) {
+			if (this.ParseToken(ref cursor, new Lexer.TokenType[] { Lexer.TokenType.IF, Lexer.TokenType.LPAREN }) != null) {
+				var r1 = this.Expression(ref cursor);
+				var condition = this.ValueOrDefault(r1);
+
+				if (r1 != null && this.ParseToken(ref cursor, Lexer.TokenType.RPAREN) != null) {
+					var r2 = this.Block(ref cursor);
+					if (r2 == null) r2 = this.Root(ref cursor);
+
+					var body = this.ValueOrDefault(r2);
+					if (r2 != null)
+						r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state => new AST.If(condition, body));
+					else
+						cursor = sc0;
+				}
+				else
+					cursor = sc0;
+			}
+			else
+				cursor = sc0;
+
+			return r0;
+		}
+		private IResult<AST.Node> While(ref Cursor cursor) {
+			IResult<AST.Node> r0 = null;
+
+			var sc0 = cursor;
+
+			if (this.ParseToken(ref cursor, new Lexer.TokenType[] { Lexer.TokenType.WHILE, Lexer.TokenType.LPAREN }) != null) {
+				var r1 = this.Expression(ref cursor);
+				var condition = this.ValueOrDefault(r1);
+
+				if (r1 != null) {
+					if (this.ParseToken(ref cursor, Lexer.TokenType.RPAREN) != null) {
+						var r2 = this.Block(ref cursor);
+						if (r2 == null) r2 = this.Root(ref cursor);
+
+						var body = this.ValueOrDefault(r2);
+						if (r2 != null)
+							r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state => new AST.While(condition, body));
+						else
+							cursor = sc0;
+					}
+					else
+						cursor = sc0;
+				}
+				else
+					cursor = sc0;
+			}
+			else
+				cursor = sc0;
+
+			return r0;
+		}
+		private IResult<AST.Node> For(ref Cursor cursor) {
+			IResult<AST.Node> r0 = null;
+
+			var sc0 = cursor;
+
+			if (this.ParseToken(ref cursor, new Lexer.TokenType[] { Lexer.TokenType.FOR, Lexer.TokenType.LPAREN }) != null) {
+				var r1 = this.Expression(ref cursor);
+				var initialize = this.ValueOrDefault(r1);
+
+				if (r1 != null && this.ParseToken(ref cursor, Lexer.TokenType.SEMICOLON) != null) {
 					var r2 = this.Expression(ref cursor);
 					var condition = this.ValueOrDefault(r2);
 
-					if (r2 != null) {
-						if (this.ParseToken(ref cursor, Lexer.TokenType.RPAREN) != null) {
-							var r3 = this.Block(ref cursor);
-							if (r3 == null) r3 = this.Root(ref cursor);
+					if (r2 != null && this.ParseToken(ref cursor, Lexer.TokenType.SEMICOLON) != null) {
+						var r3 = this.Expression(ref cursor);
+						var loop = this.ValueOrDefault(r3);
 
-							var body = this.ValueOrDefault(r3);
-							if (r3 != null)
-								r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state => new AST.If(condition, body));
+						if (r3 != null && this.ParseToken(ref cursor, Lexer.TokenType.RPAREN) != null) {
+							var r4 = this.Block(ref cursor);
+							if (r4 == null) r4 = this.Root(ref cursor);
+
+							var body = this.ValueOrDefault(r4);
+							if (r4 != null)
+								r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state => new AST.For(initialize, condition, loop, body));
 							else
 								cursor = sc0;
 						}
@@ -188,34 +263,97 @@ namespace VNScript.Parser {
 
 			return r0;
 		}
-		private IResult<AST.Node> While(ref Cursor cursor) {
-			IResult<AST.Node> r0 = null;
+
+		private IResult<AST.Func> Func(ref Cursor cursor) {
+			IResult<AST.Func> r0 = null;
 
 			var sc0 = cursor;
 
-			var r1 = this.ParseToken(ref cursor, Lexer.TokenType.WHILE);
-			if (r1 != null) {
-				if (this.ParseToken(ref cursor, Lexer.TokenType.LPAREN) != null) {
-					var r2 = this.Expression(ref cursor);
-					var condition = this.ValueOrDefault(r2);
+			if (this.ParseToken(ref cursor, Lexer.TokenType.FUNC) != null) {
+				var r1 = this.Keyword(ref cursor);
+				var name = this.ValueOrDefault(r1);
 
-					if (r2 != null) {
-						if (this.ParseToken(ref cursor, Lexer.TokenType.RPAREN) != null) {
-							var r3 = this.Block(ref cursor);
-							if (r3 == null) r3 = this.Root(ref cursor);
+				if (r1 != null && this.ParseToken(ref cursor, Lexer.TokenType.LPAREN) != null) {
+					var r2 = this.KeywordList(ref cursor);
+					var arguments = this.ValueOrDefault(r2);
 
-							var body = this.ValueOrDefault(r3);
-							if (r3 != null)
-								r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state => new AST.While(condition, body));
-							else
-								cursor = sc0;
-						}
+					if (this.ParseToken(ref cursor, Lexer.TokenType.RPAREN) != null) {
+						var r3 = this.Block(ref cursor);
+						if (r3 == null) r3 = this.Root(ref cursor);
+
+						var body = this.ValueOrDefault(r3);
+						if (r3 != null)
+							r0 = this.ReturnHelper<AST.Func>(sc0, ref cursor, state => new AST.Func(name, arguments, body));
 						else
 							cursor = sc0;
 					}
 					else
 						cursor = sc0;
 				}
+				else
+					cursor = sc0;
+			}
+			else
+				cursor = sc0;
+
+			return r0;
+		}
+		private IResult<AST.KeywordList> KeywordList(ref Cursor cursor) {
+			IResult<AST.KeywordList> r0 = null;
+			var sc0 = cursor; // StartCursor
+
+			var r1 = this.Keyword(ref cursor);
+			var left = this.ValueOrDefault(r1);
+			if (r1 != null) {
+				IResult<AST.KeywordList> r2 = null;
+
+				var sc1 = cursor;
+				if (this.ParseToken(ref cursor, Lexer.TokenType.COMMA) != null) {
+					var r4 = this.KeywordList(ref cursor);
+					var list = this.ValueOrDefault(r4);
+
+					if (r4 != null) {
+						r2 = this.ReturnHelper<AST.KeywordList>(sc1, ref cursor, state => {
+							if (r2 != null)
+								return new AST.KeywordList(
+									r2.Value.Keywords
+										.Concat(list.Keywords)
+										.ToArray()
+								);
+							else
+								return list;
+						});
+					}
+					else
+						cursor = sc1;
+				}
+				else
+					cursor = sc1;
+
+				var right = ValueOrDefault(r2);
+				if (r2 != null) {
+					r0 = this.ReturnHelper<AST.KeywordList>(sc0, ref cursor, state => new AST.KeywordList(
+						new AST.Keyword[] { left }.Concat(right.Keywords).ToArray()
+					));
+				}
+				else
+					r0 = this.ReturnHelper<AST.KeywordList>(sc0, ref cursor, state => new AST.KeywordList(new AST.Keyword[] { left }));
+			}
+			else
+				cursor = sc0;
+
+			return r0;
+		}
+		private IResult<AST.Return> Return(ref Cursor cursor) {
+			IResult<AST.Return> r0 = null;
+			var sc0 = cursor;
+
+			if (this.ParseToken(ref cursor, Lexer.TokenType.RETURN) != null) {
+				var r1 = this.Expression(ref cursor);
+				var value = this.ValueOrDefault(r1);
+
+				if (r1 != null)
+					r0 = this.ReturnHelper<AST.Return>(sc0, ref cursor, state => new AST.Return(value));
 				else
 					cursor = sc0;
 			}
@@ -282,13 +420,11 @@ namespace VNScript.Parser {
 				var sc1 = cursor;
 				while (true) {
 					var sc2 = cursor;
-					var r3 = this.ParseToken(ref cursor, Lexer.TokenType.COMMA);
+					if (this.ParseToken(ref cursor, Lexer.TokenType.COMMA) != null) {
+						var r3 = this.Lv15(ref cursor);
+						var list = this.ValueOrDefault(r3);
 
-					if (r3 != null) {
-						var r5 = this.Lv15(ref cursor);
-						var list = this.ValueOrDefault(r5);
-
-						if (r5 != null) {
+						if (r3 != null) {
 							r2 = this.ReturnHelper<AST.List>(sc2, ref cursor, state => {
 								if (r2 != null) {
 									return new AST.List(
@@ -313,10 +449,10 @@ namespace VNScript.Parser {
 							break;
 						}
 					}
-					else
+					else {
 						cursor = sc2;
-
-					if (r3 == null) break;
+						break;
+					}
 				}
 
 				var right = ValueOrDefault(r2);
@@ -362,10 +498,9 @@ namespace VNScript.Parser {
 					Lexer.TokenType.OR_ASSIGN,
 				};
 				foreach (var match in matchTokens) {
-					var r2 = this.ParseToken(ref cursor, match);
-					if (r2 != null) {
-						var r3 = this.Lv14(ref cursor);
-						var value = this.ValueOrDefault(r3);
+					if (this.ParseToken(ref cursor, match) != null) {
+						var r2 = this.Lv14(ref cursor);
+						var value = this.ValueOrDefault(r2);
 
 						if (r2 != null) {
 							r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state => {
@@ -432,27 +567,15 @@ namespace VNScript.Parser {
 			var sc0 = cursor; // StartCursor
 			while (true) {
 				IResult<AST.Node> r1 = null;
-
 				var sc1 = cursor;
 
-				var leftStart = cursor;
 				var r2 = this.Lv12(ref cursor);
-
-				var leftEnd = cursor;
 				var left = this.ValueOrDefault(r2);
-				if (r2 != null) {
-					var r3 = this.ParseToken(ref cursor, Lexer.TokenType.LOGICAL_OR);
-					if (r3 != null) {
-						var rightStart = cursor;
-						var r4 = this.Lv11(ref cursor);
-
-						var rightEnd = cursor;
-						var right = ValueOrDefault(r4);
-						if (r4 != null)
-							r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => new AST.LogicalOr(left, right));
-						else
-							cursor = sc1;
-					}
+				if (r2 != null && this.ParseToken(ref cursor, Lexer.TokenType.LOGICAL_OR) != null) {
+					var r3 = this.Lv11(ref cursor);
+					var right = ValueOrDefault(r3);
+					if (r3 != null)
+						r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => new AST.LogicalOr(left, right));
 					else
 						cursor = sc1;
 				}
@@ -488,27 +611,15 @@ namespace VNScript.Parser {
 			var sc0 = cursor; // StartCursor
 			while (true) {
 				IResult<AST.Node> r1 = null;
-
 				var sc1 = cursor;
 
-				var leftStart = cursor;
 				var r2 = this.Lv11(ref cursor);
-
-				var leftEnd = cursor;
 				var left = this.ValueOrDefault(r2);
-				if (r2 != null) {
-					var r3 = this.ParseToken(ref cursor, Lexer.TokenType.LOGICAL_AND);
-					if (r3 != null) {
-						var rightStart = cursor;
-						var r4 = this.Lv10(ref cursor);
-
-						var rightEnd = cursor;
-						var right = ValueOrDefault(r4);
-						if (r4 != null)
-							r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => new AST.LogicalAnd(left, right));
-						else
-							cursor = sc1;
-					}
+				if (r2 != null && this.ParseToken(ref cursor, Lexer.TokenType.LOGICAL_AND) != null) {
+					var r3 = this.Lv10(ref cursor);
+					var right = ValueOrDefault(r3);
+					if (r3 != null)
+						r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => new AST.LogicalAnd(left, right));
 					else
 						cursor = sc1;
 				}
@@ -544,27 +655,15 @@ namespace VNScript.Parser {
 			var sc0 = cursor; // StartCursor
 			while (true) {
 				IResult<AST.Node> r1 = null;
-
 				var sc1 = cursor;
 
-				var leftStart = cursor;
 				var r2 = this.Lv10(ref cursor);
-
-				var leftEnd = cursor;
 				var left = this.ValueOrDefault(r2);
-				if (r2 != null) {
-					var r3 = this.ParseToken(ref cursor, Lexer.TokenType.OR);
-					if (r3 != null) {
-						var rightStart = cursor;
-						var r4 = this.Lv9(ref cursor);
-
-						var rightEnd = cursor;
-						var right = ValueOrDefault(r4);
-						if (r4 != null)
-							r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => new AST.BitwiseOr(left, right));
-						else
-							cursor = sc1;
-					}
+				if (r2 != null && this.ParseToken(ref cursor, Lexer.TokenType.OR) != null) {
+					var r3 = this.Lv9(ref cursor);
+					var right = ValueOrDefault(r3);
+					if (r3 != null)
+						r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => new AST.BitwiseOr(left, right));
 					else
 						cursor = sc1;
 				}
@@ -600,27 +699,15 @@ namespace VNScript.Parser {
 			var sc0 = cursor; // StartCursor
 			while (true) {
 				IResult<AST.Node> r1 = null;
-
 				var sc1 = cursor;
 
-				var leftStart = cursor;
 				var r2 = this.Lv9(ref cursor);
-
-				var leftEnd = cursor;
 				var left = this.ValueOrDefault(r2);
-				if (r2 != null) {
-					var r3 = this.ParseToken(ref cursor, Lexer.TokenType.XOR);
-					if (r3 != null) {
-						var rightStart = cursor;
-						var r4 = this.Lv8(ref cursor);
-
-						var rightEnd = cursor;
-						var right = ValueOrDefault(r4);
-						if (r4 != null)
-							r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => new AST.BitwiseXor(left, right));
-						else
-							cursor = sc1;
-					}
+				if (r2 != null && this.ParseToken(ref cursor, Lexer.TokenType.XOR) != null) {
+					var r3 = this.Lv8(ref cursor);
+					var right = ValueOrDefault(r3);
+					if (r3 != null)
+						r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => new AST.BitwiseXor(left, right));
 					else
 						cursor = sc1;
 				}
@@ -656,27 +743,15 @@ namespace VNScript.Parser {
 			var sc0 = cursor; // StartCursor
 			while (true) {
 				IResult<AST.Node> r1 = null;
-
 				var sc1 = cursor;
 
-				var leftStart = cursor;
 				var r2 = this.Lv8(ref cursor);
-
-				var leftEnd = cursor;
 				var left = this.ValueOrDefault(r2);
-				if (r2 != null) {
-					var r3 = this.ParseToken(ref cursor, Lexer.TokenType.AND);
-					if (r3 != null) {
-						var rightStart = cursor;
-						var r4 = this.Lv7(ref cursor);
-
-						var rightEnd = cursor;
-						var right = ValueOrDefault(r4);
-						if (r4 != null)
-							r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => new AST.BitwiseAnd(left, right));
-						else
-							cursor = sc1;
-					}
+				if (r2 != null && this.ParseToken(ref cursor, Lexer.TokenType.AND) != null) {
+					var r3 = this.Lv7(ref cursor);
+					var right = ValueOrDefault(r3);
+					if (r3 != null)
+						r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => new AST.BitwiseAnd(left, right));
 					else
 						cursor = sc1;
 				}
@@ -720,36 +795,24 @@ namespace VNScript.Parser {
 
 				foreach (var match in matchTokens) {
 					if (r1 != null) break;
-
 					var sc1 = cursor;
 
-					var leftStart = cursor;
 					var r2 = this.Lv7(ref cursor);
-
-					var leftEnd = cursor;
 					var left = this.ValueOrDefault(r2);
-					if (r2 != null) {
-						var r3 = this.ParseToken(ref cursor, match);
-						if (r3 != null) {
-							var rightStart = cursor;
-							var r4 = this.Lv6(ref cursor);
-
-							var rightEnd = cursor;
-							var right = ValueOrDefault(r4);
-							if (r4 != null)
-								r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => {
-									switch (match) {
-										case Lexer.TokenType.EQUAL:
-											return new AST.Equal(left, right);
-										case Lexer.TokenType.NOT_EQUAL:
-											return new AST.NotEqual(left, right);
-										default:
-											throw new Exception("VNScript ParserError - Invalid token at parsing");
-									}
-								});
-							else
-								cursor = sc1;
-						}
+					if (r2 != null && this.ParseToken(ref cursor, match) != null) {
+						var r3 = this.Lv6(ref cursor);
+						var right = ValueOrDefault(r3);
+						if (r3 != null)
+							r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => {
+								switch (match) {
+									case Lexer.TokenType.EQUAL:
+										return new AST.Equal(left, right);
+									case Lexer.TokenType.NOT_EQUAL:
+										return new AST.NotEqual(left, right);
+									default:
+										throw new Exception("VNScript ParserError - Invalid token at parsing");
+								}
+							});
 						else
 							cursor = sc1;
 					}
@@ -795,40 +858,28 @@ namespace VNScript.Parser {
 
 				foreach (var match in matchTokens) {
 					if (r1 != null) break;
-
 					var sc1 = cursor;
 
-					var leftStart = cursor;
 					var r2 = this.Lv6(ref cursor);
-
-					var leftEnd = cursor;
 					var left = this.ValueOrDefault(r2);
-					if (r2 != null) {
-						var r3 = this.ParseToken(ref cursor, match);
-						if (r3 != null) {
-							var rightStart = cursor;
-							var r4 = this.Lv5(ref cursor);
-
-							var rightEnd = cursor;
-							var right = ValueOrDefault(r4);
-							if (r4 != null)
-								r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => {
-									switch (match) {
-										case Lexer.TokenType.LESSER:
-											return new AST.Lesser(left, right);
-										case Lexer.TokenType.LESSER_EQUAL:
-											return new AST.LesserEqual(left, right);
-										case Lexer.TokenType.GREATER:
-											return new AST.Greater(left, right);
-										case Lexer.TokenType.GREATER_EQUAL:
-											return new AST.GreaterEqual(left, right);
-										default:
-											throw new Exception("VNScript ParserError - Invalid token at parsing");
-									}
-								});
-							else
-								cursor = sc1;
-						}
+					if (r2 != null && this.ParseToken(ref cursor, match) != null) {
+						var r3 = this.Lv5(ref cursor);
+						var right = ValueOrDefault(r3);
+						if (r3 != null)
+							r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => {
+								switch (match) {
+									case Lexer.TokenType.LESSER:
+										return new AST.Lesser(left, right);
+									case Lexer.TokenType.LESSER_EQUAL:
+										return new AST.LesserEqual(left, right);
+									case Lexer.TokenType.GREATER:
+										return new AST.Greater(left, right);
+									case Lexer.TokenType.GREATER_EQUAL:
+										return new AST.GreaterEqual(left, right);
+									default:
+										throw new Exception("VNScript ParserError - Invalid token at parsing");
+								}
+							});
 						else
 							cursor = sc1;
 					}
@@ -872,36 +923,24 @@ namespace VNScript.Parser {
 
 				foreach (var match in matchTokens) {
 					if (r1 != null) break;
-
 					var sc1 = cursor;
 
-					var leftStart = cursor;
 					var r2 = this.Lv5(ref cursor);
-
-					var leftEnd = cursor;
 					var left = this.ValueOrDefault(r2);
-					if (r2 != null) {
-						var r3 = this.ParseToken(ref cursor, match);
-						if (r3 != null) {
-							var rightStart = cursor;
-							var r4 = this.Lv4(ref cursor);
-
-							var rightEnd = cursor;
-							var right = ValueOrDefault(r4);
-							if (r4 != null)
-								r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => {
-									switch (match) {
-										case Lexer.TokenType.LSHIFT:
-											return new AST.BitwiseLeftShift(left, right);
-										case Lexer.TokenType.RSHIFT:
-											return new AST.BitwiseRightShift(left, right);
-										default:
-											throw new Exception("VNScript ParserError - Invalid token at parsing");
-									}
-								});
-							else
-								cursor = sc1;
-						}
+					if (r2 != null && this.ParseToken(ref cursor, match) != null) {
+						var r3 = this.Lv4(ref cursor);
+						var right = ValueOrDefault(r3);
+						if (r3 != null)
+							r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => {
+								switch (match) {
+									case Lexer.TokenType.LSHIFT:
+										return new AST.BitwiseLeftShift(left, right);
+									case Lexer.TokenType.RSHIFT:
+										return new AST.BitwiseRightShift(left, right);
+									default:
+										throw new Exception("VNScript ParserError - Invalid token at parsing");
+								}
+							});
 						else
 							cursor = sc1;
 					}
@@ -946,38 +985,26 @@ namespace VNScript.Parser {
 
 				foreach (var match in matchTokens) {
 					if (r1 != null) break;
-
 					var sc1 = cursor;
 
-					var leftStart = cursor;
 					var r2 = this.Lv4(ref cursor);
-
-					var leftEnd = cursor;
 					var left = this.ValueOrDefault(r2);
-					if (r2 != null) {
-						var r3 = this.ParseToken(ref cursor, match);
-						if (r3 != null) {
-							var rightStart = cursor;
-							var r4 = this.Lv3(ref cursor);
-
-							var rightEnd = cursor;
-							var right = ValueOrDefault(r4);
-							if (r4 != null)
-								r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => {
-									switch (match) {
-										case Lexer.TokenType.PLUS:
-											return new AST.Addition(left, right);
-										case Lexer.TokenType.MINUS:
-											return new AST.Subtraction(left, right);
-										case Lexer.TokenType.DOT2:
-											return new AST.Concatenate(left, right);
-										default:
-											throw new Exception("VNScript ParserError - Invalid token at parsing");
-									}
-								});
-							else
-								cursor = sc1;
-						}
+					if (r2 != null && this.ParseToken(ref cursor, match) != null) {
+						var r3 = this.Lv3(ref cursor);
+						var right = ValueOrDefault(r3);
+						if (r3 != null)
+							r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => {
+								switch (match) {
+									case Lexer.TokenType.PLUS:
+										return new AST.Addition(left, right);
+									case Lexer.TokenType.MINUS:
+										return new AST.Subtraction(left, right);
+									case Lexer.TokenType.DOT2:
+										return new AST.Concatenate(left, right);
+									default:
+										throw new Exception("VNScript ParserError - Invalid token at parsing");
+								}
+							});
 						else
 							cursor = sc1;
 					}
@@ -1023,40 +1050,28 @@ namespace VNScript.Parser {
 
 				foreach (var match in matchTokens) {
 					if (r1 != null) break;
-
 					var sc1 = cursor;
 
-					var leftStart = cursor;
 					var r2 = this.Lv3(ref cursor);
-
-					var leftEnd = cursor;
 					var left = this.ValueOrDefault(r2);
-					if (r2 != null) {
-						var r3 = this.ParseToken(ref cursor, match);
-						if (r3 != null) {
-							var rightStart = cursor;
-							var r4 = this.Lv2(ref cursor);
-
-							var rightEnd = cursor;
-							var right = ValueOrDefault(r4);
-							if (r4 != null)
-								r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => {
-									switch (match) {
-										case Lexer.TokenType.MULTIPLICATION:
-											return new AST.Multiplication(left, right);
-										case Lexer.TokenType.DIVISION:
-											return new AST.Division(left, right);
-										case Lexer.TokenType.REMAINDER:
-											return new AST.Remainder(left, right);
-										case Lexer.TokenType.POWER:
-											return new AST.Power(left, right);
-										default:
-											throw new Exception("VNScript ParserError - Invalid token at parsing");
-									}
-								});
-							else
-								cursor = sc1;
-						}
+					if (r2 != null && this.ParseToken(ref cursor, match) != null) {
+						var r3 = this.Lv2(ref cursor);
+						var right = ValueOrDefault(r3);
+						if (r3 != null)
+							r1 = this.ReturnHelper<AST.Node>(sc1, ref cursor, state => {
+								switch (match) {
+									case Lexer.TokenType.MULTIPLICATION:
+										return new AST.Multiplication(left, right);
+									case Lexer.TokenType.DIVISION:
+										return new AST.Division(left, right);
+									case Lexer.TokenType.REMAINDER:
+										return new AST.Remainder(left, right);
+									case Lexer.TokenType.POWER:
+										return new AST.Power(left, right);
+									default:
+										throw new Exception("VNScript ParserError - Invalid token at parsing");
+								}
+							});
 						else
 							cursor = sc1;
 					}
@@ -1088,12 +1103,11 @@ namespace VNScript.Parser {
 				};
 
 				foreach (var match in matchTokens) {
-					var r1 = this.ParseToken(ref cursor, match);
-					if (r1 != null) {
-						var r2 = this.Keyword(ref cursor);
-						var target = this.ValueOrDefault(r2);
+					if (this.ParseToken(ref cursor, match) != null) {
+						var r1 = this.Keyword(ref cursor);
+						var target = this.ValueOrDefault(r1);
 
-						if (r2 != null) {
+						if (r1 != null) {
 							r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state =>
 								match[0] == Lexer.TokenType.PLUS
 									? (AST.Node)new AST.Increment(target, true)
@@ -1117,14 +1131,13 @@ namespace VNScript.Parser {
 				};
 
 				foreach (var match in matchTokens) {
-					var r1 = this.ParseToken(ref cursor, match);
-					if (r1 != null) {
+					if (this.ParseToken(ref cursor, match) != null) {
 						var targetStart = cursor;
-						var r2 = this.Lv2(ref cursor);
+						var r1 = this.Lv2(ref cursor);
 
 						var targetEnd = cursor;
-						var target = ValueOrDefault(r2);
-						if (r2 != null) {
+						var target = ValueOrDefault(r1);
+						if (r1 != null) {
 							r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state => {
 								switch (match) {
 									case Lexer.TokenType.PLUS:
@@ -1168,8 +1181,7 @@ namespace VNScript.Parser {
 						new Lexer.TokenType[] { Lexer.TokenType.MINUS, Lexer.TokenType.MINUS },
 					};
 					foreach (var match in matchTokens) {
-						var r2 = this.ParseToken(ref cursor, match);
-						if (r2 != null) {
+						if (this.ParseToken(ref cursor, match) != null) {
 							r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state =>
 								match[0] == Lexer.TokenType.PLUS
 									? (AST.Node)new AST.Increment(target)
@@ -1187,7 +1199,7 @@ namespace VNScript.Parser {
 				else
 					cursor = sc0;
 			}
-			if(r0 == null) r0 = this.Lv0(ref cursor);
+			if (r0 == null) r0 = this.Lv0(ref cursor);
 
 			return r0;
 		}
@@ -1196,24 +1208,14 @@ namespace VNScript.Parser {
 			IResult<AST.Node> r0 = null;
 			var sc0 = cursor;
 
-			if (r0 == null) {
-				var r1 = this.ParseToken(ref cursor, Lexer.TokenType.LPAREN);
-				if (r1 != null) {
-					var expStart = cursor;
-					var r2 = this.Expression(ref cursor);
+			if (r0 == null && this.ParseToken(ref cursor, Lexer.TokenType.LPAREN) != null) {
+				var expStart = cursor;
+				var r1 = this.Expression(ref cursor);
 
-					var expEnd = cursor;
-					var exp = ValueOrDefault(r2);
-					if (r2 != null) {
-						var r3 = this.ParseToken(ref cursor, Lexer.TokenType.RPAREN);
-						if (r3 != null)
-							r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state => exp);
-						else
-							cursor = sc0;
-					}
-					else
-						cursor = sc0;
-				}
+				var expEnd = cursor;
+				var exp = ValueOrDefault(r1);
+				if (r1 != null && this.ParseToken(ref cursor, Lexer.TokenType.RPAREN) != null)
+					r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state => exp);
 				else
 					cursor = sc0;
 			}
@@ -1232,16 +1234,11 @@ namespace VNScript.Parser {
 			if (r1 != null) {
 				var callee = this.ValueOrDefault(r1);
 
-				var r2 = this.ParseToken(ref cursor, Lexer.TokenType.LPAREN);
-				if (r2 != null) {
-					var expStart = cursor;
-					var r3 = this.Expression(ref cursor);
+				if (this.ParseToken(ref cursor, Lexer.TokenType.LPAREN) != null) {
+					var r2 = this.Expression(ref cursor);
+					var exp = ValueOrDefault(r2);
 
-					var expEnd = cursor;
-					var exp = ValueOrDefault(r3);
-
-					var r4 = this.ParseToken(ref cursor, Lexer.TokenType.RPAREN);
-					if (r4 != null)
+					if (this.ParseToken(ref cursor, Lexer.TokenType.RPAREN) != null)
 						r0 = this.ReturnHelper<AST.Node>(sc0, ref cursor, state => new AST.Call(
 							callee,
 							exp == null

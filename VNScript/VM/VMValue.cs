@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace VNScript.VM {
-	public sealed class VMValue {
+	public class VMValue {
 		public VMValueType Type { get; private set; }
 		public object Data { get; private set; }
 

@@ -10,34 +10,59 @@ using VNScript.Compiler.VNSP;
 
 namespace VNScript.VM {
 	public class VMState : StreamHelper {
-		public CodeChunk Chunk { get; }
+		public Chunk Chunk { get; }
+		public int StorageLevel { get; }
 
-		public string Name => this.Chunk?.CodeName;
-		public byte[] Body => this.Chunk?.CodeBody;
+		public string Name { get; }
+		public byte[] Body { get; }
 
 		public bool EOS => this.stream.Position >= this.Body.Length;
 
-		public VMState(CodeChunk Chunk) {
+		public bool Ended { get; private set; }
+
+		public VMState(CodeChunk Chunk, int StorageLevel) {
 			this.Chunk = Chunk;
-			this.stream = new MemoryStream(Chunk.CodeBody);
+
+			this.Name = Chunk.CodeName;
+			this.Body = Chunk.CodeBody;
+			this.stream = new MemoryStream(this.Body);
+
+			this.StorageLevel = StorageLevel;
+		}
+		public VMState(byte[] body, int StorageLevel) {
+			this.Chunk = null;
+
+			this.Name = "#RuntimeChunk";
+			this.Body = body;
+			this.stream = new MemoryStream(this.Body);
+
+			this.StorageLevel = StorageLevel;
 		}
 
-		public void Next(ReadOnlyStack<VMValue> Stack, VMStorage Storage, ReadOnlyStack<int> BlockStack, IReadOnlyDictionary<string, VM.VMFunc> Funcs) {
+		public void End() => this.Ended = true;
+
+		public void Next(VM vm) {
+			if(this.EOS) {
+				this.End();
+				return;
+			}
+
+			var Stack = vm.Stack;
+			var Storage = vm.Storage;
+			var NativeFuncs = vm.NativeFuncs;
+			var RuntimeFuncs = vm.RuntimeFuncs;
+
 			var op = (ByteCodeType)this.Byte();
 
 			switch (op) {
-				case ByteCodeType.None:
+				case ByteCodeType.Reserved:
 					break;
 
 				case ByteCodeType.EnterBlock:
-					BlockStack.Push(Stack.Count);
 					Storage.Up();
 					break;
-				case ByteCodeType.ExitBlock: {
-						var count = BlockStack.Pop();
-						while (Stack.Count > count) Stack.Pop();
-						Storage.Down();
-					}
+				case ByteCodeType.ExitBlock:
+					Storage.Down();
 					break;
 
 				case ByteCodeType.Test: {
@@ -94,7 +119,8 @@ namespace VNScript.VM {
 					Stack.Pop();
 					break;
 
-				case ByteCodeType.Call: {
+				case ByteCodeType.Call:
+				case ByteCodeType.CallPush: {
 						var argc = this.Byte();
 						var _callee = Stack.Pop();
 						if (_callee.Type != VMValueType.Keyword)
@@ -106,11 +132,20 @@ namespace VNScript.VM {
 							.Reverse()
 							.ToArray();
 
-						if (!Funcs.ContainsKey(callee))
-							throw new Exception($"VNScript VMError - Function '{callee}' not defined or registered");
+						if (NativeFuncs.ContainsKey(callee)) {
+							var result = NativeFuncs[callee].Invoke(arguments, Storage);
+							if (op == ByteCodeType.CallPush)
+								Stack.Push(result);
+						}
+						else if (RuntimeFuncs.ContainsKey(callee)) {
+							var func = RuntimeFuncs[callee];
+							var state = new VMState(func.Body, vm.Storage.CurrentLevel);
 
-						var result = Funcs[callee].Invoke(arguments, Storage);
-						Stack.Push(result);
+							foreach (var arg in arguments) Stack.Push(arg);
+							vm.States.Push(state);
+						}
+						else
+							throw new Exception($"VNScript VMError - Function '{callee}' not defined or registered");
 					}
 					break;
 
@@ -149,6 +184,23 @@ namespace VNScript.VM {
 								? Storage.Get(name).Value
 								: VMValue.Null()
 						);
+					}
+					break;
+
+				case ByteCodeType.Define: {
+						var nameLen = this.Byte();
+						var name = this.String(nameLen);
+
+						if (NativeFuncs.ContainsKey(name))
+							throw new Exception("VNScript VMError - '" + name + "' Already defined");
+
+						var bodySize = this.Int();
+						var address = (int)this.stream.Position;
+						this.Skip(bodySize);
+
+						var body = new byte[bodySize];
+						Array.Copy(this.Body, address, body, 0, bodySize);
+						RuntimeFuncs.Add(name, new VMRuntimeFunc(body));
 					}
 					break;
 
@@ -296,6 +348,10 @@ namespace VNScript.VM {
 						var target = Stack.Pop();
 						Stack.Push(new VMValue(VMValueType.Number, ~target.AsInteger(Storage)));
 					}
+					break;
+
+				case ByteCodeType.EndOfState:
+					this.End();
 					break;
 
 				default:

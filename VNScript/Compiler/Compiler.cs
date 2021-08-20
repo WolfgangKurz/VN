@@ -107,7 +107,7 @@ namespace VNScript.Compiler {
 
 		private void Travel(AST.Node node, int depth) {
 			switch (node.Type()) {
-				#region Value, Program, Block, List, Call
+				#region Value, Program, Block, List
 				case AST.Type.Literal:
 				case AST.Type.Keyword:
 					if (depth == 0) break;
@@ -158,7 +158,9 @@ namespace VNScript.Compiler {
 					foreach (var n in (node as AST.List).Nodes)
 						this.Travel(n, depth);
 					break;
+				#endregion
 
+				#region Call, Func, Return
 				case AST.Type.Call: {
 						var n = node as AST.Call;
 
@@ -168,12 +170,53 @@ namespace VNScript.Compiler {
 						}
 
 						this.Travel(n.Callee, depth + 1);
-						this.Write((byte)ByteCodeType.Call, (byte)(n.Arguments?.Length ?? 0));
+						if (depth > 0)
+							this.Write((byte)ByteCodeType.CallPush, (byte)(n.Arguments?.Length ?? 0));
+						else
+							this.Write((byte)ByteCodeType.Call, (byte)(n.Arguments?.Length ?? 0));
+					}
+					break;
+
+				case AST.Type.Func: {
+						var n = node as AST.Func;
+
+						var subCompiler = new Compiler();
+						subCompiler.Write((byte)ByteCodeType.EnterBlock);
+
+						foreach (var arg in n.Arguments.Keywords.Reverse()) {
+							var argName = arg.Value.value;
+							if (argName[0] != '@')
+								throw new Exception("VNScript CompileError - Argument for Func should be local scoped.");
+
+							subCompiler.Travel(arg, depth + 1);
+							subCompiler.Write((byte)ByteCodeType.Assign); // 인자명 변수에 대입
+						}
+						subCompiler.Travel(n.Body, 0);
+
+						subCompiler.Write((byte)ByteCodeType.EndOfState); // End of state
+						subCompiler.Write((byte)ByteCodeType.ExitBlock);
+						var compiled = subCompiler.ToArray();
+
+						var name = n.Name.Value.value;
+						this.Write((byte)ByteCodeType.Define);
+						this.WriteLengthed1(Encoding.UTF8.GetBytes(name));
+
+						var lengthCursor = this.stream.Position;
+						this.Write(BitConverter.GetBytes((int)compiled.Length));
+
+						this.Write(compiled);
+					}
+					break;
+				case AST.Type.Return: {
+						var n = node as AST.Return;
+
+						this.Travel(n.Value, depth + 1); // 값을 Push하고
+						this.Write((byte)ByteCodeType.EndOfState); // 현재 State를 종료
 					}
 					break;
 				#endregion
 
-				#region If, While
+				#region If, While, For
 				case AST.Type.If: {
 						var n = node as AST.If;
 
@@ -185,7 +228,7 @@ namespace VNScript.Compiler {
 						this.Travel(n.Condition, depth + 1);
 						this.Write((byte)ByteCodeType.Test);
 
-						this.Travel(n.Body, depth + 1);
+						this.Travel(n.Body, 0);
 
 						var currentCursor = this.stream.Position;
 						this.stream.Seek(addressCursor, SeekOrigin.Begin);
@@ -206,7 +249,35 @@ namespace VNScript.Compiler {
 						this.Travel(n.Condition, depth + 1);
 						this.Write((byte)ByteCodeType.Test);
 
-						this.Travel(n.Body, depth + 1);
+						this.Travel(n.Body, 0);
+
+						this.Write((byte)ByteCodeType.Push, 5);
+						this.WriteLengthed1(BitConverter.GetBytes((int)startCursor)); // Repeat Jump
+						this.Write((byte)ByteCodeType.Jump);
+
+						var currentCursor = this.stream.Position;
+						this.stream.Seek(addressCursor, SeekOrigin.Begin);
+						this.WriteLengthed1(BitConverter.GetBytes((int)currentCursor)); // JumpAddress
+						this.stream.Seek(currentCursor, SeekOrigin.Begin);
+					}
+					break;
+
+				case AST.Type.For: {
+						var n = node as AST.For;
+
+						this.Travel(n.Initialize, 0);
+
+						var startCursor = this.stream.Position;
+						this.Write((byte)ByteCodeType.Push, 5);
+
+						var addressCursor = this.stream.Position;
+						this.WriteLengthed1(BitConverter.GetBytes((int)0)); // Jump to
+
+						this.Travel(n.Condition, depth + 1);
+						this.Write((byte)ByteCodeType.Test);
+
+						this.Travel(n.Body, 0);
+						this.Travel(n.Loop, 0);
 
 						this.Write((byte)ByteCodeType.Push, 5);
 						this.WriteLengthed1(BitConverter.GetBytes((int)startCursor)); // Repeat Jump
@@ -450,11 +521,16 @@ namespace VNScript.Compiler {
 								),
 								0 // Unary Increment/Decrement는 stack에 push하지 않음
 							);
-							this.Travel(n.Target, depth + 1);
+							if (depth > 0) {
+								this.Travel(n.Target, depth + 1);
+								this.Write((byte)ByteCodeType.Evaluate);
+							}
 						}
 						else { // target++
-							this.Travel(n.Target, depth + 1);
-							this.Write((byte)ByteCodeType.Evaluate);
+							if (depth > 0) {
+								this.Travel(n.Target, depth + 1);
+								this.Write((byte)ByteCodeType.Evaluate);
+							}
 							this.Travel(
 								new AST.Assign( // target = target + 1
 									n.Target,
