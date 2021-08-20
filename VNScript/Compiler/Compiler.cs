@@ -193,6 +193,7 @@ namespace VNScript.Compiler {
 						}
 						subCompiler.Travel(n.Body, 0);
 
+						subCompiler.Write((byte)ByteCodeType.Push, 0, 0); // null Push
 						subCompiler.Write((byte)ByteCodeType.EndOfState); // End of state
 						subCompiler.Write((byte)ByteCodeType.ExitBlock);
 						var compiled = subCompiler.ToArray();
