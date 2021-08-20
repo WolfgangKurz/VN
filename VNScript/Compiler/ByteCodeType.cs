@@ -217,20 +217,15 @@ namespace VNScript.Compiler {
 
 
 		/// <summary>
-		/// [71] [argc:1]
+		/// [71] [return:1] [argc:1]
 		/// {stack:0} 이름을 가지는 함수를 {stack:argc} 파라메터로 전달
 		///   인자는 스택에서 역순 꺼냄
 		///   첫번째 인자 -> {stack:-n+1}
 		///   두번째 인자 -> {stack:-n+2} ...
-		/// 결과를 Push 하며, 결과가 없어도 Null을 Push
+		/// [return]이 1인 경우 결과를 Push 하며, 결과가 없어도 Null을 Push함
+		/// [return]이 0인 경우, 결과를 Push하지 않음
 		/// </summary>
 		Call = 71,
-
-		/// <summary>
-		/// [72] [argc:1]
-		/// Call과 동일하며, 결과를 Push함 (Native Function의 경우에만)
-		/// </summary>
-		CallPush = 72,
 
 		/// <summary>
 		/// [72]

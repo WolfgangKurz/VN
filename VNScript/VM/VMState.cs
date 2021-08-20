@@ -119,8 +119,9 @@ namespace VNScript.VM {
 					Stack.Pop();
 					break;
 
-				case ByteCodeType.Call:
-				case ByteCodeType.CallPush: {
+				case ByteCodeType.Call: {
+						var returns = this.Byte();
+
 						var argc = this.Byte();
 						var _callee = Stack.Pop();
 						if (_callee.Type != VMValueType.Keyword)
@@ -134,7 +135,7 @@ namespace VNScript.VM {
 
 						if (NativeFuncs.ContainsKey(callee)) {
 							var result = NativeFuncs[callee].Invoke(arguments, Storage);
-							if (op == ByteCodeType.CallPush)
+							if (returns == 1)
 								Stack.Push(result);
 						}
 						else if (RuntimeFuncs.ContainsKey(callee)) {
@@ -144,7 +145,7 @@ namespace VNScript.VM {
 							foreach (var arg in arguments) Stack.Push(arg);
 
 							// 결과를 받지 않는 경우, 함수 반환값을 무시 (Pop)
-							if (op == ByteCodeType.Call)
+							if (returns == 0)
 								vm.States.Push(new VMState(new byte[] { (byte)ByteCodeType.Pop }, vm.Storage.CurrentLevel));
 
 							vm.States.Push(state);

@@ -171,9 +171,9 @@ namespace VNScript.Compiler {
 
 						this.Travel(n.Callee, depth + 1);
 						if (depth > 0)
-							this.Write((byte)ByteCodeType.CallPush, (byte)(n.Arguments?.Length ?? 0));
+							this.Write((byte)ByteCodeType.Call, 1, (byte)(n.Arguments?.Length ?? 0));
 						else
-							this.Write((byte)ByteCodeType.Call, (byte)(n.Arguments?.Length ?? 0));
+							this.Write((byte)ByteCodeType.Call, 0, (byte)(n.Arguments?.Length ?? 0));
 					}
 					break;
 
