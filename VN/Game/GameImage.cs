@@ -6,11 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace VN.Game {
-	internal class SCG : IDisposable {
+	internal class GameImage : IDisposable {
 		public Image Image { get; set; }
 		public double X { get; set; }
 
-		public SCG(Image Image, double X) {
+		public GameImage(Image Image, double X) {
 			this.Image = Image;
 			this.X = X;
 		}

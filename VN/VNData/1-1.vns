@@ -13,6 +13,7 @@ BGM_Fadeout()
 // 페이드 아웃
 Freeze()
 BG null
+Untext()
 Transition 2
 
 // 페이드 인

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Threading;
+using System.Drawing.Imaging;
 
 namespace VN.Game {
 	using VNSPack = VNScript.Compiler.VNSP.VNSPack;
@@ -106,38 +107,25 @@ namespace VN.Game {
 		/// </summary>
 		public bool UIHide { get; set; }
 
-		#region 대사
 		/// <summary>
 		/// 해금된 화자 이름 목록
 		/// </summary>
 		private List<string> Tellers { get; } = new List<string>();
 
-		/// <summary>
-		/// 현재 말하고 있는 화자, <see langword="null" />이라면 화자 없는 서사
-		/// </summary>
-		private string TellerName { get; set; }
-
-		/// <summary>
-		/// 현재 표시되고 있는 서사/대사
-		/// </summary>
-		private string Message { get; set; }
-		#endregion
-
-		#region 오디오
 		private Audio BGM { get; } = new Audio();
-		#endregion
 
-		private Image BG { get; set; }
-		private Dictionary<int, SCG> SCG { get; } = new Dictionary<int, SCG>();
+		private GameState CurrentState { get; } = new GameState();
+		private GameState FreezedState { get; set; }
+		private GameTransition Transition { get; set; }
 
 		public bool UnblockReady {
 			get {
-				if (this.Message == null) return true;
+				if (this.CurrentState.Message == null) return true;
 
 				var elapsed = DateTime.Now.Ticks - this.textStartTime; // 대사가 시작되고 지난 시간
 
 				// 대사 전체를 표시할 때 걸리는 시간 (Ticks)
-				var totalTime = this.Message.Length * Game.TextSpeed * TimeSpan.TicksPerMillisecond;
+				var totalTime = this.CurrentState.Message.Length * Game.TextSpeed * TimeSpan.TicksPerMillisecond;
 
 				return elapsed >= totalTime;
 			}
@@ -220,8 +208,8 @@ namespace VN.Game {
 				var text = string.Join("\n", args.Select(x => x.AsString(storage)));
 
 				this.textStartTime = DateTime.Now.Ticks;
-				this.TellerName = null;
-				this.Message = text;
+				this.CurrentState.TellerName = null;
+				this.CurrentState.Message = text;
 
 				this.Blocked = true;
 				while (this.Blocked) Thread.Sleep(10);
@@ -234,11 +222,19 @@ namespace VN.Game {
 				var text = string.Join("\n", args.Skip(1).Select(x => x.AsString(storage)));
 
 				this.textStartTime = DateTime.Now.Ticks;
-				this.TellerName = teller;
-				this.Message = text;
+				this.CurrentState.TellerName = teller;
+				this.CurrentState.Message = text;
 
 				this.Blocked = true;
 				while (this.Blocked) Thread.Sleep(10);
+
+				return VMValue.Null();
+			});
+			this.VM.Register("Untext", (args, storage) => {
+				if (args.Length != 0) throw new Exception("VN RuntimeError - Transition의 인자는 0개여야합니다.");
+
+				this.CurrentState.TellerName = null;
+				this.CurrentState.Message = null;
 
 				return VMValue.Null();
 			});
@@ -262,14 +258,14 @@ namespace VN.Game {
 				var arg = args[0];
 				if(arg.Type == VMValueType.Null) {
 					lock (this.Sync) {
-						this.BG?.Dispose();
-						this.BG = null;
+						this.CurrentState.BG?.Dispose();
+						this.CurrentState.BG = null;
 					}
 				}else {
 					var bg = arg.AsString(storage);
 					lock(this.Sync) {
-						this.BG?.Dispose();
-						this.BG = Image.FromFile(
+						this.CurrentState.BG?.Dispose();
+						this.CurrentState.BG = Image.FromFile(
 							Path.Combine("VNData", "BG", bg + ".png")
 						);
 					}
@@ -286,11 +282,11 @@ namespace VN.Game {
 					: args[2].AsNumber(storage);
 
 				lock (this.Sync) {
-					if (this.SCG.ContainsKey(idx)) {
-						this.SCG[idx]?.Dispose();
-						this.SCG.Remove(idx);
+					if (this.CurrentState.Images.ContainsKey(idx)) {
+						this.CurrentState.Images[idx]?.Dispose();
+						this.CurrentState.Images.Remove(idx);
 					}
-					this.SCG[idx] = new SCG(
+					this.CurrentState.Images[idx] = new GameImage(
 						Image.FromFile(
 							Path.Combine("VNData", "SCG", file + ".png")
 						),
@@ -300,8 +296,30 @@ namespace VN.Game {
 				return VMValue.Null();
 			});
 
-			this.VM.Register("Freeze", (args, storage) => VMValue.Null());
-			this.VM.Register("Transition", (args, storage) => VMValue.Null());
+			this.VM.Register("Freeze", (args, storage) => {
+				if (args.Length != 0) throw new Exception("VN RuntimeError - Transition의 인자는 0개여야합니다.");
+				if (this.FreezedState != null) throw new Exception("VN RuntimeError - 이미 얼어있습니다.");
+
+				lock (this.Sync)
+					this.FreezedState = this.CurrentState.Clone();
+
+				return VMValue.Null();
+			});
+			this.VM.Register("Transition", (args, storage) => {
+				if (args.Length != 1) throw new Exception("VN RuntimeError - Transition의 인자는 1개여야합니다.");
+
+				var dur = args[0].AsNumber(storage);
+				lock (this.Sync)
+					this.Transition = new GameTransition(dur);
+
+				var freezed = true;
+				do {
+					lock (this.Sync)
+						freezed = this.FreezedState != null;
+				} while (freezed);
+
+				return VMValue.Null();
+			});
 
 			FX.Register(this.VM);
 
@@ -328,15 +346,13 @@ namespace VN.Game {
 		}
 
 		public void Destroy() {
-			this.BGM.Dispose();
-			this.BG?.Dispose();
-
-			{
-				var scgs = this.SCG.Values.ToArray();
-				this.SCG.Clear();
-				foreach (var scg in scgs)
-					scg.Dispose();
+			if(this.FreezedState!=null) {
+				this.FreezedState.Dispose();
+				this.FreezedState = null;
 			}
+			this.CurrentState.Dispose();
+
+			this.BGM.Dispose();
 
 			this.VMThread?.Abort();
 
@@ -365,6 +381,46 @@ namespace VN.Game {
 		public void Render(Graphics g) {
 			if (this.VM == null) return;
 
+			GameState current, freezed;
+			lock (this.Sync) {
+				current = this.CurrentState;
+				freezed = this.FreezedState;
+			}
+
+			if (freezed != null) { // Freeze된 화면이 있는 경우
+				this.Render(g, freezed);
+
+				GameTransition transition;
+				lock (this.Sync) transition = this.Transition;
+
+				if (transition != null) {
+					using var buffer = new Bitmap(this.canvasSize.Width, this.canvasSize.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+					using var _g = Graphics.FromImage(buffer);
+					_g.Clear(Color.Black);
+
+					this.Render(_g, current);
+					this.DrawImageAlpha(g, buffer, (float)transition.Progress);
+
+					if (transition.Progress >= 1) {
+						lock (this.Sync) {
+							this.Transition = null;
+
+							this.FreezedState.Dispose();
+							this.FreezedState = null;
+						}
+					}
+				}
+			}
+			else
+				this.Render(g, current);
+		}
+
+		/// <summary>
+		/// 실제 버퍼에 화면을 그리는 작업을 하는 함수, <see cref="GameState"/> 상태 기준으로 그림
+		/// </summary>
+		/// <param name="g"><see cref="Graphics"/> 객체</param>
+		/// <param name="state">화면을 그릴 때 사용될 <see cref="GameState"/> 객체</param>
+		private void Render(Graphics g, GameState state) {
 			var textboxLayout = new Rectangle(
 				(this.canvasSize.Width / 12 * 1),
 				(this.canvasSize.Height / 12 * 9),
@@ -374,21 +430,21 @@ namespace VN.Game {
 
 			// 배경 이미지 그리기
 			lock (this.Sync) {
-				if (this.BG != null)
-					g.DrawImage(this.BG, 0, 0, canvasSize.Width, canvasSize.Height);
+				if (state.BG != null)
+					g.DrawImage(state.BG, 0, 0, canvasSize.Width, canvasSize.Height);
 			}
 
 			// 캐릭터 그리기
 			{
-				SCG[] scgs;
+				GameImage[] images;
 
 				lock (this.Sync)
-					scgs = this.SCG.Values.ToArray();
+					images = state.Images.Values.ToArray();
 
-				foreach (var scg in scgs) {
-					var img = scg.Image;
+				foreach (var image in images) {
+					var img = image.Image;
 					var rect = new Rectangle(
-						(int)((canvasSize.Width * scg.X) - (img.Width * scg.X)), // 전체 영역에서 X% 위치로
+						(int)((canvasSize.Width * image.X) - (img.Width * image.X)), // 전체 영역에서 X% 위치로
 						(int)((canvasSize.Height * 0.8) - (img.Height /* * 1.0 */)), // 전체 높이의 80% 위치에서 "서있게"
 						img.Width,
 						img.Height
@@ -400,12 +456,12 @@ namespace VN.Game {
 
 			// 만약 마우스 오른쪽 버튼(혹은 UI숨김 버튼)을 누르지 않으면 UI, 대사 출력
 			if (!this.UIHide) {
-				if (this.TellerName != null) {
+				if (state.TellerName != null) {
 					string name;
 
 					lock (this.Sync) {
-						name = this.Tellers.Contains(this.TellerName)
-							? this.TellerName
+						name = this.Tellers.Contains(state.TellerName)
+							? state.TellerName
 							: "???";
 					}
 
@@ -417,11 +473,11 @@ namespace VN.Game {
 					));
 				}
 
-				if (this.Message != null) {
+				if (state.Message != null) {
 					var elapsed = (DateTime.Now.Ticks - this.textStartTime) / TimeSpan.TicksPerMillisecond; // 대사가 시작되고 지난 시간
-					var length = (int)Math.Min(this.Message.Length, elapsed / Game.TextSpeed);
+					var length = (int)Math.Min(state.Message.Length, elapsed / Game.TextSpeed);
 
-					var subMessage = this.Message.Substring(0, length);
+					var subMessage = state.Message.Substring(0, length);
 					this.DrawStrokedString(g, subMessage, textboxLayout);
 				}
 			}
@@ -437,6 +493,19 @@ namespace VN.Game {
 			path.AddString(Text, family, (int)Game.FontStyle, Game.FontSize, layoutRect, StringFormat.GenericDefault);
 			g.DrawPath(pen, path);
 			g.FillPath(brush, path);
+		}
+		private void DrawImageAlpha(Graphics g, Image image, float alpha) {
+			var matrix = new ColorMatrix();
+			matrix.Matrix33 = alpha; // Alpha
+
+			var imgAttr = new ImageAttributes();
+			imgAttr.SetColorMatrix(matrix);
+			g.DrawImage(
+				image,
+				new Rectangle(Point.Empty, image.Size),
+				0, 0, image.Width, image.Height,
+				GraphicsUnit.Pixel, imgAttr
+			);
 		}
 	}
 }
