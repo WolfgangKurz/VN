@@ -1,8 +1,0 @@
-SET Game.Title, "남십자성이 보이는 하늘 아래"
-SET Game.Width, 800
-SET Game.Height, 450
-SET Game.Resizable, true
-SET Game.Margin, LetterBox
-
-# 첫 스크립트 이름 (확장자 제외)
-SET Game, "0"

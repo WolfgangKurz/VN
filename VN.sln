@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30621.155
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VN", "VN.csproj", "{262BD30B-AE37-43E1-991C-015B1B651B4B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VN", "VN\VN.csproj", "{262BD30B-AE37-43E1-991C-015B1B651B4B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VNScript", "VNScript\VNScript.csproj", "{FDC899CE-42A8-40E6-B7EF-768284B0E283}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VNCompiler", "VNCompiler\VNCompiler.csproj", "{C85FA53D-35BB-44B4-8D56-A77B0DBF5C42}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{262BD30B-AE37-43E1-991C-015B1B651B4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{262BD30B-AE37-43E1-991C-015B1B651B4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{262BD30B-AE37-43E1-991C-015B1B651B4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDC899CE-42A8-40E6-B7EF-768284B0E283}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDC899CE-42A8-40E6-B7EF-768284B0E283}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDC899CE-42A8-40E6-B7EF-768284B0E283}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDC899CE-42A8-40E6-B7EF-768284B0E283}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C85FA53D-35BB-44B4-8D56-A77B0DBF5C42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C85FA53D-35BB-44B4-8D56-A77B0DBF5C42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C85FA53D-35BB-44B4-8D56-A77B0DBF5C42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C85FA53D-35BB-44B4-8D56-A77B0DBF5C42}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,8 +1,0 @@
-# "나"가 말하는 대사는 처음부터 이름이 보이도록
-UNLOCK name, "나"
-
-# 모든 SCG 어둡게
-FX SCG_LightOff
-
-# 1-1 스크립트 시작
-SCRIPT "1-1"
