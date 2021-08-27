@@ -76,18 +76,8 @@ namespace VN.Game {
         }
 
 		public Image nameBox = Image.FromFile(Path.Combine("VNData", "UI", "nameBox.png"));
-		class UIImages {
-		
-			public Image dialogueBox = Image.FromFile(Path.Combine("VNData", "UI", "dialogueBox.png"));
-			public Image historyIcon = Image.FromFile(Path.Combine("VNData", "UI", "historyIcon.png"));
-			public Image autoIcon = Image.FromFile(Path.Combine("VNData", "UI", "autoIcon.png"));
-			public Image saveIcon = Image.FromFile(Path.Combine("VNData", "UI", "saveIcon.png"));
-			public Image loadIcon = Image.FromFile(Path.Combine("VNData", "UI", "loadIcon.png"));
-			public Image uiIcon = Image.FromFile(Path.Combine("VNData", "UI", "uiIcon.png"));
-			public Image stopIcon = Image.FromFile(Path.Combine("VNData", "UI", "stopIcon.png"));
-			public Image settingIcon = Image.FromFile(Path.Combine("VNData", "UI", "settingIcon.png"));
-			public Image nextIcon = Image.FromFile(Path.Combine("VNData", "UI", "nextIcon.png"));
-		}
+		public Image dialogueBox = Image.FromFile(Path.Combine("VNData", "UI", "dialogueBox.png"));
+		public Image nextIcon = Image.FromFile(Path.Combine("VNData", "UI", "nextIcon.png"));
 
 		// 싱글톤 패턴
 		internal static Game Instance { get; } = new Game();
@@ -470,8 +460,9 @@ namespace VN.Game {
 
 			// 만약 마우스 오른쪽 버튼(혹은 UI숨김 버튼)을 누르지 않으면 UI, 대사 출력
 			if (!this.UIHide) {
-				
-				DrawUIIcons(g);		//	다양한 아이콘들 출력
+
+				g.DrawImage(dialogueBox, 50, 290, 600, 150);
+				g.DrawImage(nextIcon, 593, 413, nextIcon.Width * 3 / 4, nextIcon.Height * 3 / 4);
 
 				if (state.TellerName != null) {
 					string name;
@@ -528,27 +519,5 @@ namespace VN.Game {
 			);
 		}
 
-		private void DrawUIIcons(Graphics g) {
-			UIImages uis = new UIImages();
-			/*
-			int uiWidth = uis.historyIcon.Width * 2 / 3 = 86
-			int uiHeight = uis.historyIcon.Height * 2 / 3 = 29
-			*/
-			g.DrawImage(uis.nextIcon, 593, 413, uis.nextIcon.Width * 3 / 4, uis.nextIcon.Height * 3 / 4);
-			g.DrawImage(uis.dialogueBox, 50, 290, 600, 150);
-			g.DrawImage(uis.historyIcon, 660, 290, 86, 29);
-			g.DrawImage(uis.autoIcon, 660, 320, 86, 29);
-			g.DrawImage(uis.saveIcon, 660, 350, 86, 29);
-			g.DrawImage(uis.loadIcon, 660, 380, 86, 29);
-			g.DrawImage(uis.uiIcon, 660, 410, 86, 29);
-
-			/*
-			int uiWidth2 = uis.stopIcon.Width * 2 / 3 = 46
-			int uiHeight2 = uis.stopIcon.Height * 2 / 3 = 29
-			*/
-			g.DrawImage(uis.stopIcon, 740, 20, 46, 29);
-			g.DrawImage(uis.settingIcon, 740, 55, 46, 29);
-			g.DrawImage(uis.nextIcon, 593, 413, 57, 29);
-		}
 	}
 }

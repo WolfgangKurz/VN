@@ -123,5 +123,44 @@
   <ItemGroup>
     <None Include="bin\Debug\VNData\BG\title.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\historyIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\autoIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\saveIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\loadIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\uiIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\btnHistory.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\btnAuto.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\btnSave.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\btnLoad.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\btnUI.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\nextIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\btnStop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Debug\VNData\UI\btnSetting.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

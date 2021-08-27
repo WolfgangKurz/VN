@@ -114,6 +114,15 @@ namespace VN {
 			Game.Game.Instance.Run();
 			this.btnStart.Visible = false;
 
+			this.btnStop.Visible = true;
+			this.btnSetting.Visible = true;
+			this.btnHistory.Visible = true;
+			this.btnAuto.Visible = true;
+			this.btnSave.Visible = true;
+			this.btnLoad.Visible = true;
+			this.btnUI.Visible = true;
+
+
 			this.Running = true;
 			this.RenderThread.Start();
 		}
@@ -137,10 +146,20 @@ namespace VN {
 		private void frmMain_MouseClick(object sender, MouseEventArgs e) {
 			var instance = Game.Game.Instance;
 
-			if (e.Button == MouseButtons.Left) {
+			if (e.Button == MouseButtons.Left)
+			{
 				if (instance.UIHide) // UI를 감춘 상태라면
+				{
 					instance.UIHide = false; // UI 감추기만 해제
 
+					this.btnStop.Visible = true;
+					this.btnSetting.Visible = true;
+					this.btnHistory.Visible = true;
+					this.btnAuto.Visible = true;
+					this.btnSave.Visible = true;
+					this.btnLoad.Visible = true;
+					this.btnUI.Visible = true;
+				}
 				else if (instance.UnblockReady) // 다음 대사/명령으로 넘어갈 준비가 되었다면
 					instance.Unblock(); // 대기를 해제
 
@@ -148,12 +167,46 @@ namespace VN {
 					instance.InstantText(); // 현재 대사를 즉시 전부 표시
 			}
 			else if (e.Button == MouseButtons.Right)
+			{
 				instance.UIHide = !instance.UIHide; // 우클릭 시 UI 감추기 토글
+				
+				// 우클릭 시 UIHide 값이 true면 다시 숨김
+				if(instance.UIHide) {
+					this.btnStop.Visible = false;
+					this.btnSetting.Visible = false;
+					this.btnHistory.Visible = false;
+					this.btnAuto.Visible = false;
+					this.btnSave.Visible = false;
+					this.btnLoad.Visible = false;
+					this.btnUI.Visible = false;
+				}
+				// false이면 다시 보여줌
+                else {
+					this.btnStop.Visible = true;
+					this.btnSetting.Visible = true;
+					this.btnHistory.Visible = true;
+					this.btnAuto.Visible = true;
+					this.btnSave.Visible = true;
+					this.btnLoad.Visible = true;
+					this.btnUI.Visible = true;
+				}
+			}
+						
 		}
 
 		private void frmMain_MouseDoubleClick(object sender, MouseEventArgs e) {
 			// 더블 클릭 이벤트 무시
 			this.frmMain_MouseClick(sender, e);
 		}
-	}
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnNext_Click(object sender, EventArgs e)
+        {
+
+        }
+    }
 }
