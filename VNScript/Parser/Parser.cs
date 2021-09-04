@@ -71,6 +71,36 @@ namespace VNScript.Parser {
 			}
 			return null;
 		}
+		private IResult<AST.Parameter> Parameter(ref Cursor cursor) {
+			IResult<AST.Parameter> r0 = null;
+			var sc0 = cursor;
+
+			var r1 = this.Keyword(ref cursor);
+			if (r1 != null) {
+				var name = this.ValueOrDefault(r1);
+
+				var sc1 = cursor;
+				if (this.ParseToken(ref cursor, Lexer.TokenType.ASSIGN) != null) {
+					var r2 = this.Literal(ref cursor);
+					if (r2 != null) {
+						var value = this.ValueOrDefault(r2);
+						r0 = this.ReturnHelper<AST.Parameter>(sc0, ref cursor, state => new AST.Parameter(name, value));
+					}
+					else {
+						cursor = sc1;
+						r0 = this.ReturnHelper<AST.Parameter>(sc0, ref cursor, state => new AST.Parameter(name));
+					}
+				}
+				else {
+					cursor = sc1;
+					r0 = this.ReturnHelper<AST.Parameter>(sc0, ref cursor, state => new AST.Parameter(name));
+				}
+			}
+			else
+				cursor = sc0;
+
+			return r0;
+		}
 		private IResult<AST.Literal> Literal(ref Cursor cursor) {
 			var token = cursor.Peek();
 			if (token != null) {
@@ -274,7 +304,7 @@ namespace VNScript.Parser {
 				var name = this.ValueOrDefault(r1);
 
 				if (r1 != null && this.ParseToken(ref cursor, Lexer.TokenType.LPAREN) != null) {
-					var r2 = this.KeywordList(ref cursor);
+					var r2 = this.ParameterList(ref cursor);
 					var arguments = this.ValueOrDefault(r2);
 
 					if (this.ParseToken(ref cursor, Lexer.TokenType.RPAREN) != null) {
@@ -298,26 +328,26 @@ namespace VNScript.Parser {
 
 			return r0;
 		}
-		private IResult<AST.KeywordList> KeywordList(ref Cursor cursor) {
-			IResult<AST.KeywordList> r0 = null;
+		private IResult<AST.ParameterList> ParameterList(ref Cursor cursor) {
+			IResult<AST.ParameterList> r0 = null;
 			var sc0 = cursor; // StartCursor
 
-			var r1 = this.Keyword(ref cursor);
+			var r1 = this.Parameter(ref cursor);
 			var left = this.ValueOrDefault(r1);
 			if (r1 != null) {
-				IResult<AST.KeywordList> r2 = null;
+				IResult<AST.ParameterList> r2 = null;
 
 				var sc1 = cursor;
 				if (this.ParseToken(ref cursor, Lexer.TokenType.COMMA) != null) {
-					var r4 = this.KeywordList(ref cursor);
+					var r4 = this.ParameterList(ref cursor);
 					var list = this.ValueOrDefault(r4);
 
 					if (r4 != null) {
-						r2 = this.ReturnHelper<AST.KeywordList>(sc1, ref cursor, state => {
+						r2 = this.ReturnHelper<AST.ParameterList>(sc1, ref cursor, state => {
 							if (r2 != null)
-								return new AST.KeywordList(
-									r2.Value.Keywords
-										.Concat(list.Keywords)
+								return new AST.ParameterList(
+									r2.Value.Parameters
+										.Concat(list.Parameters)
 										.ToArray()
 								);
 							else
@@ -332,12 +362,15 @@ namespace VNScript.Parser {
 
 				var right = ValueOrDefault(r2);
 				if (r2 != null) {
-					r0 = this.ReturnHelper<AST.KeywordList>(sc0, ref cursor, state => new AST.KeywordList(
-						new AST.Keyword[] { left }.Concat(right.Keywords).ToArray()
+					r0 = this.ReturnHelper<AST.ParameterList>(sc0, ref cursor, state => new AST.ParameterList(
+						new AST.Parameter[] { left }.Concat(right.Parameters).ToArray()
 					));
 				}
-				else
-					r0 = this.ReturnHelper<AST.KeywordList>(sc0, ref cursor, state => new AST.KeywordList(new AST.Keyword[] { left }));
+				else {
+					r0 = this.ReturnHelper<AST.ParameterList>(sc0, ref cursor, state =>
+						new AST.ParameterList(new AST.Parameter[] { left })
+					);
+				}
 			}
 			else
 				cursor = sc0;

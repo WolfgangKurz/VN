@@ -109,15 +109,6 @@ namespace VN {
 				act();
 		}
 
-		private void btnStart_Click(object sender, EventArgs e) {
-			// 임시
-			Game.Game.Instance.Run();
-			this.btnStart.Visible = false;
-
-			this.Running = true;
-			this.RenderThread.Start();
-		}
-
 		private void frmMain_FormClosing(object sender, FormClosingEventArgs e) {
 			if (this.Running) {
 				Game.Game.Instance.Destroy();
@@ -154,6 +145,22 @@ namespace VN {
 		private void frmMain_MouseDoubleClick(object sender, MouseEventArgs e) {
 			// 더블 클릭 이벤트 무시
 			this.frmMain_MouseClick(sender, e);
+		}
+
+		private void frmMain_Shown(object sender, EventArgs e) {
+			Game.Game.Instance.Run();
+
+			this.Running = true;
+			this.RenderThread.Start();
+		}
+
+		private void frmMain_MouseMove(object sender, MouseEventArgs e) {
+			var game = Game.Game.Instance;
+
+			var buttons = 0;
+			if (e.Button.HasFlag(MouseButtons.Left)) buttons |= 1;
+			if (e.Button.HasFlag(MouseButtons.Right)) buttons |= 2;
+			game.Mouse(e.X, e.Y, buttons);
 		}
 	}
 }

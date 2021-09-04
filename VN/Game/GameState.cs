@@ -26,7 +26,7 @@ namespace VN.Game {
 		/// <summary>
 		/// 화면에 표시되는 추가 이미지 목록
 		/// </summary>
-		public Dictionary<int, GameImage> Images { get; } = new Dictionary<int, GameImage>();
+		public Dictionary<string, GameImage> Images { get; } = new Dictionary<string, GameImage>();
 
 		public GameState Clone() {
 			var clone = new GameState();
@@ -36,7 +36,11 @@ namespace VN.Game {
 			clone.BG = this.BG?.Clone() as Image;
 
 			foreach (var entity in this.Images)
-				clone.Images[entity.Key] = new GameImage(entity.Value.Image.Clone() as Image, entity.Value.X);
+				clone.Images[entity.Key] = new GameImage(
+					entity.Value.Image.Clone() as Image,
+					entity.Value.X, entity.Value.Y,
+					entity.Value.CenterX, entity.Value.CenterY
+				);
 
 			return clone;
 		}

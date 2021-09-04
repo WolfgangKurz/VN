@@ -13,6 +13,27 @@ namespace VNCompiler {
 	class Program {
 		private static string CurrentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
 
+		private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs) {
+			var dir = new DirectoryInfo(sourceDirName);
+
+			if (!dir.Exists)
+				throw new DirectoryNotFoundException($"Source directory does not exist or could not be found: {sourceDirName}");
+
+			var dirs = dir.GetDirectories();
+			Directory.CreateDirectory(destDirName);
+
+			var files = dir.GetFiles();
+			foreach (var file in files) {
+				if (file.Extension != ".vns")
+					file.CopyTo(Path.Combine(destDirName, file.Name), false);
+			}
+
+			if (copySubDirs) {
+				foreach (var subdir in dirs)
+					DirectoryCopy(subdir.FullName, Path.Combine(destDirName, subdir.Name), copySubDirs);
+			}
+		}
+
 		static void Main(string[] args) {
 			VNScript.Test.Run();
 
@@ -43,6 +64,15 @@ namespace VNCompiler {
 				output,
 				Compiler.Pack(pack.ToArray()).ToArray()
 			);
+
+			var debugDir = Path.Combine(
+				inputDir,
+				"..", "bin", "Debug", "VNData"
+			);
+
+			if (Directory.Exists(debugDir))
+				Directory.Delete(debugDir, true);
+			DirectoryCopy(outputDir, debugDir, true);
 		}
 	}
 }

@@ -98,6 +98,11 @@ func max(@a, @b) {
 	return @b
 }
 $RuntimeFunc = max(10, 20) // 20
+
+func power(@x, @y = 2) {
+	return @x ** @y
+}
+$OptionalFunc = power(2) // 4
 ";
 
 			var r = VNScript.Compiler.Compiler.Compile(VNScript.Parser.Parser.Parse(code));
@@ -181,6 +186,7 @@ $RuntimeFunc = max(10, 20) // 20
 
 			Assert("$NativeFunc", 3);
 			Assert("$RuntimeFunc", 20);
+			Assert("$OptionalFunc", 4);
 		}
 	}
 }

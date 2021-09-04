@@ -1,7 +1,17 @@
 GameTitle "남십자성이 보이는 하늘 아래"
-GameSize 800, 450
+GameSize 1280, 720
 GameResizable true
 GameMargin "LetterBox"
 
 // 첫 스크립트 이름 (확장자 제외)
-$Startup = "0"
+$Startup = "title"
+
+Script "MATH"
+
+Func SCG (@key, @img, @x = null) {
+	@_x = $game_width * @x
+	@_y = $game_height * 0.8
+
+	IMG @key, @img, @_x, @_y, 0.5, 1
+	// 전체 높이의 80% 위치에서 "서있게"
+}

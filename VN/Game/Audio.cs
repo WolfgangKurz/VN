@@ -33,12 +33,17 @@ namespace VN.Game {
 				int totalBytesRead = 0;
 
 				while (totalBytesRead < count) {
-					var bytesRead = sourceStream.Read(buffer, offset + totalBytesRead, count - totalBytesRead);
-					if (bytesRead == 0) {
-						if (sourceStream.Position == 0 || !EnableLooping) break;
-						sourceStream.Position = 0;
+					try {
+						var bytesRead = sourceStream.Read(buffer, offset + totalBytesRead, count - totalBytesRead);
+						if (bytesRead == 0) {
+							if (sourceStream.Position == 0 || !EnableLooping) break;
+							sourceStream.Position = 0;
+						}
+						totalBytesRead += bytesRead;
 					}
-					totalBytesRead += bytesRead;
+					catch {
+						break;
+					}
 				}
 				return totalBytesRead;
 			}

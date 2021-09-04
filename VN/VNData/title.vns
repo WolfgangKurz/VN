@@ -1,0 +1,95 @@
+// 버튼 초기화
+$btn_start_step = 0
+$btn_load_step = 0
+$btn_collection_step = 0
+$btn_option_step = 0
+
+Wait 0.5
+
+// 페이드 인
+Freeze()
+BG "BG_Title"
+Transition 2
+
+BGM "title_first"
+
+// 로고 페이드 인
+Freeze()
+IMG "logo", "title/logo", 1200, 40, 1, 0
+Transition 1
+
+// 버튼 페이드 인
+Freeze()
+IMG "title_start", "title/btn_start", 50, 240, 0, 0
+IMG "title_load", "title/btn_load", 50, 360, 0, 0
+IMG "title_collection", "title/btn_collection", 50, 480, 0, 0
+IMG "title_option", "title/btn_option", 50, 600, 0, 0
+Transition 1
+
+FUNC OnFrame() {
+	// 320 = 50 + 270
+
+	@temp = false // 시작 버튼
+	if ($mouse_x >= 50 && $mouse_x <= 320 && $mouse_y >= 240 && $mouse_y <= 333) {
+		@temp = true
+		$buttonFrame ++
+
+		@prev = $btn_start_step
+		$btn_start_step = (floor($buttonFrame / 30) % 4) + 1
+
+		if ($btn_start_step != @prev) IMG "title_start", "title/btn_start_hover" .. $btn_start_step
+	}
+	if (!@temp && $btn_start_step > 0) {
+		$btn_start_step = 0
+		$buttonFrame = 0
+		IMG "title_start", "title/btn_start"
+	}
+
+	@temp = false // 로드 버튼
+	if ($mouse_x >= 50 && $mouse_x <= 320 && $mouse_y >= 360 && $mouse_y <= 453) {
+		@temp = true
+		$buttonFrame ++
+
+		@prev = $btn_load_step
+		$btn_load_step = (floor($buttonFrame / 30) % 4) + 1
+
+		if ($btn_load_step != @prev) IMG "title_load", "title/btn_load_hover" .. $btn_load_step
+	}
+	if (!@temp && $btn_load_step > 0) {
+		$btn_load_step = 0
+		$buttonFrame = 0
+		IMG "title_load", "title/btn_load"
+	}
+
+	@temp = false
+	if ($mouse_x >= 50 && $mouse_x <= 320 && $mouse_y >= 480 && $mouse_y <= 573) {
+		@temp = true
+		$buttonFrame ++
+
+		@prev = $btn_collection_step
+		$btn_collection_step = (floor($buttonFrame / 30) % 4) + 1
+
+		if ($btn_collection_step != @prev) IMG "title_collection", "title/btn_collection_hover" .. $btn_collection_step
+	}
+	if (!@temp && $btn_collection_step > 0) {
+		$btn_collection_step = 0
+		$buttonFrame = 0
+		IMG "title_collection", "title/btn_collection"
+	}
+
+	@temp = false
+	if ($mouse_x >= 50 && $mouse_x <= 320 && $mouse_y >= 600 && $mouse_y <= 693) {
+		@temp = true
+		$buttonFrame ++
+
+		@prev = $btn_option_step
+		$btn_option_step = (floor($buttonFrame / 30) % 4) + 1
+
+		if ($btn_option_step != @prev) IMG "title_option", "title/btn_option_hover" .. $btn_option_step
+	}
+	if (!@temp && $btn_option_step > 0) {
+		$btn_option_step = 0
+		$buttonFrame = 0
+		IMG "title_option", "title/btn_option"
+	}
+}

@@ -141,6 +141,10 @@ namespace VN.Game {
 			this.Pack = new VNSPack(File.ReadAllBytes(compiled));
 			this.VM = new VM();
 
+			this.VM.Storage.Set(-1, "$mouse_x", VMValue.Number(0));
+			this.VM.Storage.Set(-1, "$mouse_y", VMValue.Number(0));
+			this.VM.Storage.Set(-1, "$mouse_state", VMValue.Number(0));
+
 			this.VM.Register("GameTitle", (args, storage) => {
 				if (args.Length != 1) throw new Exception("VN RuntimeError - GameTitle의 인자는 1개여야합니다.");
 				this.handler.InvokeTitle(args[0].AsString(storage));
@@ -151,6 +155,9 @@ namespace VN.Game {
 
 				var width = args[0].AsNumber(storage);
 				var height = args[1].AsNumber(storage);
+
+				this.VM.Storage.Set(-1, "$game_width", VMValue.Number(width));
+				this.VM.Storage.Set(-1, "$game_height", VMValue.Number(height));
 
 				this.canvasSize = new Size((int)width, (int)height);
 				this.handler.InvokeResize(width,height );
@@ -272,25 +279,151 @@ namespace VN.Game {
 				}
 				return VMValue.Null();
 			});
-			this.VM.Register("SCG", (args, storage) => {
-				if (args.Length < 2 || args.Length > 3) throw new Exception("VN RuntimeError - SCG의 인자는 2개 또는 3개여야합니다.");
+			this.VM.Register("IMG", (args, storage) => {
+				if (args.Length < 2 || args.Length > 6) throw new Exception("VN RuntimeError - IMG의 인자는 2개 이상 6개 이하여야합니다.");
 
-				var idx = args[0].AsInteger(storage);
+				var key = args[0].AsString(storage);
 				var file = args[1].AsString(storage);
-				var pos = args.Length == 2
-					? 0.5
-					: args[2].AsNumber(storage);
+
+				var x = 0.5;
+				var y = 0.5;
+				var centerX = 0.5;
+				var centerY = 0.5;
+
+				if (args.Length >= 3) {
+					x = args[2].AsNumber(storage);
+					if (args[2].Type == VMValueType.Null) {
+						lock (this.Sync) {
+							if (this.CurrentState.Images.ContainsKey(key))
+								x = this.CurrentState.Images[key].X;
+							else
+								x = 0.5;
+						}
+					}
+					else if (args[2].Type == VMValueType.Keyword) {
+						var val = storage.Get(args[2].Data as string)?.Value;
+						if (val == null)
+							x = 0.5;
+						else if (val.Type == VMValueType.Null) {
+							lock (this.Sync) {
+								if (this.CurrentState.Images.ContainsKey(key))
+									x = this.CurrentState.Images[key].X;
+								else
+									x = 0.5;
+							}
+						}
+					}
+				}
+				else {
+					lock (this.Sync) {
+						if (this.CurrentState.Images.ContainsKey(key))
+							x = this.CurrentState.Images[key].X;
+					}
+				}
+
+				if (args.Length >= 4) {
+					y = args[3].AsNumber(storage);
+					if (args[3].Type == VMValueType.Null) {
+						lock (this.Sync) {
+							if (this.CurrentState.Images.ContainsKey(key))
+								y = this.CurrentState.Images[key].Y;
+							else
+								y = 0.5;
+						}
+					}
+					else if (args[3].Type == VMValueType.Keyword) {
+						var val = storage.Get(args[3].Data as string)?.Value;
+						if (val == null)
+							y = 0.5;
+						else if (val.Type == VMValueType.Null) {
+							lock (this.Sync) {
+								if (this.CurrentState.Images.ContainsKey(key))
+									y = this.CurrentState.Images[key].Y;
+								else
+									y = 0.5;
+							}
+						}
+					}
+				}
+				else {
+					lock (this.Sync) {
+						if (this.CurrentState.Images.ContainsKey(key))
+							y = this.CurrentState.Images[key].Y;
+					}
+				}
+
+				if (args.Length >= 5) {
+					centerX = args[4].AsNumber(storage);
+					if (args[4].Type == VMValueType.Null) {
+						lock (this.Sync) {
+							if (this.CurrentState.Images.ContainsKey(key))
+								centerX = this.CurrentState.Images[key].CenterX;
+							else
+								centerX = 0.5;
+						}
+					}
+					else if (args[4].Type == VMValueType.Keyword) {
+						var val = storage.Get(args[4].Data as string)?.Value;
+						if (val == null)
+							centerX = 0.5;
+						else if (val.Type == VMValueType.Null) {
+							lock (this.Sync) {
+								if (this.CurrentState.Images.ContainsKey(key))
+									centerX = this.CurrentState.Images[key].CenterX;
+								else
+									centerX = 0.5;
+							}
+						}
+					}
+				}
+				else {
+					lock (this.Sync) {
+						if (this.CurrentState.Images.ContainsKey(key))
+							centerX = this.CurrentState.Images[key].CenterX;
+					}
+				}
+
+				if (args.Length >= 6) {
+					centerY = args[5].AsNumber(storage);
+					if (args[5].Type == VMValueType.Null) {
+						lock (this.Sync) {
+							if (this.CurrentState.Images.ContainsKey(key))
+								centerY = this.CurrentState.Images[key].CenterY;
+							else
+								centerY = 0.5;
+						}
+					}
+					else if (args[5].Type == VMValueType.Keyword) {
+						var val = storage.Get(args[5].Data as string)?.Value;
+						if (val == null)
+							centerY = 0.5;
+						else if (val.Type == VMValueType.Null) {
+							lock (this.Sync) {
+								if (this.CurrentState.Images.ContainsKey(key))
+									centerY = this.CurrentState.Images[key].CenterY;
+								else
+									centerY = 0.5;
+							}
+						}
+					}
+				}
+				else {
+					lock (this.Sync) {
+						if (this.CurrentState.Images.ContainsKey(key))
+							centerY = this.CurrentState.Images[key].CenterY;
+					}
+				}
 
 				lock (this.Sync) {
-					if (this.CurrentState.Images.ContainsKey(idx)) {
-						this.CurrentState.Images[idx]?.Dispose();
-						this.CurrentState.Images.Remove(idx);
+					if (this.CurrentState.Images.ContainsKey(key)) {
+						this.CurrentState.Images[key].Dispose();
+						this.CurrentState.Images.Remove(key);
 					}
-					this.CurrentState.Images[idx] = new GameImage(
+					this.CurrentState.Images[key] = new GameImage(
 						Image.FromFile(
-							Path.Combine("VNData", "SCG", file + ".png")
+							Path.Combine("VNData", "IMG", file + ".png")
 						),
-						pos
+						x, y, centerX, centerY
 					);
 				}
 				return VMValue.Null();
@@ -316,6 +449,19 @@ namespace VN.Game {
 				do {
 					lock (this.Sync)
 						freezed = this.FreezedState != null;
+				} while (freezed);
+
+				return VMValue.Null();
+			});
+			this.VM.Register("Wait", (args, storage) => {
+				if (args.Length != 1) throw new Exception("VN RuntimeError - Wait의 인자는 1개여야합니다.");
+
+				var dur = args[0].AsNumber(storage) * TimeSpan.TicksPerSecond;
+				var start = DateTime.UtcNow.Ticks;
+				
+				var freezed = true;
+				do {
+					freezed = (DateTime.UtcNow.Ticks - start) < dur;
 				} while (freezed);
 
 				return VMValue.Null();
@@ -346,18 +492,20 @@ namespace VN.Game {
 		}
 
 		public void Destroy() {
-			if(this.FreezedState!=null) {
-				this.FreezedState.Dispose();
-				this.FreezedState = null;
+			lock (this.Sync) {
+				if (this.FreezedState != null) {
+					this.FreezedState.Dispose();
+					this.FreezedState = null;
+				}
+				this.CurrentState.Dispose();
+
+				this.BGM.Dispose();
+
+				this.VMThread?.Abort();
+
+				this.VM = null;
+				this.Pack = null;
 			}
-			this.CurrentState.Dispose();
-
-			this.BGM.Dispose();
-
-			this.VMThread?.Abort();
-
-			this.VM = null;
-			this.Pack = null;
 		}
 
 		/// <summary>
@@ -375,6 +523,18 @@ namespace VN.Game {
 		}
 
 		/// <summary>
+		/// 마우스 상태를 입력
+		/// </summary>
+		/// <param name="X">마우스 X</param>
+		/// <param name="Y">마우스 Y</param>
+		/// <param name="State">마우스 상태 (0: 없음, 1: 좌클릭, 2: 우클릭)</param>
+		public void Mouse(int X, int  Y, int State) {
+			this.VM.Storage.Set(-1, "$mouse_x", VMValue.Number(X));
+			this.VM.Storage.Set(-1, "$mouse_y", VMValue.Number(Y));
+			this.VM.Storage.Set(-1, "$mouse_state", VMValue.Number(State));
+		}
+
+		/// <summary>
 		/// 화면에 그리기 위한 렌더 사이클 본문 (매 프레임 Clear된 상태로 호출됨)
 		/// </summary>
 		/// <param name="g"><see cref="Graphics"/> 객체</param>
@@ -386,6 +546,9 @@ namespace VN.Game {
 				current = this.CurrentState;
 				freezed = this.FreezedState;
 			}
+
+			if (this.VM.FuncExists("OnFrame"))
+				this.VM.Call("OnFrame");
 
 			if (freezed != null) { // Freeze된 화면이 있는 경우
 				this.Render(g, freezed);
@@ -413,6 +576,9 @@ namespace VN.Game {
 			}
 			else
 				this.Render(g, current);
+
+			var debug = $"{this.VM.Storage.Get("$mouse_x")?.Value.AsNumber(this.VM.Storage)} x {this.VM.Storage.Get("$mouse_y")?.Value.AsNumber(this.VM.Storage)}";
+			this.DrawStrokedString(g, debug, new Rectangle(0, 0, 1280, 200));
 		}
 
 		/// <summary>
@@ -444,8 +610,8 @@ namespace VN.Game {
 				foreach (var image in images) {
 					var img = image.Image;
 					var rect = new Rectangle(
-						(int)((canvasSize.Width * image.X) - (img.Width * image.X)), // 전체 영역에서 X% 위치로
-						(int)((canvasSize.Height * 0.8) - (img.Height /* * 1.0 */)), // 전체 높이의 80% 위치에서 "서있게"
+						(int)(image.X - (img.Width * image.CenterX)), // 전체 가로에서 X% 위치로
+						(int)(image.Y - (img.Height *image.CenterY)), // 전체 높이에서 Y% 위치로
 						img.Width,
 						img.Height
 					);

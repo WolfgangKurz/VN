@@ -142,7 +142,24 @@ namespace VNScript.VM {
 							var func = RuntimeFuncs[callee];
 							var state = new VMState(func.Body, vm.Storage.CurrentLevel);
 
-							foreach (var arg in arguments) Stack.Push(arg);
+							var argList = new List<VMValue>();
+							foreach (var arg in arguments) argList.Add(arg);
+
+							// Optional 값 추가
+							for (var i = argList.Count; i < func.Arguments.Length; i++) {
+								var arg = func.Arguments[i];
+
+								if (arg == null) {
+									var mod = i % 10;
+									var index = (i + 1) + (mod == 1 ? "st" : mod == 2 ? "nd" : mod == 3 ? "rd" : "th");
+									throw new Exception($"VNScript VMError - Function \"{callee}\"'s {index} argument is not optional");
+								}
+
+								argList.Add(arg);
+							}
+
+							// 스택에 삽입
+							foreach (var arg in argList) Stack.Push(arg);
 
 							// 결과를 받지 않는 경우, 함수 반환값을 무시 (Pop)
 							if (returns == 0)
@@ -194,11 +211,51 @@ namespace VNScript.VM {
 					break;
 
 				case ByteCodeType.Define: {
+						var paramLen = this.Byte();
+						var paramList = new VMValue[paramLen];
+						for (var i = 0; i < paramLen; i++) {
+							var spec = (VMValueType)this.Byte();
+							if (spec == VMValueType.None)
+								paramList[i] = null;
+							else {
+								var buffer = this.Read(this.Byte());
+								VMValue data;
+
+								switch (spec) {
+									case VMValueType.Null:
+										if (buffer.Length != 0) throw new Exception("VNScript VMError - Invalid Data Length for Null");
+										data = VMValue.Null();
+										break;
+									case VMValueType.Number:
+										if (buffer.Length != 8) throw new Exception("VNScript VMError - Invalid Data Length for Number");
+										data = VMValue.Number(BitConverter.ToDouble(buffer, 0));
+										break;
+									case VMValueType.Boolean:
+										if (buffer.Length != 1) throw new Exception("VNScript VMError - Invalid Data Length for Boolean");
+										data = VMValue.Boolean(buffer[0] != 0);
+										break;
+									case VMValueType.String:
+										data = VMValue.String(Encoding.UTF8.GetString(buffer));
+										break;
+									case VMValueType.Keyword:
+										data = VMValue.Keyword(Encoding.UTF8.GetString(buffer));
+										break;
+									case VMValueType.Integer:
+										if (buffer.Length != 4) throw new Exception("VNScript VMError - Invalid Data Length for Integer");
+										data = VMValue.Integer(BitConverter.ToInt32(buffer, 0));
+										break;
+									default:
+										throw new Exception("VNScript VMError - Unexpected Value Type");
+								}
+								paramList[i] = data;
+							}
+						}
+
 						var nameLen = this.Byte();
 						var name = this.String(nameLen);
 
 						if (NativeFuncs.ContainsKey(name))
-							throw new Exception("VNScript VMError - '" + name + "' Already defined");
+							throw new Exception("VNScript VMError - '" + name + "' Already defined at Native Functions");
 
 						var bodySize = this.Int();
 						var address = (int)this.stream.Position;
@@ -206,7 +263,9 @@ namespace VNScript.VM {
 
 						var body = new byte[bodySize];
 						Array.Copy(this.Body, address, body, 0, bodySize);
-						RuntimeFuncs.Add(name, new VMRuntimeFunc(body));
+
+						// Add or Replace
+						RuntimeFuncs[name] = new VMRuntimeFunc(paramList, body);
 					}
 					break;
 
@@ -226,19 +285,19 @@ namespace VNScript.VM {
 				case ByteCodeType.BitwiseOr: {
 						var left = Stack.Pop();
 						var right = Stack.Pop();
-						Stack.Push(new VMValue(VMValueType.Number, left.AsInteger(Storage) | right.AsInteger(Storage)));
+						Stack.Push(new VMValue(VMValueType.Number, (double)(left.AsInteger(Storage) | right.AsInteger(Storage))));
 					}
 					break;
 				case ByteCodeType.BitwiseXor: {
 						var left = Stack.Pop();
 						var right = Stack.Pop();
-						Stack.Push(new VMValue(VMValueType.Number, left.AsInteger(Storage) ^ right.AsInteger(Storage)));
+						Stack.Push(new VMValue(VMValueType.Number, (double)(left.AsInteger(Storage) ^ right.AsInteger(Storage))));
 					}
 					break;
 				case ByteCodeType.BitwiseAnd: {
 						var left = Stack.Pop();
 						var right = Stack.Pop();
-						Stack.Push(new VMValue(VMValueType.Number, left.AsInteger(Storage) & right.AsInteger(Storage)));
+						Stack.Push(new VMValue(VMValueType.Number, (double)(left.AsInteger(Storage) & right.AsInteger(Storage))));
 					}
 					break;
 
@@ -282,13 +341,13 @@ namespace VNScript.VM {
 				case ByteCodeType.BitwiseLeftShift: {
 						var left = Stack.Pop();
 						var right = Stack.Pop();
-						Stack.Push(new VMValue(VMValueType.Number, left.AsInteger(Storage) << right.AsInteger(Storage)));
+						Stack.Push(new VMValue(VMValueType.Number, (double)(left.AsInteger(Storage) << right.AsInteger(Storage))));
 					}
 					break;
 				case ByteCodeType.BitwiseRightShift: {
 						var left = Stack.Pop();
 						var right = Stack.Pop();
-						Stack.Push(new VMValue(VMValueType.Number, left.AsInteger(Storage) >> right.AsInteger(Storage)));
+						Stack.Push(new VMValue(VMValueType.Number, (double)(left.AsInteger(Storage) >> right.AsInteger(Storage))));
 					}
 					break;
 
@@ -352,7 +411,7 @@ namespace VNScript.VM {
 					break;
 				case ByteCodeType.BitwiseNot: {
 						var target = Stack.Pop();
-						Stack.Push(new VMValue(VMValueType.Number, ~target.AsInteger(Storage)));
+						Stack.Push(new VMValue(VMValueType.Number, (double)(~target.AsInteger(Storage))));
 					}
 					break;
 

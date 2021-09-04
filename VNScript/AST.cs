@@ -14,7 +14,8 @@ namespace VNScript.AST {
 
 		Call,
 		List,
-		KeywordList,
+		Parameter,
+		ParameterList,
 
 		If,
 		While,
@@ -134,12 +135,12 @@ namespace VNScript.AST {
 		public override Type Type() => AST.Type.Func;
 
 		public Keyword Name { get; }
-		public KeywordList Arguments { get; }
+		public ParameterList Arguments { get; }
 		public Node Body { get; }
 
-		public Func(Keyword Name, KeywordList Arguments, Node Body) {
+		public Func(Keyword Name, ParameterList Arguments, Node Body) {
 			this.Name = Name;
-			this.Arguments = Arguments;
+			this.Arguments = Arguments ?? new ParameterList(new Parameter[0]);
 			this.Body = Body;
 		}
 	}
@@ -614,13 +615,24 @@ namespace VNScript.AST {
 			this.Nodes = nodes;
 		}
 	}
-	public class KeywordList : Node {
-		public override Type Type() => AST.Type.KeywordList;
+	public class Parameter : Node {
+		public override Type Type() => AST.Type.Parameter;
 
-		public Keyword[] Keywords { get; }
+		public Keyword Name { get; }
+		public Node DefaultValue { get; }
 
-		public KeywordList(Keyword[] keywords) {
-			this.Keywords = keywords;
+		public Parameter(Keyword name, Node defaultValue = null) {
+			this.Name = name;
+			this.DefaultValue = defaultValue;
+		}
+	}
+	public class ParameterList : Node {
+		public override Type Type() => AST.Type.ParameterList;
+
+		public Parameter[] Parameters { get; }
+
+		public ParameterList(Parameter[] parameters) {
+			this.Parameters = parameters;
 		}
 	}
 }

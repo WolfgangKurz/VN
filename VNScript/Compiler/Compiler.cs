@@ -110,6 +110,7 @@ namespace VNScript.Compiler {
 				#region Value, Program, Block, List
 				case AST.Type.Literal:
 				case AST.Type.Keyword:
+				case AST.Type.Parameter:
 					if (depth == 0) break;
 
 					this.Write((byte)ByteCodeType.Push);
@@ -133,6 +134,10 @@ namespace VNScript.Compiler {
 							default:
 								throw new Exception("VNScript CompileError - Invalid Node");
 						}
+					}
+					else if (node.Type() == AST.Type.Parameter) {
+						this.Write(4);
+						this.WriteLengthed1(Encoding.UTF8.GetBytes((node as AST.Parameter).Name.Value.value));
 					}
 					else {
 						this.Write(4);
@@ -183,8 +188,8 @@ namespace VNScript.Compiler {
 						var subCompiler = new Compiler();
 						subCompiler.Write((byte)ByteCodeType.EnterBlock);
 
-						foreach (var arg in n.Arguments.Keywords.Reverse()) {
-							var argName = arg.Value.value;
+						foreach (var arg in n.Arguments.Parameters.Reverse()) {
+							var argName = arg.Name.Value.value;
 							if (argName[0] != '@')
 								throw new Exception("VNScript CompileError - Argument for Func should be local scoped.");
 
@@ -198,8 +203,42 @@ namespace VNScript.Compiler {
 						subCompiler.Write((byte)ByteCodeType.ExitBlock);
 						var compiled = subCompiler.ToArray();
 
-						var name = n.Name.Value.value;
+						// [9] [paramLen:1] <param: [spec:1] <def?: [pn:1] [...:pn]>>:paramLen   [nameLen:1] [name:nameLen]   [len:4] [...:len]
 						this.Write((byte)ByteCodeType.Define);
+
+						this.Write((byte)n.Arguments.Parameters.Length);
+						foreach (var arg in n.Arguments.Parameters) {
+							if (arg.DefaultValue != null) {
+								var def = arg.DefaultValue;
+								if (def.Type() == AST.Type.Literal) {
+									var literal = (def as AST.Literal).Value;
+									switch (literal.type) {
+										case Lexer.TokenType.NULL:
+											this.Write(0, 0);
+											break;
+										case Lexer.TokenType.NUMBER:
+											this.Write(1);
+											this.WriteLengthed1(BitConverter.GetBytes(double.Parse(literal.value)));
+											break;
+										case Lexer.TokenType.BOOLEAN:
+											this.Write(2, 1, (byte)(Compiler.TrueRegex.IsMatch(literal.value) ? 1 : 0));
+											break;
+										case Lexer.TokenType.STRING:
+											this.Write(3);
+											this.WriteLengthed1(Encoding.UTF8.GetBytes(literal.value));
+											break;
+										default:
+											throw new Exception("VNScript CompileError - Invalid Node");
+									}
+								}
+								else
+									throw new Exception("VNScript CompileError - Function's arguments should not be Keyword");
+							}
+							else
+								this.Write(255);
+						}
+
+						var name = n.Name.Value.value;
 						this.WriteLengthed1(Encoding.UTF8.GetBytes(name));
 
 						var lengthCursor = this.stream.Position;

@@ -23,18 +23,7 @@
 		/// 이 메서드의 내용을 코드 편집기로 수정하지 마세요.
 		/// </summary>
 		private void InitializeComponent() {
-			this.btnStart = new System.Windows.Forms.Button();
 			this.SuspendLayout();
-			// 
-			// btnStart
-			// 
-			this.btnStart.Location = new System.Drawing.Point(12, 12);
-			this.btnStart.Name = "btnStart";
-			this.btnStart.Size = new System.Drawing.Size(75, 23);
-			this.btnStart.TabIndex = 0;
-			this.btnStart.Text = "시작";
-			this.btnStart.UseVisualStyleBackColor = true;
-			this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
 			// 
 			// frmMain
 			// 
@@ -42,21 +31,20 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.Black;
 			this.ClientSize = new System.Drawing.Size(526, 295);
-			this.Controls.Add(this.btnStart);
 			this.Name = "frmMain";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "VN";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
+			this.Shown += new System.EventHandler(this.frmMain_Shown);
 			this.Click += new System.EventHandler(this.frmMain_Click);
 			this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseClick);
 			this.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseDoubleClick);
+			this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseMove);
 			this.ResumeLayout(false);
 
 		}
 
 		#endregion
-
-		private System.Windows.Forms.Button btnStart;
     }
 }
 

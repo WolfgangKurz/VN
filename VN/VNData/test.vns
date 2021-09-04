@@ -33,13 +33,19 @@ if (@E != @F) { // If Test Block
 	$IfTest2 = true
 }
 
-// While Test
+// While Test (1~5 sum)
 @a = 0, @b = 0, @c = 5
 while (@a < @c) {
 	@a ++
 	@b += @a
 }
 $WhileTest = @b
+
+// For Test (!5 Factorial)
+for (@a = 1, @b = 1, @c = 5; @a <= @c; @a++) {
+	@b *= @a
+}
+$ForTest = @b
 
 $Positive = +@G // -13
 $Negative = -@G // 13
@@ -54,10 +60,7 @@ $DecPrefix = --$Dec // 4
 $DecPostfix = $Dec-- // 4
 // $Dec == 3
 
-$Func = Add(1, 2) // 3
-Test $Func // Print 3
-
-$Concat = @A . @B // "1010"
+$Concat = @A .. @B // ""1010""
 
 $AssignAdd = $AssignSub = $AssignMul = $AssignDiv = $AssignRem = $AssignPow = $AssignOr = $AssignXor = $AssignAnd = $AssignLShift = $AssignRShift = @A
 $AssignAdd += @C // 13
@@ -71,3 +74,13 @@ $AssignXor ^= @C // 9
 $AssignAnd &= @C // 2
 $AssignLShift <<= @C // 80
 $AssignRShift >>= @C // 1
+
+$NativeFunc = Add(1, 2) // 3
+Test $NativeFunc // Print 3
+
+func max(@a, @b) {
+	if (@a > @b)
+		return @a
+	return @b
+}
+$RuntimeFunc = max(10, 20) // 20

@@ -18,6 +18,7 @@ namespace VNScript.VM {
 		internal Dictionary<string, VMRuntimeFunc> RuntimeFuncs { get; }
 
 		private bool Running = false;
+		private int Calling = 0;
 
 		public VM() {
 			this.States = new ReadOnlyStack<VMState>();
@@ -37,6 +38,67 @@ namespace VNScript.VM {
 			return this;
 		}
 
+		public VM Call(string FuncName, params VMValue[] args) {
+			if (this.NativeFuncs.ContainsKey(FuncName)) {
+				var func = this.NativeFuncs[FuncName];
+				func.Invoke(args, this.Storage);
+			}
+			else if (this.RuntimeFuncs.ContainsKey(FuncName)) {
+				// 기존 실행중인 State
+				var curLevel = this.States.Count;
+
+				var func = this.RuntimeFuncs[FuncName];
+				var funcState = new VMState(func.Body, this.Storage.CurrentLevel);
+
+				var argList = new List<VMValue>();
+				foreach (var arg in args) argList.Add(arg);
+
+				// Optional 값 추가
+				for (var i = argList.Count; i < func.Arguments.Length; i++) {
+					var arg = func.Arguments[i];
+
+					if (arg == null) {
+						var mod = i % 10;
+						var index = (i + 1) + (mod == 1 ? "st" : mod == 2 ? "nd" : mod == 3 ? "rd" : "th");
+						throw new Exception($"VNScript VMError - Function \"{FuncName}\"'s {index} argument is not optional");
+					}
+
+					argList.Add(arg);
+				}
+
+				// 스택에 삽입
+				foreach (var arg in argList) Stack.Push(arg);
+
+				// 함수 반환값을 무시 (Pop)
+				this.States.Push(new VMState(new byte[] { (byte)Compiler.ByteCodeType.Pop }, this.Storage.CurrentLevel));
+				this.States.Push(funcState);
+
+				this.Calling++;
+
+				while (this.States.Count > curLevel) {
+					var state = this.States.Peek();
+
+					if (!state.Ended)
+						state.Next(this);
+					else {
+						var level = state.StorageLevel;
+						while (this.Storage.CurrentLevel > level)
+							this.Storage.Down();
+
+						this.States.Pop();
+					}
+				}
+
+				this.Calling--;
+			}
+			else
+				throw new Exception("VMScript VMError - Undefined Function");
+
+			return this;
+		}
+
+		public bool FuncExists(string FuncName) => this.NativeFuncs.ContainsKey(FuncName) || this.RuntimeFuncs.ContainsKey(FuncName);
+
 		public void Run() {
 			this.Stack = new ReadOnlyStack<VMValue>();
 
@@ -44,7 +106,9 @@ namespace VNScript.VM {
 				throw new Exception("VMScript VMError - Already Running");
 
 			while (this.States.Count > 0) {
-				var stateSize = this.States.Count;
+				if (this.Calling > 0)
+					continue;
+
 				var state = this.States.Peek();
 
 				if (!state.Ended)

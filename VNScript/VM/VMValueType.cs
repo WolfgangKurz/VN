@@ -12,5 +12,7 @@ namespace VNScript.VM {
 		String = 3,
 		Keyword = 4,
 		Integer = 5,
+
+		None = 255,
 	}
 }
