@@ -129,8 +129,10 @@ namespace VN {
 			var instance = Game.Game.Instance;
 
 			if (e.Button == MouseButtons.Left) {
-				if (instance.UIHide) // UI를 감춘 상태라면
-					instance.UIHide = false; // UI 감추기만 해제
+				instance.MouseClick(e.X, e.Y, 1);
+
+				if ((instance.UIState & Game.UIState.Interactive) == Game.UIState.None) // UI를 감춘 상태라면
+					instance.UIState |= Game.UIState.Interactive; // UI 감추기만 해제
 
 				else if (instance.UnblockReady) // 다음 대사/명령으로 넘어갈 준비가 되었다면
 					instance.Unblock(); // 대기를 해제
@@ -138,8 +140,11 @@ namespace VN {
 				else // 모두 아니라면
 					instance.InstantText(); // 현재 대사를 즉시 전부 표시
 			}
-			else if (e.Button == MouseButtons.Right)
-				instance.UIHide = !instance.UIHide; // 우클릭 시 UI 감추기 토글
+			else if (e.Button == MouseButtons.Right) {
+				instance.MouseClick(e.X, e.Y, 2);
+
+				instance.UIState ^= Game.UIState.Interactive; // 우클릭 시 UI 감추기 토글
+			}
 		}
 
 		private void frmMain_MouseDoubleClick(object sender, MouseEventArgs e) {

@@ -29,10 +29,10 @@ namespace VNScript.VM {
 
 			this.StorageLevel = StorageLevel;
 		}
-		public VMState(byte[] body, int StorageLevel) {
+		public VMState(byte[] body, int StorageLevel, string Name = "") {
 			this.Chunk = null;
 
-			this.Name = "#RuntimeChunk";
+			this.Name = Name + "#RuntimeChunk";
 			this.Body = body;
 			this.stream = new MemoryStream(this.Body);
 
@@ -127,7 +127,7 @@ namespace VNScript.VM {
 						if (_callee.Type != VMValueType.Keyword)
 							throw new Exception("VNScript VMError - Callee should be Keyword");
 
-						var callee = _callee.AsString();
+						var callee = _callee.AsKeyword();
 						var arguments = new VMValue[argc]
 							.Select(_ => Stack.Pop())
 							.Reverse()
@@ -177,10 +177,10 @@ namespace VNScript.VM {
 						if(_target.Type != VMValueType.Keyword)
 							throw new Exception("VNScript VMError - Assign Target should be Keyword");
 
-						var target = _target.AsString();
+						var target = _target.AsKeyword();
 						var value = Stack.Pop();
 						if (value.Type == VMValueType.Keyword) {
-							var name = value.AsString();
+							var name = value.AsKeyword();
 							if (Storage.Has(name))
 								value = Storage.Get(name).Value;
 							else
@@ -201,7 +201,7 @@ namespace VNScript.VM {
 						if (value.Type != VMValueType.Keyword)
 							throw new Exception("VNScript VMError - Evaluate require Keyword");
 
-						var name = value.AsString();
+						var name = value.AsKeyword();
 						Stack.Push(
 							Storage.Has(name)
 								? Storage.Get(name).Value

@@ -121,6 +121,7 @@ namespace VN.Game {
 				});
 			}
 
+			this.waveOut.Volume = 0.15f;
 			this.waveOut.Play();
 			if (!this.thread.IsAlive)
 				this.thread.Start();

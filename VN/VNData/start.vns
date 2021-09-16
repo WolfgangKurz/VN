@@ -1,0 +1,12 @@
+Freeze()
+BG null
+IMG "logo", null
+IMG "btn_start", null
+IMG "btn_load", null
+IMG "btn_collection", null
+IMG "btn_option", null
+Transition 1
+
+Wait 2
+
+Script "0"

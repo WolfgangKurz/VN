@@ -55,6 +55,28 @@ namespace VNScript.VM {
 						var name = this.Data as string;
 						if (storage?.Has(name) ?? false)
 							return storage.Get(name).Value.AsString(storage);
+						return VMValue.Null().AsString(storage);
+					}
+				case VMValueType.Integer:
+					return ((int)this.Data).ToString();
+				default:
+					throw new Exception("VNScript VMError - Invalid Type");
+			}
+		}
+		public string AsKeyword(VMStorage storage = null) {
+			switch (this.Type) {
+				case VMValueType.Null:
+					return "null";
+				case VMValueType.Number:
+					return ((double)this.Data).ToString();
+				case VMValueType.Boolean:
+					return (bool)this.Data ? "true" : "false";
+				case VMValueType.String:
+					return this.Data as string;
+				case VMValueType.Keyword: {
+						var name = this.Data as string;
+						if (storage?.Has(name) ?? false)
+							return storage.Get(name).Value.AsString(storage);
 						return name;
 					}
 				case VMValueType.Integer:

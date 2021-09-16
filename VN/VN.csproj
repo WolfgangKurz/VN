@@ -87,10 +87,13 @@
     <Compile Include="Game\Audio.cs" />
     <Compile Include="Game\FX.cs" />
     <Compile Include="Game\Game.cs" />
+    <Compile Include="Game\GameSprite.cs" />
     <Compile Include="Game\GameState.cs" />
     <Compile Include="Game\GameTransition.cs" />
     <Compile Include="Game\MarginType.cs" />
     <Compile Include="Game\GameImage.cs" />
+    <Compile Include="Game\Sprite.cs" />
+    <Compile Include="Game\UIState.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

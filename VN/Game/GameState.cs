@@ -22,6 +22,10 @@ namespace VN.Game {
 		/// 화면의 배경
 		/// </summary>
 		public Image BG { get; set; }
+		/// <summary>
+		/// 화면의 배경 파일명
+		/// </summary>
+		public string BGID { get; set; }
 
 		/// <summary>
 		/// 화면에 표시되는 추가 이미지 목록
@@ -38,6 +42,7 @@ namespace VN.Game {
 			foreach (var entity in this.Images)
 				clone.Images[entity.Key] = new GameImage(
 					entity.Value.Image.Clone() as Image,
+					entity.Value.ID,
 					entity.Value.X, entity.Value.Y,
 					entity.Value.CenterX, entity.Value.CenterY
 				);

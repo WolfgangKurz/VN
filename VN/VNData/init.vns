@@ -3,10 +3,12 @@ GameSize 1280, 720
 GameResizable true
 GameMargin "LetterBox"
 
+$scene = ""
+
 // 첫 스크립트 이름 (확장자 제외)
 $Startup = "title"
 
-Script "MATH"
+Load "MATH"
 
 Func SCG (@key, @img, @x = null) {
 	@_x = $game_width * @x

@@ -8,6 +8,7 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Threading;
 using System.Drawing.Imaging;
+using System.Collections.Concurrent;
 
 namespace VN.Game {
 	using VNSPack = VNScript.Compiler.VNSP.VNSPack;
@@ -78,8 +79,11 @@ namespace VN.Game {
 		// 싱글톤 패턴
 		internal static Game Instance { get; } = new Game();
 
+		private long CurrentFrame = 0;
+
 		private VNSPack Pack { get; set; }
 		private VM VM { get; set; }
+		private ConcurrentQueue<string> LoadQueue { get; } = new ConcurrentQueue<string>();
 
 		private Handler handler { get; set; }
 
@@ -103,9 +107,12 @@ namespace VN.Game {
 		private long textStartTime { get; set; } // 대사 출력 기준 시간
 
 		/// <summary>
-		/// UI를 감출지 여부
+		/// UI 상태
 		/// </summary>
-		public bool UIHide { get; set; }
+		internal UIState UIState { get; set; }
+		public bool UIDisplaying { get; set; }
+
+		private Sprite UISprite { get; set; }
 
 		/// <summary>
 		/// 해금된 화자 이름 목록
@@ -137,8 +144,44 @@ namespace VN.Game {
 		public void Initialize(Handler handler) {
 			this.handler = handler;
 
-			var compiled = Path.Combine("VNData", "script.vnc");
-			this.Pack = new VNSPack(File.ReadAllBytes(compiled));
+			this.UISprite = new Sprite(
+				Image.FromFile(Path.Combine("VNData", "IMG", "UI.png")),
+				new Sprite.SpriteInfo[] {
+					new Sprite.SpriteInfo("in_history_1_1", 1486, 579, 84, 26),
+					new Sprite.SpriteInfo("in_history_1_2", 1658, 242, 20, 22),
+					new Sprite.SpriteInfo("in_history_1_3", 0, 0, 747, 666),
+					new Sprite.SpriteInfo("in_icon_1_1", 1557, 530, 129, 43),
+					new Sprite.SpriteInfo("in_icon_1_2", 1269, 335, 129, 44),
+					new Sprite.SpriteInfo("in_icon_1_3", 1398, 335, 129, 44),
+					new Sprite.SpriteInfo("in_icon_1_4", 1527, 335, 129, 44),
+					new Sprite.SpriteInfo("in_icon_1_5", 747, 579, 129, 43),
+					new Sprite.SpriteInfo("in_icon_2_1", 876, 579, 129, 43),
+					new Sprite.SpriteInfo("in_icon_2_2", 1557, 393, 129, 44),
+					new Sprite.SpriteInfo("in_icon_2_3", 1557, 437, 129, 44),
+					new Sprite.SpriteInfo("in_icon_2_4", 1557, 486, 129, 44),
+					new Sprite.SpriteInfo("in_icon_2_5", 1005, 579, 129, 43),
+					new Sprite.SpriteInfo("in_icon_3_1", 1134, 579, 69, 43),
+					new Sprite.SpriteInfo("in_icon_3_2", 1203, 579, 69, 43),
+					new Sprite.SpriteInfo("in_icon_4_1", 1272, 579, 69, 43),
+					new Sprite.SpriteInfo("in_icon_4_2", 1341, 579, 69, 43),
+					new Sprite.SpriteInfo("in_pause_1_0", 747, 242, 371, 151),
+					new Sprite.SpriteInfo("in_pause_1_1", 1118, 242, 270, 93),
+					new Sprite.SpriteInfo("in_pause_1_2", 1388, 242, 270, 93),
+					new Sprite.SpriteInfo("in_pause_1_3", 747, 393, 270, 93),
+					new Sprite.SpriteInfo("in_pause_1_4", 1017, 393, 270, 93),
+					new Sprite.SpriteInfo("in_pause_1_5", 1287, 393, 270, 93),
+					new Sprite.SpriteInfo("in_pause_2_1", 747, 486, 270, 93),
+					new Sprite.SpriteInfo("in_pause_2_2", 1017, 486, 270, 93),
+					new Sprite.SpriteInfo("in_pause_2_3", 1287, 486, 270, 93),
+					new Sprite.SpriteInfo("in_pause_2_4", 0, 666, 270, 93),
+					new Sprite.SpriteInfo("in_pause_2_5", 270, 666, 270, 93),
+					new Sprite.SpriteInfo("in_text_1_0", 747, 0, 947, 242),
+					new Sprite.SpriteInfo("in_text_1_1", 1118, 335, 151, 51),
+					new Sprite.SpriteInfo("in_text_1_2", 1410, 579, 76, 38),
+				}
+			);
+
+			this.Pack = new VNSPack(File.ReadAllBytes(Path.Combine("VNData", "script.vnc")));
 			this.VM = new VM();
 
 			this.VM.Storage.Set(-1, "$mouse_x", VMValue.Number(0));
@@ -180,15 +223,34 @@ namespace VN.Game {
 				return VMValue.Null();
 			});
 
-			this.VM.Register("Script", (args, storage) => {
-				if (args.Length != 1) throw new Exception("VN RuntimeError - Script의 인자는 1개여야합니다.");
+			this.VM.Register("Load", (args, storage) => {
+				if (args.Length != 1) throw new Exception("VN RuntimeError - Load의 인자는 1개여야합니다.");
 
 				var script = args[0].AsString(storage);
 				this.VM.Load(this.Pack.Codes.First(x => x.CodeName == script));
 
 				return VMValue.String(script);
 			});
+			this.VM.Register("Script", (args, storage) => {
+				if (args.Length != 1) throw new Exception("VN RuntimeError - Script의 인자는 1개여야합니다.");
 
+				var script = args[0].AsString(storage);
+				this.LoadQueue.Enqueue(script);
+
+				return VMValue.String(script);
+			});
+
+			this.VM.Register("UI", (args, storage) => {
+				if (args.Length != 1) throw new Exception("VN RuntimeError - UI의 인자는 1개여야합니다.");
+
+				var value = args[0].AsBoolean(storage);
+				if(value)
+					this.UIState |= UIState.Ready;
+				else
+					this.UIState &= ~UIState.Ready;
+
+				return VMValue.Null();
+			});
 			this.VM.Register("UnlockName", (args, storage) => {
 				lock (this.Sync) {
 					foreach (var arg in args.Select(x => x.AsString(storage))) {
@@ -270,11 +332,15 @@ namespace VN.Game {
 					}
 				}else {
 					var bg = arg.AsString(storage);
-					lock(this.Sync) {
-						this.CurrentState.BG?.Dispose();
-						this.CurrentState.BG = Image.FromFile(
-							Path.Combine("VNData", "BG", bg + ".png")
-						);
+
+					var targetFile = Path.Combine("VNData", "BG", bg + ".png");
+					if (targetFile != this.CurrentState.BGID) { // 파일이 다른 경우에만 불러옴
+						lock (this.Sync) {
+							this.CurrentState.BG?.Dispose();
+
+							this.CurrentState.BGID = targetFile;
+							this.CurrentState.BG = Image.FromFile(this.CurrentState.BGID);
+						}
 					}
 				}
 				return VMValue.Null();
@@ -414,17 +480,230 @@ namespace VN.Game {
 					}
 				}
 
-				lock (this.Sync) {
-					if (this.CurrentState.Images.ContainsKey(key)) {
-						this.CurrentState.Images[key].Dispose();
-						this.CurrentState.Images.Remove(key);
+				// 해제하는 경우
+				if (file == null) {
+					lock (this.Sync) {
+						if (this.CurrentState.Images.ContainsKey(key)) {
+							this.CurrentState.Images[key].Dispose();
+							this.CurrentState.Images.Remove(key);
+						}
 					}
-					this.CurrentState.Images[key] = new GameImage(
-						Image.FromFile(
-							Path.Combine("VNData", "IMG", file + ".png")
-						),
-						x, y, centerX, centerY
-					);
+				} else {
+					var targetFile = Path.Combine("VNData", "IMG", file + ".png");
+					lock (this.Sync) {
+						if (!this.CurrentState.Images.ContainsKey(key) || targetFile != this.CurrentState.Images[key].ID) {
+							if (this.CurrentState.Images.ContainsKey(key)) {
+								this.CurrentState.Images[key].Dispose();
+								this.CurrentState.Images.Remove(key);
+							}
+
+							// 파일명이 null인 경우, 새로 불러오지않고 해제만
+							if (args[1].Type != VMValueType.Null) {
+								this.CurrentState.Images[key] = new GameImage(
+									Image.FromFile(targetFile),
+									targetFile,
+									x, y, centerX, centerY
+								);
+							}
+						}
+						else {
+							this.CurrentState.Images[key].X = x;
+							this.CurrentState.Images[key].Y = y;
+							this.CurrentState.Images[key].CenterX = centerX;
+							this.CurrentState.Images[key].CenterY = centerY;
+						}
+					}
+				}
+				return VMValue.Null();
+			});
+			this.VM.Register("SPRITE", (args, storage) => {
+				if (args.Length < 2 || args.Length > 7) throw new Exception("VN RuntimeError - SPRITE의 인자는 3개 이상 7개 이하여야합니다.");
+
+				var key = args[0].AsString(storage);
+				var file = args[1].AsString(storage);
+				var sprite = args[2].AsString(storage);
+
+				var x = 0.5;
+				var y = 0.5;
+				var centerX = 0.5;
+				var centerY = 0.5;
+
+				if (args.Length >= 4) {
+					x = args[3].AsNumber(storage);
+					if (args[3].Type == VMValueType.Null) {
+						lock (this.Sync) {
+							if (this.CurrentState.Images.ContainsKey(key))
+								x = this.CurrentState.Images[key].X;
+							else
+								x = 0.5;
+						}
+					}
+					else if (args[3].Type == VMValueType.Keyword) {
+						var val = storage.Get(args[3].Data as string)?.Value;
+						if (val == null)
+							x = 0.5;
+						else if (val.Type == VMValueType.Null) {
+							lock (this.Sync) {
+								if (this.CurrentState.Images.ContainsKey(key))
+									x = this.CurrentState.Images[key].X;
+								else
+									x = 0.5;
+							}
+						}
+					}
+				}
+				else {
+					lock (this.Sync) {
+						if (this.CurrentState.Images.ContainsKey(key))
+							x = this.CurrentState.Images[key].X;
+					}
+				}
+
+				if (args.Length >= 5) {
+					y = args[4].AsNumber(storage);
+					if (args[4].Type == VMValueType.Null) {
+						lock (this.Sync) {
+							if (this.CurrentState.Images.ContainsKey(key))
+								y = this.CurrentState.Images[key].Y;
+							else
+								y = 0.5;
+						}
+					}
+					else if (args[4].Type == VMValueType.Keyword) {
+						var val = storage.Get(args[4].Data as string)?.Value;
+						if (val == null)
+							y = 0.5;
+						else if (val.Type == VMValueType.Null) {
+							lock (this.Sync) {
+								if (this.CurrentState.Images.ContainsKey(key))
+									y = this.CurrentState.Images[key].Y;
+								else
+									y = 0.5;
+							}
+						}
+					}
+				}
+				else {
+					lock (this.Sync) {
+						if (this.CurrentState.Images.ContainsKey(key))
+							y = this.CurrentState.Images[key].Y;
+					}
+				}
+
+				if (args.Length >= 6) {
+					centerX = args[5].AsNumber(storage);
+					if (args[5].Type == VMValueType.Null) {
+						lock (this.Sync) {
+							if (this.CurrentState.Images.ContainsKey(key))
+								centerX = this.CurrentState.Images[key].CenterX;
+							else
+								centerX = 0.5;
+						}
+					}
+					else if (args[5].Type == VMValueType.Keyword) {
+						var val = storage.Get(args[5].Data as string)?.Value;
+						if (val == null)
+							centerX = 0.5;
+						else if (val.Type == VMValueType.Null) {
+							lock (this.Sync) {
+								if (this.CurrentState.Images.ContainsKey(key))
+									centerX = this.CurrentState.Images[key].CenterX;
+								else
+									centerX = 0.5;
+							}
+						}
+					}
+				}
+				else {
+					lock (this.Sync) {
+						if (this.CurrentState.Images.ContainsKey(key))
+							centerX = this.CurrentState.Images[key].CenterX;
+					}
+				}
+
+				if (args.Length >= 7) {
+					centerY = args[6].AsNumber(storage);
+					if (args[6].Type == VMValueType.Null) {
+						lock (this.Sync) {
+							if (this.CurrentState.Images.ContainsKey(key))
+								centerY = this.CurrentState.Images[key].CenterY;
+							else
+								centerY = 0.5;
+						}
+					}
+					else if (args[6].Type == VMValueType.Keyword) {
+						var val = storage.Get(args[6].Data as string)?.Value;
+						if (val == null)
+							centerY = 0.5;
+						else if (val.Type == VMValueType.Null) {
+							lock (this.Sync) {
+								if (this.CurrentState.Images.ContainsKey(key))
+									centerY = this.CurrentState.Images[key].CenterY;
+								else
+									centerY = 0.5;
+							}
+						}
+					}
+				}
+				else {
+					lock (this.Sync) {
+						if (this.CurrentState.Images.ContainsKey(key))
+							centerY = this.CurrentState.Images[key].CenterY;
+					}
+				}
+
+				// 해제하는 경우
+				if (file == null) {
+					lock (this.Sync) {
+						if (this.CurrentState.Images.ContainsKey(key)) {
+							this.CurrentState.Images[key].Dispose();
+							this.CurrentState.Images.Remove(key);
+						}
+					}
+				}
+				else {
+					var targetFile = Path.Combine("VNData", "IMG", file + ".sprite.png");
+					lock (this.Sync) {
+						var usingKey = this.CurrentState.Images.ContainsKey(key);
+						var sameKey = (key != null) && usingKey && (targetFile == this.CurrentState.Images[key].ID);
+						var wasSprite = usingKey && typeof(GameSprite).IsInstanceOfType(this.CurrentState.Images[key]);
+
+						var disposeRequired = usingKey && (!sameKey || !wasSprite);
+						var allocRequired = (!usingKey || !sameKey || !wasSprite) && (args[1].Type != VMValueType.Null);
+						// 파일명이 null인 경우, 새로 불러오지않고 해제만
+
+						if (disposeRequired) {
+							this.CurrentState.Images[key].Dispose();
+							this.CurrentState.Images.Remove(key);
+						}
+
+						if (allocRequired) {
+							var Infos = File.ReadAllLines(Path.Combine("VNData", "IMG", file + ".sprite.txt"))
+								.Where(x => !string.IsNullOrEmpty(x))
+								.Select(x => x.Split('\t'))
+								.Select(x => new Sprite.SpriteInfo(
+									x[0],
+									int.Parse(x[1]), int.Parse(x[2]), int.Parse(x[3]), int.Parse(x[4])
+								))
+								.ToArray();
+
+							var sp = new GameSprite(
+								new Sprite(Image.FromFile(targetFile), Infos),
+								targetFile,
+								x, y, centerX, centerY
+							);
+							sp.Update(sprite);
+							this.CurrentState.Images[key] =sp;
+						}
+						else if(!disposeRequired) {
+							var sp = this.CurrentState.Images[key] as GameSprite;
+							sp.Update(sprite);
+							sp.X = x;
+							sp.Y = y;
+							sp.CenterX = centerX;
+							sp.CenterY = centerY;
+						}
+					}
 				}
 				return VMValue.Null();
 			});
@@ -446,10 +725,10 @@ namespace VN.Game {
 					this.Transition = new GameTransition(dur);
 
 				var freezed = true;
-				do {
+				while (freezed) {
 					lock (this.Sync)
 						freezed = this.FreezedState != null;
-				} while (freezed);
+				}
 
 				return VMValue.Null();
 			});
@@ -458,11 +737,18 @@ namespace VN.Game {
 
 				var dur = args[0].AsNumber(storage) * TimeSpan.TicksPerSecond;
 				var start = DateTime.UtcNow.Ticks;
-				
+
 				var freezed = true;
-				do {
-					freezed = (DateTime.UtcNow.Ticks - start) < dur;
-				} while (freezed);
+				while (freezed) freezed = (DateTime.UtcNow.Ticks - start) < dur;
+
+				return VMValue.Null();
+			});
+
+			this.VM.Register("Sync", (args, storage) => {
+				var frame = this.CurrentFrame;
+
+				while (frame == this.CurrentFrame)
+					Thread.Sleep(10);
 
 				return VMValue.Null();
 			});
@@ -484,7 +770,18 @@ namespace VN.Game {
 							.AsString(this.VM.Storage)
 						)
 				);
-				this.VM.Run();
+
+				while (this.Pack != null) {
+					this.VM.Run();
+					Thread.Sleep(100);
+
+					while (this.LoadQueue.Count > 0) {
+						string script;
+						if (!this.LoadQueue.TryDequeue(out script)) break;
+
+						this.VM.Load(this.Pack.Codes.First(x => x.CodeName == script));
+					}
+				}
 
 				this.VMThread = null;
 			});
@@ -501,10 +798,14 @@ namespace VN.Game {
 
 				this.BGM.Dispose();
 
+				this.Pack = null;
 				this.VMThread?.Abort();
+				this.VMThread?.Join();
 
 				this.VM = null;
-				this.Pack = null;
+
+				this.UISprite?.Dispose();
+				this.UISprite = null;
 			}
 		}
 
@@ -535,20 +836,29 @@ namespace VN.Game {
 		}
 
 		/// <summary>
+		/// 마우스 클릭을 전달
+		/// </summary>
+		/// <param name="X">마우스 X</param>
+		/// <param name="Y">마우스 Y</param>
+		/// <param name="Type">마우스 버튼 (1: 좌클릭, 2: 우클릭)</param>
+		public void MouseClick(int X, int  Y, int Type) {
+		}
+
+		/// <summary>
 		/// 화면에 그리기 위한 렌더 사이클 본문 (매 프레임 Clear된 상태로 호출됨)
 		/// </summary>
 		/// <param name="g"><see cref="Graphics"/> 객체</param>
 		public void Render(Graphics g) {
 			if (this.VM == null) return;
 
+			this.CurrentFrame++;
+			this.VM.Storage.Set(-1, "$globalFrame", VMValue.Number(this.CurrentFrame));
+
 			GameState current, freezed;
 			lock (this.Sync) {
 				current = this.CurrentState;
 				freezed = this.FreezedState;
 			}
-
-			if (this.VM.FuncExists("OnFrame"))
-				this.VM.Call("OnFrame");
 
 			if (freezed != null) { // Freeze된 화면이 있는 경우
 				this.Render(g, freezed);
@@ -577,7 +887,8 @@ namespace VN.Game {
 			else
 				this.Render(g, current);
 
-			var debug = $"{this.VM.Storage.Get("$mouse_x")?.Value.AsNumber(this.VM.Storage)} x {this.VM.Storage.Get("$mouse_y")?.Value.AsNumber(this.VM.Storage)}";
+			var debug = $"{this.VM.Storage.Get("$mouse_x")?.Value.AsNumber(this.VM.Storage)} x {this.VM.Storage.Get("$mouse_y")?.Value.AsNumber(this.VM.Storage)}\n" +
+				$"{this.VM.Storage.Get("$globalFrame")?.Value.AsNumber(this.VM.Storage)}";
 			this.DrawStrokedString(g, debug, new Rectangle(0, 0, 1280, 200));
 		}
 
@@ -609,6 +920,8 @@ namespace VN.Game {
 
 				foreach (var image in images) {
 					var img = image.Image;
+					if (img == null) continue;
+
 					var rect = new Rectangle(
 						(int)(image.X - (img.Width * image.CenterX)), // 전체 가로에서 X% 위치로
 						(int)(image.Y - (img.Height *image.CenterY)), // 전체 높이에서 Y% 위치로
@@ -621,7 +934,12 @@ namespace VN.Game {
 			}
 
 			// 만약 마우스 오른쪽 버튼(혹은 UI숨김 버튼)을 누르지 않으면 UI, 대사 출력
-			if (!this.UIHide) {
+			if (this.UIState == UIState.All) {
+				g.DrawImageUnscaled(
+					this.UISprite["in_text_1_0"],
+					new Point(120, 458)
+				);
+
 				if (state.TellerName != null) {
 					string name;
 

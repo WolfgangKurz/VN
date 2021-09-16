@@ -17,8 +17,8 @@ namespace VNScript.VM {
 		internal Dictionary<string, VMNativeFunc> NativeFuncs { get; }
 		internal Dictionary<string, VMRuntimeFunc> RuntimeFuncs { get; }
 
+		private object StateLocker { get; } = new object();
 		private bool Running = false;
-		private int Calling = 0;
 
 		public VM() {
 			this.States = new ReadOnlyStack<VMState>();
@@ -29,8 +29,10 @@ namespace VNScript.VM {
 		}
 
 		public void Load(CodeChunk chunk) {
-			this.States.Push(new VMState(chunk, this.Storage.CurrentLevel));
-			this.Storage.Up();
+			lock (this.StateLocker) {
+				this.States.Push(new VMState(chunk, this.Storage.CurrentLevel));
+				this.Storage.Up();
+			}
 		}
 
 		public VM Register(string FuncName, VMNativeFunc FuncBody) {
@@ -44,11 +46,8 @@ namespace VNScript.VM {
 				func.Invoke(args, this.Storage);
 			}
 			else if (this.RuntimeFuncs.ContainsKey(FuncName)) {
-				// 기존 실행중인 State
-				var curLevel = this.States.Count;
-
 				var func = this.RuntimeFuncs[FuncName];
-				var funcState = new VMState(func.Body, this.Storage.CurrentLevel);
+				var funcState = new VMState(func.Body, this.Storage.CurrentLevel, FuncName);
 
 				var argList = new List<VMValue>();
 				foreach (var arg in args) argList.Add(arg);
@@ -70,26 +69,32 @@ namespace VNScript.VM {
 				foreach (var arg in argList) Stack.Push(arg);
 
 				// 함수 반환값을 무시 (Pop)
-				this.States.Push(new VMState(new byte[] { (byte)Compiler.ByteCodeType.Pop }, this.Storage.CurrentLevel));
-				this.States.Push(funcState);
+				lock (this.StateLocker) {
+					var curLevel = this.States.Count;
 
-				this.Calling++;
+					this.States.Push(new VMState(new byte[] { (byte)Compiler.ByteCodeType.Pop }, this.Storage.CurrentLevel, FuncName));
+					this.States.Push(funcState);
 
-				while (this.States.Count > curLevel) {
-					var state = this.States.Peek();
+					while (this.States.Count != curLevel) {
+						lock (this.StateLocker) {
+							if (this.States.Count > 0) {
+								var state = this.States.Peek();
 
-					if (!state.Ended)
-						state.Next(this);
-					else {
-						var level = state.StorageLevel;
-						while (this.Storage.CurrentLevel > level)
-							this.Storage.Down();
+								if (!state.Ended)
+									state.Next(this);
+								else {
+									var level = state.StorageLevel;
+									while (this.Storage.CurrentLevel > level)
+										this.Storage.Down();
 
-						this.States.Pop();
+									this.States.Pop();
+								}
+							}
+							else
+								break;
+						}
 					}
 				}
-
-				this.Calling--;
 			}
 			else
 				throw new Exception("VMScript VMError - Undefined Function");
@@ -105,20 +110,23 @@ namespace VNScript.VM {
 			if (this.Running)
 				throw new Exception("VMScript VMError - Already Running");
 
-			while (this.States.Count > 0) {
-				if (this.Calling > 0)
-					continue;
+			while (true) {
+				lock (this.StateLocker) {
+					if (this.States.Count > 0) {
+						var state = this.States.Peek();
 
-				var state = this.States.Peek();
+						if (!state.Ended)
+							state.Next(this);
+						else {
+							var level = state.StorageLevel;
+							while (this.Storage.CurrentLevel > level)
+								this.Storage.Down();
 
-				if (!state.Ended)
-					state.Next(this);
-				else {
-					var level = state.StorageLevel;
-					while (this.Storage.CurrentLevel > level)
-						this.Storage.Down();
-
-					this.States.Pop();
+							this.States.Pop();
+						}
+					}
+					else
+						break;
 				}
 			}
 		}

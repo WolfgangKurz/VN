@@ -8,13 +8,17 @@ using System.Threading.Tasks;
 namespace VN.Game {
 	internal class GameImage : IDisposable {
 		public Image Image { get; set; }
+		public string ID { get; set; }
+
 		public double X { get; set; }
 		public double Y { get; set; }
 		public double CenterX { get; set; }
 		public double CenterY { get; set; }
 
-		public GameImage(Image Image, double X, double Y, double centerX, double centerY) {
+		public GameImage(Image Image, string ID, double X, double Y, double centerX, double centerY) {
 			this.Image = Image;
+			this.ID = ID;
+
 			this.X = X;
 			this.Y = Y;
 			this.CenterX = centerX;
