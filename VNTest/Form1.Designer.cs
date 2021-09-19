@@ -1,5 +1,5 @@
-﻿namespace VN {
-	partial class frmMain {
+﻿namespace VNTest {
+	partial class Form1 {
 		/// <summary>
 		/// 필수 디자이너 변수입니다.
 		/// </summary>
@@ -25,26 +25,19 @@
 		private void InitializeComponent() {
 			this.SuspendLayout();
 			// 
-			// frmMain
+			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.BackColor = System.Drawing.Color.Black;
-			this.ClientSize = new System.Drawing.Size(526, 295);
-			this.Name = "frmMain";
-			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "VN";
-			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
-			this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseClick);
-			this.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseDoubleClick);
-			this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.frmMain_Mouse);
-			this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.frmMain_Mouse);
-			this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_Mouse);
+			this.ClientSize = new System.Drawing.Size(800, 450);
+			this.Name = "Form1";
+			this.Text = "Form1";
+			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
 			this.ResumeLayout(false);
 
 		}
 
 		#endregion
-    }
+	}
 }
 
