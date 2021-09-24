@@ -5,7 +5,7 @@ function Transition()
 
         while true do
             local el = Time.now() - begin -- elapsed
-            if el >= dur then break end
+            if el > dur then break end
 
             Input.Update()
             if #Mouse.Clicks > 0 then
@@ -13,23 +13,28 @@ function Transition()
                 break
             end
 
-            from:Update()
-            to:Update()
+            if from ~= nil then
+                from:Update()
 
-            from:Draw()
-            to:Draw(el / dur)
+                if to == nil then
+                    from:Draw(1 - el / dur)
+                else
+                    from:Draw()
+                end
+            end
+
+            if to ~= nil then
+                to:Update()
+                to:Draw(el / dur)
+            end
             Game:Update()
         end
-
-        to:Draw()
-        Game:Update()
     end
-    function _.Progress(scene, dur, cb)
+    function _.One(scene, dur, cb)
         local before = scene:Clone()
-        cb(scene)
+        if cb ~= nil then cb(scene) end
 
         _.Run(before, scene, dur)
-        before:Destroy()
     end
 
     Transition = _

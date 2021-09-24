@@ -78,6 +78,7 @@ namespace VN.Game {
 					? new LoopStream(reader)
 					: (WaveStream)reader
 				);
+				this.Volume = 0.5f;
 			}
 			catch(Exception e) {
 				this.Path = null;
@@ -121,7 +122,7 @@ namespace VN.Game {
 				});
 			}
 
-			this.waveOut.Volume = 0.15f;
+			this.waveOut.Volume = this.Volume;
 			this.waveOut.Play();
 			if (!this.thread.IsAlive)
 				this.thread.Start();

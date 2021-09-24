@@ -55,121 +55,142 @@ namespace VN.Game {
 		/// </summary>
 		public class Handler {
 			public delegate void CenterHandler();
-			public delegate void TitleHandler(string title);
+			public delegate void TitleHandler(string title, bool memorize);
 			public delegate void ResizableHandler(bool resizable);
 			public delegate void ResizeHandler(int width, int height);
+			public delegate void MessageHandler(string message);
+			public delegate void QuitHandler();
 
-			public event CenterHandler OnCenterRequest;
-			public event TitleHandler OnTitleRequest;
-			public event ResizableHandler OnResizableRequest;
-			public event ResizeHandler OnResizeRequest;
+			public event CenterHandler OnCenter;
+			public event TitleHandler OnTitle;
+			public event ResizableHandler OnResizable;
+			public event ResizeHandler OnResize;
+			public event MessageHandler OnMessage;
+			public event QuitHandler OnQuit;
 
-			internal void InvokeCenter() => this.OnCenterRequest?.Invoke();
-			internal void InvokeTitle(string title) => this.OnTitleRequest?.Invoke(title);
-			internal void InvokeResizable(bool resizable) => this.OnResizableRequest?.Invoke(resizable);
-			internal void InvokeResize(int width, int height) => this.OnResizeRequest?.Invoke(width, height);
+			internal void InvokeCenter() => this.OnCenter?.Invoke();
+			internal void InvokeTitle(string title, bool memorize = false) => this.OnTitle?.Invoke(title, memory);
+			internal void InvokeResizable(bool resizable) => this.OnResizable?.Invoke(resizable);
+			internal void InvokeResize(int width, int height) => this.OnResize?.Invoke(width, height);
+			internal void InvokeMessage(string message) => this.OnMessage?.Invoke(message);
+			internal void InvokeQuit() => this.OnQuit?.Invoke();
 		}
 
 		// 싱글톤 패턴
 		internal static Game Instance { get; } = new Game();
 
+		internal GL.GL gl { get; set; }
 		internal Lua lua { get; set; }
-
 		private Handler handler { get; set; }
+		private event Handler.ResizeHandler ResizeHandler;
 
 		private Thread VMThread { get; set; }
 
 		internal MouseInfo Mouse { get; } = new MouseInfo();
 		internal Queue<Point> ClickQueue { get; } = new Queue<Point>();
 
-		private SurfaceManager[] Buffers { get; set; } = new SurfaceManager[2];
-		private int BufferCursor { get; set; } = 0;
-
-		public object BufferLocker { get; } = new object();
-		public Surface CurrentBuffer { get; private set; }
-
-		public Graphics Graphics => this.Buffers[this.BufferCursor].Peek().g;
-
-		internal Dictionary<int, VImage> ImageDictionary { get; } = new Dictionary<int, VImage>();
-
+		internal Dictionary<int, GL.Image> ImageDict { get; } = new Dictionary<int, GL.Image>();
+		internal Dictionary<int, GL.Font> FontDict { get; } = new Dictionary<int, GL.Font>();
+		internal Dictionary<int, Audio> AudioDict { get; } = new Dictionary<int, Audio>();
 
 		// private로 해야 new로 생성하는 것을 방지할 수 있음
 		private Game() { }
 
 		public void Initialize(Handler handler) {
 			this.handler = handler;
+			this.ResizeBuffer(640, 480);
+		}
+		public void Destroy() {
+			foreach (var item in this.ImageDict) item.Value?.Dispose();
+			this.ImageDict.Clear();
 
-			this.ResizeBuffer(320, 180);
+			foreach (var item in this.AudioDict) item.Value?.Dispose();
+			this.AudioDict.Clear();
+
+			this.VMThread?.Abort();
+			// this.VMThread?.Join();
+
+			this.lua?.Dispose();
+			this.lua = null;
+
+			this.gl?.Dispose();
+			this.gl = null;
 		}
 
 		public void Center() => this.handler.InvokeCenter();
 
+		public void ResizeWindow(int width, int height) {
+			this.ResizeHandler?.Invoke(width, height);
+		}
+
 		public void ResizeBuffer(int width, int height) {
 			this.handler.InvokeResize(width, height);
-
-			lock (this.BufferLocker) {
-				for (var i = 0; i < this.Buffers.Length; i++) {
-					if (this.Buffers[i] == null)
-						this.Buffers[i] = new SurfaceManager(width, height);
-					else
-						this.Buffers[i].Resize(width, height);
-
-					this.Buffers[i].Push();
-				}
-			}
-			this.NextBuffer();
+			this.gl?.Resize(width, height);
 		}
 
-		public void UpdateTitle(string title) => this.handler.InvokeTitle(title);
+		public void UpdateTitle(string title, bool memory = false) => this.handler.InvokeTitle(title, memory);
 
-		private void NextBuffer() {
-			lock (this.BufferLocker)
-				this.CurrentBuffer = this.Buffers[this.BufferCursor][0];
+		public void Update() => this.gl?.Flush().Render().Clear();
 
-			this.BufferCursor = (this.BufferCursor + 1) % this.Buffers.Length;
+		public void EnterSurface() => this.gl.Enter();
+		public void FlushSurface(float opacity) => this.gl.Exit(opacity);
 
-			this.Buffers[this.BufferCursor].Clear(1);
-			// 잔여 Surface 정리
-			this.Graphics.Clear(Color.Black);
+		private void Test(string x) {
+			// Nothing to do
 		}
 
-		public void Update() {
-			//var cur = this.Buffers[this.BufferCursor];
-			//while (cur.Count > 1)
-			//	cur.Pop().Flush(this.Graphics);
-
-			//this.NextBuffer();
-		}
-
-		public void EnterSurface() => this.Buffers[this.BufferCursor].Push();
-		public void FlushSurface(float opacity) => this.Buffers[this.BufferCursor].Pop().Flush(this.Graphics, opacity);
-
-		public void Run() {
+		public void Run(IntPtr hWnd) {
 			this.VMThread = new Thread(() => {
+				this.gl = new GL.GL(hWnd);
+				this.gl.Flush().Clear();
+				this.ResizeHandler += (width, height) => {
+					// this.gl?.Resize(width, height);
+				};
+
 				this.lua = new Lua();
 				this.lua.State.Encoding = Encoding.UTF8;
 #if DEBUG
 				this.lua.UseTraceback = true;
 #endif
 
-				lua["Bridge"] = new Bridge(this);
-				lua["import"] = new Func<string, object[]>(filename => {
-					var script = File.ReadAllText(Path.Combine("..", "..", "VNData", "lua", filename + ".lua"));
-					return lua.DoString(script, filename);
-				});
-				var output = lua.DoString("return import(\"script\")");
+				LuaHelper.Register<Action<string>>(this.lua, "__debug", this.Test);
 
-				this.VMThread = null;
+				{ // LuaHelper.Register(this.lua, "import", ...)
+					var state = this.lua.State;
+					state.PushCFunction(pState => {
+						var state = KeraLua.Lua.FromIntPtr(pState);
+
+						var filename = state.CheckString(1);
+							var path = Path.Combine("..", "..", "VNData", "lua", filename + ".lua");
+							if (!File.Exists(path)) {
+								return state.Error($"Script \"{filename}\" not found.");
+							}
+
+						var script = File.ReadAllText(path);
+						if (state.LoadString(script, filename) == KeraLua.LuaStatus.OK) {
+							state.Call(0, -1);
+							return 0;
+						}
+						else
+							return state.Error($"Script \"{filename}\" cannot be loaded.");
+					});
+					state.SetGlobal("import");
+				}
+				LuaHelper.Register(this.lua, "Bridge", new Bridge(this));
+
+				try {
+					this.lua.DoString("return import(\"script\")");
+				}
+				catch (ThreadAbortException) { }
+				catch (Exception e) {
+					this.handler.InvokeMessage(e.Message);
+				}
+				finally {
+					this.VMThread = null;
+					this.handler.InvokeQuit();
+				}
 			});
 			this.VMThread.Start();
-		}
-
-		public void Destroy() {
-			this.VMThread?.Abort();
-			this.VMThread?.Join();
-
-			this.lua?.Dispose();
-			this.lua = null;
 		}
 
 		/// <summary>

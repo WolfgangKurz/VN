@@ -12,54 +12,45 @@ using System.Windows.Forms;
 
 namespace VN {
 	public partial class frmMain : Form {
-		private bool Running = false;
-		private Thread RenderThread { get; }
+		private string CurrentTitle = "";
+
 
 		public frmMain() {
 			InitializeComponent();
 
 			var gameHandler = new Game.Game.Handler();
-			gameHandler.OnCenterRequest += () => this.AutoInvoke(() => this.CenterToScreen());
-			gameHandler.OnTitleRequest += (v) => this.AutoInvoke(() => this.Text = v);
-			gameHandler.OnResizableRequest += (v) => this.AutoInvoke(() => {
+			gameHandler.OnCenter += () => this.AutoInvoke(() => this.CenterToScreen());
+			gameHandler.OnTitle += (v, mem) => this.AutoInvoke(() => {
+				if (mem) this.CurrentTitle = v;
+				this.Text = v;
+			});
+			gameHandler.OnResizable += (v) => this.AutoInvoke(() => {
 				this.FormBorderStyle = v
 					? FormBorderStyle.Sizable
 					: FormBorderStyle.FixedSingle;
 			}); ;
-			gameHandler.OnResizeRequest += (w, h) => this.AutoInvoke(() => this.ClientSize = new Size((int)w, (int)h));
-
-			this.Running = true;
-			this.RenderThread = new Thread(() => {
-				var MaxFPS = 60;
-				var PrevTick = 0L;
-
-				while (this.Running) {
-					this.AutoInvoke(() => this.Invalidate(false));
-
-					var time = DateTime.UtcNow.Ticks;
-					var elapsed = (time - PrevTick) / TimeSpan.TicksPerMillisecond;
-					var wait = (int)Math.Max(0, (1000 / MaxFPS) - elapsed);
-					PrevTick = time;
-					// Thread.Sleep(wait);
-				}
-			});
+			gameHandler.OnResize += (w, h) => this.AutoInvoke(() => this.ClientSize = new Size(w, h));
+			gameHandler.OnMessage += (msg) => this.AutoInvoke(() => MessageBox.Show(msg, this.CurrentTitle));
+			gameHandler.OnQuit += () => this.AutoInvoke(() => this.Close());
 
 			Game.Game.Instance.Initialize(gameHandler);
-			Game.Game.Instance.Run();
-			this.RenderThread.Start();
+			Game.Game.Instance.Run(this.Handle);
 		}
 
 		protected override void OnPaint(PaintEventArgs e) {
-			var instance = Game.Game.Instance;
-
-			lock (instance.BufferLocker) {
-				if (instance.CurrentBuffer != null)
-					instance.CurrentBuffer.Flush(e.Graphics);
-			}
+			// base.OnPaint(e);
 		}
 
 		protected override void OnPaintBackground(PaintEventArgs e) {
-			// 배경을 그리면서 화면이 깜빡이기 때문에 방지하기 위해서 배경 칠하기를 무시
+			if (Game.Game.Instance.gl == null)
+				base.OnPaintBackground(e);
+		}
+
+		protected override void OnResize(EventArgs e) {
+			base.OnResize(e);
+
+			var size = this.ClientSize;
+			Game.Game.Instance.ResizeWindow(size.Width, size.Height);
 		}
 
 		/// <summary>
@@ -67,14 +58,16 @@ namespace VN {
 		/// </summary>
 		/// <param name="act">실행할 함수</param>
 		private void AutoInvoke(Action act) {
-			if (this.InvokeRequired)
-				this.Invoke(act);
-			else
-				act();
+			try {
+				if (this.InvokeRequired)
+					this.Invoke(act);
+				else
+					act();
+			}
+			catch { }
 		}
 
 		private void frmMain_FormClosing(object sender, FormClosingEventArgs e) {
-			this.Running = false;
 			Game.Game.Instance.Destroy();
 		}
 

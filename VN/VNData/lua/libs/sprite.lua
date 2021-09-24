@@ -4,18 +4,21 @@ function Sprite()
     function Meta:Update()
         if self.frames == nil then return end
 
-        local frame = nil
+        local now = Time.now()
+        local frame, elapsed = nil, now - self.frameTime
+
         while true do
             frame = self.frames[self.frame + 1]
-            if frame.duration < self.frameTime then
-                self.frameTime = self.frameTime - frame.duration
-                self.frame = (self.frame + 1) % Array.count(self.frames)
+            if elapsed > frame.duration then
+                elapsed = elapsed - frame.duration
+                self.frameTime = self.frameTime + frame.duration
+                self.frame = (self.frame + 1) % #self.frames
             else
                 break
             end
         end
 
-        if self.key ~= frame.key then self:Set(frame.key) end
+        if self.key ~= frame.key then self:Set(frame.key, true) end
     end
     function Meta:Draw()
         if self.image ~= nil then
@@ -25,7 +28,7 @@ function Sprite()
         end
     end
 
-    function Meta:Set(key)
+    function Meta:Set(key, inframe)
         if self.key ~= key then
             local info = self.infos[key]
             if info ~= nil then
@@ -39,7 +42,7 @@ function Sprite()
                 self.image.width = info.width
                 self.image.height = info.height
 
-                self.frames = nil
+                if inframe ~= true then self.frames = nil end
             end
         end
     end
@@ -55,29 +58,30 @@ function Sprite()
         local img = Image.Load(filename .. ".sprite")
 
         local infos = {}
-        local str = string.Replace(Bridge:Sprite_Info(filename), "\r", "")
-        local _infos = string.Split(str, "\n")
+        local _infos = Bridge.Sprite_Info(filename)
         Array.foreach(_infos, function(v)
-            local p = string.Split(v, "\t")
+            local name = v[1]
             local info = {
-                name = p[1],
-                x = tonumber(p[2]),
-                y = tonumber(p[3]),
-                width = tonumber(p[4]),
-                height = tonumber(p[5])
+                name = name,
+                x = tonumber(v[2]),
+                y = tonumber(v[3]),
+                width = tonumber(v[4]),
+                height = tonumber(v[5])
             }
-
-            infos[info.name] = info
+            infos[name] = info
         end)
 
         local object = {
+            type = "sprite",
+            id = Time.now(),
             key = "",
             image = img,
             infos = infos,
             x = 0,
             y = 0,
             frames = nil,
-            frame = 0
+            frame = 0,
+            frameTime = 0
         }
         return setmetatable(object, {__index = Meta})
     end

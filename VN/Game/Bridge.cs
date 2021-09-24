@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,7 +13,7 @@ namespace VN.Game {
 			this.Parent = Parent;
 		}
 
-		public void Debug(object p) {
+		public void Debug(params object[] p) {
 			;
 		}
 
@@ -25,17 +24,11 @@ namespace VN.Game {
 
 		public void Game_Resize(int width, int height) => this.Parent.ResizeBuffer(width, height);
 
-		public void Game_Title(string name) => this.Parent.UpdateTitle(name);
+		public void Game_Title(string name, bool memory = false) => this.Parent.UpdateTitle(name, memory);
 		#endregion
 
 		#region Input
-		public int[] Input_Mouse() {
-			return new int[] {
-				this.Parent.Mouse.X,
-				this.Parent.Mouse.Y,
-				this.Parent.Mouse.State
-			};
-		}
+		public (int, int, int) Input_Mouse() => (this.Parent.Mouse.X, this.Parent.Mouse.Y, this.Parent.Mouse.State);
 
 		public int[][] Input_Clicks() {
 			var ret = this.Parent.ClickQueue
@@ -49,87 +42,152 @@ namespace VN.Game {
 		#region Image
 		public int Image_Load(string filename) {
 			var idx = 0;
-			foreach (var kv in this.Parent.ImageDictionary) {
-				if (kv.Value.id == filename) {
+			foreach (var kv in this.Parent.ImageDict) {
+				if (kv.Value.uid == filename) {
 					kv.Value.Reference();
 					return kv.Key;
 				}
 			}
 
-			while (this.Parent.ImageDictionary.ContainsKey(idx)) idx++;
-			this.Parent.ImageDictionary[idx] = new VImage(filename);
+			while (this.Parent.ImageDict.ContainsKey(idx)) idx++;
+			this.Parent.ImageDict[idx] = new GL.Image(this.Parent.gl, filename);
 			return idx;
 		}
 
-		public int[] Image_Size(int id) {
-			if (!this.Parent.ImageDictionary.ContainsKey(id)) return new int[] { -1, -1 };
+		public (int, int) Image_Size(int id) {
+			if (!this.Parent.ImageDict.ContainsKey(id)) return (-1, -1);
 
-			var img = this.Parent.ImageDictionary[id];
-			return new int[] {
-				img.width,
-				img.height,
-			};
+			var img = this.Parent.ImageDict[id];
+			return (img.width, img.height);
 		}
 
 		public void Image_Unload(int id) {
-			if (!this.Parent.ImageDictionary.ContainsKey(id)) return;
+			if (!this.Parent.ImageDict.ContainsKey(id)) return;
 
-			var item = this.Parent.ImageDictionary[id];
+			var item = this.Parent.ImageDict[id];
 			item.Unreference();
-			if (item.References == 0) {
+			if (item.RefCount <= 0) {
 				item.Dispose();
-				this.Parent.ImageDictionary.Remove(id);
+				this.Parent.ImageDict.Remove(id);
 			}
 		}
 
-		public void Image_Draw(int id, int srcx, int srcy, int srcw, int srch, int x, int y, int w, int h) {
-			if (!this.Parent.ImageDictionary.ContainsKey(id)) return;
+		public void Image_Draw(int id, double srcx, double srcy, double srcw, double srch, double x, double y, double w, double h, double orix, double oriy, double opacity, double angle) {
+			if (!this.Parent.ImageDict.ContainsKey(id)) return;
 
-			var img = this.Parent.ImageDictionary[id];
-			if (srcx == 0 && srcy == 0 && srcw == w && srch == h)
-				this.Parent.Graphics.DrawImageUnscaledAndClipped(img.image, new Rectangle(x, y, w, h));
-			else
-				this.Parent.Graphics.DrawImage(img.image, new Rectangle(x, y, w, h), new Rectangle(srcx, srcy, srcw, srch), GraphicsUnit.Pixel);
+			var image = this.Parent.ImageDict[id];
+			this.Parent.gl.DrawImage(image, srcx, srcy, srcw, srch, x, y, w, h, orix, oriy, opacity, angle);
 		}
 		#endregion
 
 		#region Sprite
-		public string Sprite_Info(string spriteName) {
+		public string[][] Sprite_Info(string spriteName) {
 			var path = Path.Combine(Helper.DirName, "VNData", spriteName + ".sprite.txt");
-			//return File.ReadAllLines(path)
-			//	.Where(x => !string.IsNullOrEmpty(x))
-			//	.Select(x => x.Split('\t'))
-			//	.Select(x => new {
-			//		name = x[0],
-			//		x = int.Parse(x[1]),
-			//		y = int.Parse(x[2]),
-			//		w = int.Parse(x[3]),
-			//		h = int.Parse(x[4])
-			//	})
-			//	.ToArray();
-			return File.ReadAllText(path);
+			return File.ReadAllLines(path)
+				.Where(x => !string.IsNullOrEmpty(x))
+				.Select(x => x.Split('\t'))
+				.ToArray();
 		}
 		#endregion
 
 		#region Graphics
-		public void Graphics_Text(string text, int x, int y) {
-			this.Parent.DrawStrokedString(this.Parent.Graphics, text, new Rectangle(x, y, 1000, 1000));
-		}
-
 		public void Graphics_EnterSurface() {
 			this.Parent.EnterSurface();
 		}
-		public void Graphics_FlushSurface(double opacity) {
-			this.Parent.FlushSurface((float)opacity);
+		public void Graphics_FlushSurface(float opacity = 1.0f) {
+			this.Parent.FlushSurface(opacity);
+		}
+		#endregion
+
+		#region Font
+		public int Font_Create(string fontName) {
+			var idx = 0;
+			foreach (var kv in this.Parent.FontDict) {
+				if (kv.Value.FontName == fontName) {
+					kv.Value.Reference();
+					return kv.Key;
+				}
+			}
+
+			while (this.Parent.FontDict.ContainsKey(idx)) idx++;
+			this.Parent.FontDict[idx] = new GL.Font(this.Parent.gl, fontName);
+			return idx;
+		}
+
+		public void Font_Unload(int id) {
+			if (!this.Parent.FontDict.ContainsKey(id)) return;
+
+			var item = this.Parent.FontDict[id];
+			item.Unreference();
+			if (item.RefCount <= 0) {
+				item.Dispose();
+				this.Parent.FontDict.Remove(id);
+			}
+		}
+
+		public void Font_Draw(int id, string text, float size, int x, int y, uint color = 0xFFFFFF, bool bold = false, bool italic = false, bool underline = false, bool strike = false, int align = 0) {
+			if (!this.Parent.FontDict.ContainsKey(id)) return;
+
+			var font = this.Parent.FontDict[id];
+			font.Draw(text, new System.Drawing.PointF(x, y), size, bold, italic, underline, strike, color, align);
+			// this.Parent.gl.Text(fontface, size, text, x, y, color);
+		}
+		#endregion
+
+		#region Audio
+		public int Audio_Load(string path, bool repeats = false) {
+			var idx = 0;
+			while (this.Parent.AudioDict.ContainsKey(idx)) idx++;
+
+			var audio = new Audio();
+			audio.Load(Path.Combine(Helper.DirName, "VNData", path), repeats);
+			this.Parent.AudioDict[idx] = audio;
+			return idx;
+		}
+
+		public void Audio_Unload(int id) {
+			if (!this.Parent.AudioDict.ContainsKey(id)) return;
+
+			var item = this.Parent.AudioDict[id];
+			item.Dispose();
+			this.Parent.AudioDict.Remove(id);
+		}
+
+		public void Audio_Play(int id) {
+			if (!this.Parent.AudioDict.ContainsKey(id)) return;
+
+			var audio = this.Parent.AudioDict[id];
+			audio.Play();
+		}
+
+		public void Audio_Stop(int id) {
+			if (!this.Parent.AudioDict.ContainsKey(id)) return;
+
+			var audio = this.Parent.AudioDict[id];
+			audio.Stop();
+		}
+
+		public void Audio_Pause(int id) {
+			if (!this.Parent.AudioDict.ContainsKey(id)) return;
+
+			var audio = this.Parent.AudioDict[id];
+			audio.Pause();
+		}
+
+		public void Audio_Volume(int id, float volume) {
+			if (!this.Parent.AudioDict.ContainsKey(id)) return;
+
+			var audio = this.Parent.AudioDict[id];
+			audio.Volume = volume;
 		}
 		#endregion
 
 		public void Dispose() {
 			{
-				var list = this.Parent.ImageDictionary.Values.ToArray();
+				var list = this.Parent.ImageDict.Values.ToArray();
 				foreach (var item in list)
 					item.Dispose();
-				this.Parent.ImageDictionary.Clear();
+				this.Parent.ImageDict.Clear();
 			}
 		}
 	}

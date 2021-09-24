@@ -1,18 +1,7 @@
 function Array()
     local _ = {}
-    function _.isNative(t)
-        return (t.length ~= nil or t.Length ~= nil or t.Count ~= nil)
-    end
-    function _.count(t)
-        local ret = nil
-        if pcall(function() ret = #t end) then return ret end
-        if t.length ~= nil then return t.length end
-        if t.Length ~= nil then return t.Length end
-        if t.Count ~= nil then return t.Count end
-        return 0
-    end
     function _.filter(t, predict)
-        local j, n = 1, _.count(t);
+        local j, n = 1, #t;
 
         for i = 1, n do
             if (predict(t, i, j)) then
@@ -28,37 +17,49 @@ function Array()
 
         return t;
     end
-    function _.foreach(t, cb)
-        if pcall(function() for i, v in pairs(t) do cb(v, i) end end) then
-            return
-        end
-
-        local n = _.count(t)
-        for i = 1, n do cb(t[i], i) end
+    function _.map(t, cb)
+        local nt = {}
+        for i, v in pairs(t) do nt[#nt + 1] = cb(v, i) end
+        return nt
     end
+    function _.foreach(t, cb) for i, v in pairs(t) do cb(v, i) end end
+
+    function _.first(t, cb)
+        if cb == nil then return t[1] end
+        for i, v in pairs(t) do if cb(v, i) then return v end end
+        return nil
+    end
+    function _.last(t, cb) -- Slow!
+        if cb == nil then return t[#t] end
+        local r = nil
+        for i, v in pairs(t) do if cb(v, i) then r = v end end
+        return r
+    end
+
     function _.push(t, e)
-        local n = _.count(t)
-        t[n + 1] = e
+        t[#t + 1] = e
         return t
     end
     function _.pushes(t, et)
-        local n = _.count(et)
-        if _.isNative(et) then
-            for i = 0, n - 1 do _.push(t, et[i]) end
-        else
-            for i = 1, n do _.push(t, et[i]) end
+        local n, m = #t, #et
+        for i = 1, m do
+            t[n + 1] = et[i]
+            n = n + 1
         end
         return t
     end
     function _.pop(t)
-        local n = _.count(t)
-        local v = t[n]
-        t[n] = nil
+        local v = t[#t]
+        t[#t] = nil
         return v
     end
-    function _.normalize(t)
-        if _.isNative(t) then return _.pushes({}, t) end
-        return t
+
+    _.enqueue = _.push
+    function _.dequeue(t)
+        local n, r = #t, t[1]
+        for i = 1, n - 1 do t[i] = t[i + 1] end
+        t[n] = nil
+        return r
     end
 
     Array = _
