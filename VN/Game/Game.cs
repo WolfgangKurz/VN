@@ -69,7 +69,7 @@ namespace VN.Game {
 			public event QuitHandler OnQuit;
 
 			internal void InvokeCenter() => this.OnCenter?.Invoke();
-			internal void InvokeTitle(string title, bool memorize = false) => this.OnTitle?.Invoke(title, memory);
+			internal void InvokeTitle(string title, bool memorize = false) => this.OnTitle?.Invoke(title, memorize);
 			internal void InvokeResizable(bool resizable) => this.OnResizable?.Invoke(resizable);
 			internal void InvokeResize(int width, int height) => this.OnResize?.Invoke(width, height);
 			internal void InvokeMessage(string message) => this.OnMessage?.Invoke(message);
