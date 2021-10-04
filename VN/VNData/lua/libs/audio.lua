@@ -5,7 +5,7 @@ function Audio()
     function Meta:Pause() Bridge.Audio_Pause(self.id) end
     function Meta:Volume(vol)
         self.volume = vol
-        Bridge.Audio_Volume(self.id, vol)
+        Bridge.Audio_Volume(self.id, vol * Audio.Master)
     end
     function Meta:FadeIn(dur)
         self.fadeTime = Time.now()
@@ -30,13 +30,20 @@ function Audio()
             if progress >= 1 then self.fadeTime = 0 end
         end
     end
+    function Meta:Clone()
+        local n = Audio.Create(self.file, self.repeats)
+        n:Volume(self.volume)
+        return n
+    end
     function Meta:Unload() Bridge.Audio_Unload(self.id) end
 
-    local _ = {}
+    local _ = {Master = 1}
     function _.Load(file, repeats)
         local obj = {
             type = "audio",
             id = Bridge.Audio_Load(file, repeats),
+            file = file,
+            repeats = repeats,
             volume = 1,
             fadeFrom = 0,
             fadeTo = 0,

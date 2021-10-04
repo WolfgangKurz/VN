@@ -1,5 +1,11 @@
 function Sprite()
     local Meta = {}
+    function Meta:Clone()
+        local c = Object.clone(self)
+        c.id = Time.now()
+        c.image = self.image:Clone()
+        return c
+    end
     function Meta:Unload() self.image:Unload() end
     function Meta:Update()
         if self.frames == nil then return end
@@ -21,6 +27,7 @@ function Sprite()
         if self.key ~= frame.key then self:Set(frame.key, true) end
     end
     function Meta:Draw()
+        if self.visible ~= true then return end
         if self.image ~= nil then
             self.image.x = self.x
             self.image.y = self.y
@@ -81,7 +88,8 @@ function Sprite()
             y = 0,
             frames = nil,
             frame = 0,
-            frameTime = 0
+            frameTime = 0,
+            visible = true
         }
         return setmetatable(object, {__index = Meta})
     end

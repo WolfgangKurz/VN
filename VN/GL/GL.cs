@@ -55,7 +55,7 @@ namespace VN.GL {
 			this.dc = this.context = IntPtr.Zero;
 		}
 
-		public void Resize(int width, int height) {
+		public GL Resize(int width, int height) {
 			if (height == 0) height = 1;
 
 			this.gl.SetDimensions(width, height);
@@ -76,6 +76,8 @@ namespace VN.GL {
 
 			this.Width = width;
 			this.Height = height;
+
+			return this;
 		}
 
 		public GL Flush() {
@@ -131,13 +133,18 @@ namespace VN.GL {
 			this.gl.LoadIdentity();
 
 			// offset, size
-			this.gl.Translate(x, y, 0.0);
-			this.gl.Scale(width / srcWidth, height / srcHeight, 0.0);
+			if (x != 0 || y != 0)
+				this.gl.Translate(x, y, 0.0);
+
+			//if (srcWidth != width || srcHeight != height)
+			//	this.gl.Scale(width / srcWidth, height / srcHeight, 0.0);
 
 			// Rotate
-			this.gl.Translate(originX, originY, 0.0);
-			this.gl.Rotate(angle, 0.0, 0.0, 1.0);
-			this.gl.Translate(-originX, -originY, 0.0);
+			if (angle != 0) {
+				this.gl.Translate(originX, originY, 0.0);
+				this.gl.Rotate(angle, 0.0, 0.0, 1.0);
+				this.gl.Translate(-originX, -originY, 0.0);
+			}
 
 			this.gl.Begin(OpenGL.GL_TRIANGLE_FAN);
 
@@ -168,6 +175,31 @@ namespace VN.GL {
 			return this;
 		}
 
+		public GL Fill(uint color) {
+			this.gl.Disable(OpenGL.GL_TEXTURE_2D);
+
+			var a = ((color >> 24) & 0xFF) / 255f;
+			var r = ((color >> 16) & 0xFF) / 255f;
+			var g = ((color >> 8) & 0xFF) / 255f;
+			var b = ((color >> 0) & 0xFF) / 255f;
+
+			this.gl.Color(r, g, b, a);
+
+			this.gl.PushMatrix();
+			this.gl.LoadIdentity();
+
+			this.gl.Begin(OpenGL.GL_TRIANGLE_FAN);
+
+			this.gl.Vertex(0, 0);
+			this.gl.Vertex(0, this.Height);
+			this.gl.Vertex(this.Width, this.Height);
+			this.gl.Vertex(this.Width, 0);
+
+			this.gl.End();
+			this.gl.PopMatrix();
+
+			return this;
+		}
 		public GL Enter() {
 			var fb = new uint[1];
 			var rb = new uint[1];

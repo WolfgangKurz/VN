@@ -5,6 +5,7 @@ function Game()
         height = 0,
         debugFont = Font.Create("맑은 고딕", 14)
     }
+    _.debugFont.color = 0xffff0000
     local lastTime, fps, fpsCounter = 0, 0, 0
 
     function _.Center() Bridge.Game_Center() end
@@ -23,7 +24,7 @@ function Game()
         local now = Time.now()
         local diff = now - lastTime
         if diff >= 1 then
-            fps = fpsCounter
+            fps = math.floor(fpsCounter / diff)
             fpsCounter = 0
             lastTime = now
         end
@@ -35,6 +36,10 @@ function Game()
         -- _.debugFont:Draw(text, 0, 0)
         Bridge.Game_Update()
     end
+
+    function _.Fill(color) Bridge.Graphics_Fill(color) end
+    function _.Push() Bridge.Graphics_EnterSurface() end
+    function _.Pop(opacity) Bridge.Graphics_FlushSurface(opacity) end
 
     Game = _
 end

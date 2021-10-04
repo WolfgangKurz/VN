@@ -2,7 +2,7 @@ const SpriteSmith = require("spritesmith");
 const path = require("path");
 const fs = require("fs");
 
-const baseDir = path.resolve(__dirname, "..", "res", "title");
+const baseDir = path.resolve(__dirname, "..", "res", "ui");
 const sprites = fs.readdirSync(baseDir)
 	.map(x => path.resolve(baseDir, x));
 

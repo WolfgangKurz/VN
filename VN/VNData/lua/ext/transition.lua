@@ -13,11 +13,13 @@ function Transition()
                 break
             end
 
+            local p = el / dur
+
             if from ~= nil then
                 from:Update()
 
                 if to == nil then
-                    from:Draw(1 - el / dur)
+                    from:Draw(1 - p)
                 else
                     from:Draw()
                 end
@@ -25,16 +27,17 @@ function Transition()
 
             if to ~= nil then
                 to:Update()
-                to:Draw(el / dur)
+                to:Draw(p)
             end
             Game:Update()
         end
     end
     function _.One(scene, dur, cb)
         local before = scene:Clone()
-        if cb ~= nil then cb(scene) end
+        if type(cb) == "function" then cb(scene) end
 
         _.Run(before, scene, dur)
+        before:Destroy()
     end
 
     Transition = _

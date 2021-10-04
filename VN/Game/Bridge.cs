@@ -14,6 +14,11 @@ namespace VN.Game {
 		}
 
 		public void Debug(params object[] p) {
+			object p0, p1, p2;
+			p0 = p1 = p2 = null;
+			if (p.Length > 0) p0 = p[0];
+			if (p.Length > 1) p1 = p[1];
+			if (p.Length > 2) p2 = p[2];
 			;
 		}
 
@@ -54,6 +59,13 @@ namespace VN.Game {
 			return idx;
 		}
 
+		public void Image_Clone(int id) {
+			if (!this.Parent.ImageDict.ContainsKey(id)) return;
+
+			var item = this.Parent.ImageDict[id];
+			item.Reference();
+		}
+
 		public (int, int) Image_Size(int id) {
 			if (!this.Parent.ImageDict.ContainsKey(id)) return (-1, -1);
 
@@ -91,12 +103,9 @@ namespace VN.Game {
 		#endregion
 
 		#region Graphics
-		public void Graphics_EnterSurface() {
-			this.Parent.EnterSurface();
-		}
-		public void Graphics_FlushSurface(float opacity = 1.0f) {
-			this.Parent.FlushSurface(opacity);
-		}
+		public void Graphics_Fill(uint color) => this.Parent.Fill(color);
+		public void Graphics_EnterSurface() => this.Parent.EnterSurface();
+		public void Graphics_FlushSurface(float opacity = 1.0f) => this.Parent.FlushSurface(opacity);
 		#endregion
 
 		#region Font
@@ -114,6 +123,13 @@ namespace VN.Game {
 			return idx;
 		}
 
+		public void Font_Clone(int id) {
+			if (!this.Parent.FontDict.ContainsKey(id)) return;
+
+			var item = this.Parent.FontDict[id];
+			item.Reference();
+		}
+
 		public void Font_Unload(int id) {
 			if (!this.Parent.FontDict.ContainsKey(id)) return;
 
@@ -125,11 +141,11 @@ namespace VN.Game {
 			}
 		}
 
-		public void Font_Draw(int id, string text, float size, int x, int y, uint color = 0xFFFFFF, bool bold = false, bool italic = false, bool underline = false, bool strike = false, int align = 0) {
+		public void Font_Draw(int id, string text, float size, int x, int y, uint color = 0xFFFFFF, bool bold = false, bool italic = false, bool underline = false, bool strike = false, int align = 0, float width = 0f) {
 			if (!this.Parent.FontDict.ContainsKey(id)) return;
 
 			var font = this.Parent.FontDict[id];
-			font.Draw(text, new System.Drawing.PointF(x, y), size, bold, italic, underline, strike, color, align);
+			font.Draw(text, new System.Drawing.PointF(x, y), width, size, bold, italic, underline, strike, color, align);
 			// this.Parent.gl.Text(fontface, size, text, x, y, color);
 		}
 		#endregion

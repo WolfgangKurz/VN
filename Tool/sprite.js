@@ -1,6 +1,7 @@
 const fs = require("fs");
+const path= require("path")
 
-const json = JSON.parse(fs.readFileSync("output.json", "utf-8"));
+const json = JSON.parse(fs.readFileSync(path.resolve(__dirname, "output.json"), "utf-8"));
 const ret = [];
 
 Object.keys(json)

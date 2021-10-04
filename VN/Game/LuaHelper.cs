@@ -101,8 +101,8 @@ namespace VN.Game {
 					var state = KeraLua.Lua.FromIntPtr(pState);
 
 					var argc = state.GetTop();
-					var reqArgc = parameters.Count(x => !x.IsOptional);
 					var paramArray = parameters.Any(x => x.GetCustomAttributes(typeof(ParamArrayAttribute), false).Length > 0);
+					var reqArgc = parameters.Count(x => !x.IsOptional) - (paramArray ? 1 : 0);
 
 					if (argc < reqArgc)
 						return state.Error($"{className}.{name} requires {reqArgc} arguments at least, but {argc} passed");
@@ -216,8 +216,9 @@ namespace VN.Game {
 						}
 
 					case KeraLua.LuaType.Function:
-						state.Error($"Function argument is not implemented");
-						return false;
+						// state.Error($"Function argument is not implemented");
+						cb("[Function]");
+						return true;
 
 					case KeraLua.LuaType.UserData:
 						state.Error($"UserData argument is not implemented");

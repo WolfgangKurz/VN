@@ -54,37 +54,38 @@ namespace VN.Game {
 		/// 엔진을 사용하는 창에서 제어할 핸들러
 		/// </summary>
 		public class Handler {
-			public delegate void CenterHandler();
+			public delegate void EmptyHandler();
 			public delegate void TitleHandler(string title, bool memorize);
 			public delegate void ResizableHandler(bool resizable);
 			public delegate void ResizeHandler(int width, int height);
 			public delegate void MessageHandler(string message);
-			public delegate void QuitHandler();
 
-			public event CenterHandler OnCenter;
+			public event EmptyHandler OnCenter;
 			public event TitleHandler OnTitle;
 			public event ResizableHandler OnResizable;
 			public event ResizeHandler OnResize;
 			public event MessageHandler OnMessage;
-			public event QuitHandler OnQuit;
+			public event EmptyHandler OnUpdate;
+			public event EmptyHandler OnQuit;
 
 			internal void InvokeCenter() => this.OnCenter?.Invoke();
 			internal void InvokeTitle(string title, bool memorize = false) => this.OnTitle?.Invoke(title, memorize);
 			internal void InvokeResizable(bool resizable) => this.OnResizable?.Invoke(resizable);
 			internal void InvokeResize(int width, int height) => this.OnResize?.Invoke(width, height);
 			internal void InvokeMessage(string message) => this.OnMessage?.Invoke(message);
+			internal void InvokeUpdate() => this.OnUpdate?.Invoke();
 			internal void InvokeQuit() => this.OnQuit?.Invoke();
 		}
 
 		// 싱글톤 패턴
 		internal static Game Instance { get; } = new Game();
 
-		internal GL.GL gl { get; set; }
-		internal Lua lua { get; set; }
+		public GL.GL gl { get; set; }
+		private Lua lua { get; set; }
+		public bool Running { get; private set; } = false;
+
 		private Handler handler { get; set; }
 		private event Handler.ResizeHandler ResizeHandler;
-
-		private Thread VMThread { get; set; }
 
 		internal MouseInfo Mouse { get; } = new MouseInfo();
 		internal Queue<Point> ClickQueue { get; } = new Queue<Point>();
@@ -107,9 +108,7 @@ namespace VN.Game {
 			foreach (var item in this.AudioDict) item.Value?.Dispose();
 			this.AudioDict.Clear();
 
-			this.VMThread?.Abort();
-			// this.VMThread?.Join();
-
+			this.lua?.Close();
 			this.lua?.Dispose();
 			this.lua = null;
 
@@ -125,72 +124,98 @@ namespace VN.Game {
 
 		public void ResizeBuffer(int width, int height) {
 			this.handler.InvokeResize(width, height);
-			this.gl?.Resize(width, height);
+			this.gl?.Resize(width, height).Flush().Clear();
 		}
 
 		public void UpdateTitle(string title, bool memory = false) => this.handler.InvokeTitle(title, memory);
 
-		public void Update() => this.gl?.Flush().Render().Clear();
+		public void Update() {
+			this.gl?.Flush().Render().Clear();
+			this.handler.InvokeUpdate();
+		}
 
+		public void Fill(uint color) => this.gl.Fill(color);
 		public void EnterSurface() => this.gl.Enter();
 		public void FlushSurface(float opacity) => this.gl.Exit(opacity);
 
-		private void Test(string x) {
-			// Nothing to do
+		public void Stop() {
+			if (!this.Running) return;
+
+			this.Running = false;
+
+			if (this.lua != null) {
+				this.lua.DebugHook += (sender, e) => {
+					if (!this.Running)
+						((Lua)sender).State.Error("");
+				};
+			}
 		}
 
 		public void Run(IntPtr hWnd) {
-			this.VMThread = new Thread(() => {
-				this.gl = new GL.GL(hWnd);
-				this.gl.Flush().Clear();
-				this.ResizeHandler += (width, height) => {
-					// this.gl?.Resize(width, height);
-				};
+			this.gl = new GL.GL(hWnd);
+			this.gl.Flush().Clear();
+			this.ResizeHandler += (width, height) => {
+				// this.gl?.Resize(width, height);
+			};
 
-				this.lua = new Lua();
-				this.lua.State.Encoding = Encoding.UTF8;
+			this.Running = true;
+
+			this.lua = new Lua();
+			this.lua.State.Encoding = Encoding.UTF8;
+			this.lua.SetDebugHook(KeraLua.LuaHookMask.Line, 0);
 #if DEBUG
-				this.lua.UseTraceback = true;
+			this.lua.UseTraceback = true;
+
+			//var scriptDict = new Dictionary<string, string>();
+			//this.lua.DebugHook += (sender, e) => {
+			//	var filename = e.LuaDebug.Source;
+			//	if (!scriptDict.ContainsKey(filename)) return;
+
+			//	var lines = scriptDict[filename].Split(new char[] { '\n' });
+			//	var code = lines[e.LuaDebug.CurrentLine - 1];
+			//	System.Diagnostics.Debug.WriteLine(code);
+			//};
 #endif
 
-				LuaHelper.Register<Action<string>>(this.lua, "__debug", this.Test);
+			{ // LuaHelper.Register(this.lua, "import", ...)
+				var state = this.lua.State;
+				state.PushCFunction(pState => {
+					var state = KeraLua.Lua.FromIntPtr(pState);
 
-				{ // LuaHelper.Register(this.lua, "import", ...)
-					var state = this.lua.State;
-					state.PushCFunction(pState => {
-						var state = KeraLua.Lua.FromIntPtr(pState);
+					var filename = state.CheckString(1);
+					var path = Path.Combine("..", "..", "VNData", "lua", filename + ".lua");
+					if (!File.Exists(path)) {
+						return state.Error($"Script \"{filename}\" not found.");
+					}
 
-						var filename = state.CheckString(1);
-							var path = Path.Combine("..", "..", "VNData", "lua", filename + ".lua");
-							if (!File.Exists(path)) {
-								return state.Error($"Script \"{filename}\" not found.");
-							}
+					var script = File.ReadAllText(path);
+#if DEBUG
+					//scriptDict[filename] = script;
+#endif
 
-						var script = File.ReadAllText(path);
-						if (state.LoadString(script, filename) == KeraLua.LuaStatus.OK) {
-							state.Call(0, -1);
-							return 0;
-						}
-						else
-							return state.Error($"Script \"{filename}\" cannot be loaded.");
-					});
-					state.SetGlobal("import");
-				}
-				LuaHelper.Register(this.lua, "Bridge", new Bridge(this));
+					if (state.LoadString(script, filename) == KeraLua.LuaStatus.OK) {
+						state.Call(0, -1);
+						return 0;
+					}
+					else
+						return state.Error($"Script \"{filename}\" cannot be loaded.");
+				});
+				state.SetGlobal("import");
+			}
+			LuaHelper.Register(this.lua, "Bridge", new Bridge(this));
 
-				try {
-					this.lua.DoString("return import(\"script\")");
-				}
-				catch (ThreadAbortException) { }
-				catch (Exception e) {
+			try {
+				this.lua.DoString("return import(\"script\")");
+			}
+			catch (ThreadAbortException) { }
+			catch (Exception e) {
+				if (this.Running)
 					this.handler.InvokeMessage(e.Message);
-				}
-				finally {
-					this.VMThread = null;
-					this.handler.InvokeQuit();
-				}
-			});
-			this.VMThread.Start();
+			}
+			finally {
+				this.Destroy();
+				this.handler.InvokeQuit();
+			}
 		}
 
 		/// <summary>

@@ -19,21 +19,25 @@ namespace VN {
 			InitializeComponent();
 
 			var gameHandler = new Game.Game.Handler();
-			gameHandler.OnCenter += () => this.AutoInvoke(() => this.CenterToScreen());
-			gameHandler.OnTitle += (v, mem) => this.AutoInvoke(() => {
+			gameHandler.OnCenter += () => this.CenterToScreen();
+			gameHandler.OnTitle += (v, mem) => {
 				if (mem) this.CurrentTitle = v;
 				this.Text = v;
-			});
-			gameHandler.OnResizable += (v) => this.AutoInvoke(() => {
+			};
+			gameHandler.OnResizable += (v) =>
 				this.FormBorderStyle = v
 					? FormBorderStyle.Sizable
 					: FormBorderStyle.FixedSingle;
-			}); ;
-			gameHandler.OnResize += (w, h) => this.AutoInvoke(() => this.ClientSize = new Size(w, h));
-			gameHandler.OnMessage += (msg) => this.AutoInvoke(() => MessageBox.Show(msg, this.CurrentTitle));
-			gameHandler.OnQuit += () => this.AutoInvoke(() => this.Close());
+			gameHandler.OnResize += (w, h) => this.ClientSize = new Size(w, h);
+			gameHandler.OnMessage += (msg) => MessageBox.Show(msg, this.CurrentTitle);
+			gameHandler.OnUpdate += () => Application.DoEvents();
+			gameHandler.OnQuit += () => this.Close();
 
 			Game.Game.Instance.Initialize(gameHandler);
+		}
+
+		protected override void OnShown(EventArgs e) {
+			base.OnShown(e);
 			Game.Game.Instance.Run(this.Handle);
 		}
 
@@ -53,22 +57,19 @@ namespace VN {
 			Game.Game.Instance.ResizeWindow(size.Width, size.Height);
 		}
 
-		/// <summary>
-		/// 외부 스레드에서 UI스레드를 접근하려고 하면 Invoke하고 아니라면 직접 실행
-		/// </summary>
-		/// <param name="act">실행할 함수</param>
-		private void AutoInvoke(Action act) {
-			try {
-				if (this.InvokeRequired)
-					this.Invoke(act);
-				else
-					act();
-			}
-			catch { }
-		}
-
 		private void frmMain_FormClosing(object sender, FormClosingEventArgs e) {
-			Game.Game.Instance.Destroy();
+			if (Game.Game.Instance.Running) {
+				e.Cancel = true;
+				this.Hide();
+				new Thread(() => {
+					Game.Game.Instance.Stop();
+
+					try { 
+						this.Invoke(new Action(() => this.Close()));
+					}
+					catch { }
+				}).Start();
+			}
 		}
 
 		private void frmMain_Mouse(object sender, MouseEventArgs e) {

@@ -1,9 +1,14 @@
 function Font()
     local Meta = {}
+    function Meta:Clone()
+        Bridge.Font_Clone(self.id)
+        return Object.clone(self)
+    end
     function Meta:Unload() Bridge.Font_Unload(self.id) end
-    function Meta:Draw(text, x, y)
+    function Meta:Draw(text, x, y, width)
         Bridge.Font_Draw(self.id, text, self.size, x, y, self.color, self.bold,
-                         self.italic, self.underline, self.strike, self.align)
+                         self.italic, self.underline, self.strike, self.align,
+                         width)
     end
     function Meta:Update()
         -- Nothing to do

@@ -148,10 +148,11 @@ namespace VN.GL {
 			this.measureGraphics?.Dispose();
 		}
 
-		public void Draw(string Text, PointF Location, float Size, bool Bold, bool Italic, bool Underline, bool Strike, uint Color, int Align) {
+		public void Draw(string Text, PointF Location, float MaxWidth, float Size, bool Bold, bool Italic, bool Underline, bool Strike, uint Color, int Align) {
 			double x = 0, y = 0;
 			double fs = Size * 96 / 72;
 			double ratio = fs / Font.BaseFontSize;
+			var MW = MaxWidth / ratio;
 			float a = ((Color >> 24) & 0xFF) / 255f;
 			float r = ((Color >> 16) & 0xFF) / 255f;
 			float g = ((Color >> 8) & 0xFF) / 255f;
@@ -160,13 +161,14 @@ namespace VN.GL {
 			var lines = Text.Replace("\r", "").Split('\n');
 			foreach (var line in lines) {
 				var size = this.Measure(Text, Size, Bold, Italic, Underline, Strike);
+				var bx = 0.0;
 
 				if (Align == 0)
-					x = 0;
+					bx = x = 0;
 				else if (Align == 1)
-					x = -size.X / 2;
+					bx = x = -size.X / 2;
 				else if (Align == 2)
-					x = -size.X;
+					bx = x = -size.X;
 
 				var style = (Bold ? FontStyle.Bold : 0) |
 					(Italic ? FontStyle.Italic : 0) |
@@ -179,6 +181,11 @@ namespace VN.GL {
 					if (!this.cachedList.ContainsKey(key)) continue;
 
 					var (list, cw) = this.cachedList[key];
+
+					if (MaxWidth > 0 && x + cw > MW) {
+						x = bx;
+						y += Font.BaseFontSize * 1.5;
+					}
 
 					this.gl.Push(() => {
 						this.gl
