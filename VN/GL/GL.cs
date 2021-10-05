@@ -119,12 +119,17 @@ namespace VN.GL {
 			return this;
 		}
 
-		public GL DrawImage(Image image, double srcX, double srcY, double srcWidth, double srcHeight, double x, double y, double width, double height, double originX, double originY, double opacity, double angle) {
+		public GL DrawImage(Image image, double srcX, double srcY, double srcWidth, double srcHeight, double x, double y, double width, double height, double originX, double originY, uint color, double angle) {
 			if (image.textureId == 0) return this;
 
 			this.gl.Enable(OpenGL.GL_TEXTURE_2D);
 
-			this.gl.Color(1, 1, 1, opacity);
+			var a = ((color >> 24) & 0xFF) / 255f;
+			var r = ((color >> 16) & 0xFF) / 255f;
+			var g = ((color >> 8) & 0xFF) / 255f;
+			var b = ((color >> 0) & 0xFF) / 255f;
+			this.gl.Color(r, g, b, a);
+
 			this.gl.BindTexture(OpenGL.GL_TEXTURE_2D, image.textureId);
 			this.gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, OpenGL.GL_LINEAR);
 			this.gl.TexParameter(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, OpenGL.GL_LINEAR);
@@ -182,7 +187,6 @@ namespace VN.GL {
 			var r = ((color >> 16) & 0xFF) / 255f;
 			var g = ((color >> 8) & 0xFF) / 255f;
 			var b = ((color >> 0) & 0xFF) / 255f;
-
 			this.gl.Color(r, g, b, a);
 
 			this.gl.PushMatrix();
@@ -244,12 +248,14 @@ namespace VN.GL {
 				this.gl.BlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE_MINUS_SRC_ALPHA);
 			}
 
+			var argb = ((uint)(opacity * 255f) << 24) | 0xffffffU;
+
 			this.DrawImage(
 				new Image(b.texture, this.Width, -this.Height),
 				0, 0, this.Width, this.Height,
 				0, 0, this.Width, this.Height,
 				0, 0,
-				opacity, 0
+				argb, 0
 			);
 
 			var _tex = new uint[1] { b.texture };

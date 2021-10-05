@@ -31,6 +31,7 @@ function Sprite()
         if self.image ~= nil then
             self.image.x = self.x
             self.image.y = self.y
+            self.image.color = self.color
             self.image:Draw()
         end
     end
@@ -89,6 +90,7 @@ function Sprite()
             frames = nil,
             frame = 0,
             frameTime = 0,
+            color = 0xffffffff,
             visible = true
         }
         return setmetatable(object, {__index = Meta})

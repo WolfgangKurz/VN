@@ -160,7 +160,7 @@ namespace VN.GL {
 
 			var lines = Text.Replace("\r", "").Split('\n');
 			foreach (var line in lines) {
-				var size = this.Measure(Text, Size, Bold, Italic, Underline, Strike);
+				var size = this.Measure(Text, Font.BaseFontSize, Bold, Italic, Underline, Strike);
 				var bx = 0.0;
 
 				if (Align == 0)
@@ -187,16 +187,19 @@ namespace VN.GL {
 						y += Font.BaseFontSize * 1.5;
 					}
 
-					this.gl.Push(() => {
-						this.gl
-							.Tex(false)
-							.Translate(Location.X, Location.Y)
-							.Scale(ratio, ratio)
-							.Translate(x, y)
-							.Color(r, g, b, a)
-							.RunList(list);
-					});
+					if (c != ' ') { // 공백은 그리지 않음
+						this.gl.Push(() => {
+							this.gl
+								.Tex(false)
+								.Translate(Location.X, Location.Y)
+								.Scale(ratio, ratio)
+								.Translate(x, y)
+								.Color(r, g, b, a)
+								.RunList(list);
+						});
+					}
 
+					if (x == bx && c == ' ') continue; // 줄의 시작에서 공백이라면 x 값을 늘리지 않음
 					x += cw;
 				}
 

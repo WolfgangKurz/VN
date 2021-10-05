@@ -1,7 +1,6 @@
 local CHAR_DISP_TIME = 0.05 -- 한 글자당 표시되는데 소요되는 시간 (초)
-local AUTO_NEXT_TIME = 2 -- 대사가 끝난 후 다음 문장으로 넘어가기 전 대기할 시간 (초)
+local AUTO_NEXT_TIME = 1 -- 대사가 끝난 후 다음 문장으로 넘어가기 전 대기할 시간 (초)
 
-local scene = Scene.Create()
 local inst = {
     teller = nil,
     text = nil,
@@ -14,8 +13,15 @@ local inst = {
     auto = false, -- 자동 진행 여부
     autoTime = 0,
 
+    nextFrame = 0, -- 다음 대화로 표시자 프레임 시작 시간
+
+    scriptName = "", -- 진행중인 스크립트 파일
+    scriptIndex = 0, -- 스크립트 진행 위치
     queue = {}
 }
+
+local scene = Scene.Create()
+scene.scg = {} -- SCG 목록
 
 -- 초기화
 local function init()
@@ -72,6 +78,9 @@ end
 init()
 init = nil
 
+-- 스크립트 진행 위치를 1 증가
+local function step() inst.scriptIndex = inst.scriptIndex + 1 end
+
 -- 입력 대기 함수
 local function Block()
     inst.block = true
@@ -102,26 +111,22 @@ function BGM.r(name)
         bgm:Play()
         scene:Add(bgm, "BGM")
     end
+
+    step()
 end
 function BGM.fadeIn(dur)
     local bgm = scene:Find("BGM")
     if bgm == nil then return end
 
-    if dur == nil then
-        bgm:FadeIn(1)
-    else
-        bgm:FadeIn(dur)
-    end
+    bgm:FadeIn(fallback(dur, 1))
+    step()
 end
 function BGM.fadeOut(dur)
     local bgm = scene:Find("BGM")
     if bgm == nil then return end
 
-    if dur == nil then
-        bgm:FadeOut(1)
-    else
-        bgm:FadeOut(dur)
-    end
+    bgm:FadeOut(fallback(dur, 1))
+    step()
 end
 
 function BG(name)
@@ -134,7 +139,47 @@ function BG(name)
         bg.height = Game.height
         scene:Add(bg, "BG")
     end
+
+    step()
 end
+
+SCG = {}
+function SCG.r(id, name, x, y, cx, cy)
+    local cgid = "SCG:" .. id
+    local scg = scene:Find(cgid)
+
+    if scg ~= nil then
+        scene:Remove(cgid)
+        scene.scg = Array.filter(scene.scg, function(v) return v ~= cgid end)
+    end
+
+    if name ~= nil then
+        scg = Image.Load("IMG/" .. name)
+
+        scg.x = fallback(x, Game.width * 0.5)
+        scg.y = fallback(y, Game.height)
+        scg.centerx = fallback(cx, 0.5)
+        scg.centery = fallback(cy, 1)
+
+        scene:Add(scg, cgid)
+        Array.push(scene.scg, cgid)
+    end
+
+    step()
+end
+function SCG.on(id)
+    local cgid = "SCG:" .. id
+    local scg = scene:Find(cgid)
+
+    if scg ~= nil then scg.color = 0xffffffff end
+end
+function SCG.off(id)
+    local cgid = "SCG:" .. id
+    local scg = scene:Find(cgid)
+
+    if scg ~= nil then scg.color = 0xff404040 end
+end
+IMG = SCG
 
 local function tBase(teller, text)
     local textbox = scene:Find("textbox")
@@ -162,8 +207,14 @@ local function tBase(teller, text)
 
     if text ~= nil then Block() end
 end
-function t(text) tBase(nil, text) end
-function s(teller, text) tBase(teller, text) end
+function t(text)
+    tBase(nil, text)
+    step()
+end
+function s(teller, text)
+    tBase(teller, text)
+    step()
+end
 
 function wait(dur, skippable)
     local start = Time.now()
@@ -180,21 +231,22 @@ function wait(dur, skippable)
         scene:Draw()
         Game.Update()
     end
+
+    Mouse.Clicks = {} -- 기록된 입력 전부 무시
+    step()
 end
 
 function tl(cb, dur)
     local before = scene:Clone(function(s)
         s.Update = scene.Update
         s.Draw = scene.Draw
+        s.scg = Array.map(scene.scg, function(v) return v end)
     end)
     if type(cb) == "function" then cb(scene) end
 
-    if dur == nil then
-        Transition.Run(before, scene, 1)
-    else
-        Transition.Run(before, scene, dur)
-    end
+    Transition.Run(before, scene, fallback(dur, 1))
     before:Destroy()
+    step()
 end
 
 function next(script) Array.enqueue(inst.queue, script) end
@@ -278,15 +330,18 @@ function scene:Update()
 
         if inst.textTime > 0 and Time.now() - inst.textTime < inst.textTimeTo then
             inst.textTime = 0
+            inst.nextFrame = Time.now()
         else
             inst.block = false
         end
     end
 end
 
-local font = Font.Create("맑은 고딕", 16)
--- font.color = 0x80FFDDBB
-scene:Add(font, "font")
+local textFont = Font.Create("맑은 고딕", 16)
+scene:Add(textFont, "textFont")
+
+local nameFont = Font.Create("맑은 고딕", 14)
+scene:Add(nameFont, "nameFont")
 
 local oldDraw = scene.Draw
 function scene:Draw(opacity)
@@ -297,6 +352,11 @@ function scene:Draw(opacity)
 
     local BG = self:Find("BG")
     if BG ~= nil then BG:Draw() end
+
+    Array.foreach(self.scg, function(cgid)
+        local SCG = self:Find(cgid)
+        SCG:Draw()
+    end)
 
     local textbox = self:Find("textbox")
     if inst.hidden == false and textbox.visible == true then
@@ -315,7 +375,11 @@ function scene:Draw(opacity)
             if inst.teller ~= nil then
                 local tellerBox = self:Find("tellerbox")
                 tellerBox:Draw()
-                font:Draw(inst.teller, 1000, tellerBox.y + 25 - 8) -- 51 = tellerBox.height, 16 = fontSize
+                nameFont.align = 2 -- 오른쪽 정렬
+                nameFont.color = 0xFFFFFFFF
+                nameFont:Draw(inst.teller, tellerBox.x + 151 - 4,
+                              tellerBox.y + 25 - 8)
+                -- 51 = tellerBox.height, 16 = fontSize
             end
 
             local x, y, stroke = textbox.x + 50, textbox.y + 50, 2
@@ -326,29 +390,36 @@ function scene:Draw(opacity)
                 txt = inst.text
 
                 -- 텍스트 끝 지시자 표시
-                self:Find("text_end"):Draw()
+                local tend = self:Find("text_end")
+                local elapsed = Time.now() - inst.nextFrame
+                local angle = math.cos(elapsed * 5) / 2 + 0.5
+                tend.color = (math.floor(0xff * angle) * 0x1000000) + 0xffffff
+                tend:Draw()
             else
                 local len = math.min(math.floor(
                                          (Time.now() - inst.textTime) /
                                              CHAR_DISP_TIME), inst.textLen)
                 if len > 0 then txt = UTF8.sub(inst.text, 1, len) end -- 자르기
 
-                if len == inst.textLen then inst.textTime = 0 end -- 최적화
+                if len == inst.textLen then
+                    inst.textTime = 0
+                    inst.nextFrame = Time.now()
+                end -- 최적화 및 다음 대화 지시자 시간 설정
             end
 
             -- 테두리
             if stroke > 0 then
-                font.color = 0xFF000000
+                textFont.color = 0xFF000000
                 for i = -stroke, stroke do
                     for j = -stroke, stroke do
-                        font:Draw(txt, x + i, y + j, 947 - 100) -- 947 = 대화창 가로
+                        textFont:Draw(txt, x + i, y + j, 947 - 100) -- 947 = 대화창 가로
                     end
                 end
             end
 
             -- 내용
-            font.color = 0xFFFFFFFF
-            font:Draw(txt, x, y, 947 - 100) -- 947 = 대화창 가로
+            textFont.color = 0xFFFFFFFF
+            textFont:Draw(txt, x, y, 947 - 100) -- 947 = 대화창 가로
         end
     end
 
@@ -360,6 +431,8 @@ end
 Array.enqueue(inst.queue, "0")
 while #inst.queue > 0 do
     local script = Array.dequeue(inst.queue)
+    inst.scriptName = script
+    inst.scriptIndex = 0
     import("script/" .. script)
 end
 

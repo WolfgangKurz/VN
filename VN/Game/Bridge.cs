@@ -84,11 +84,11 @@ namespace VN.Game {
 			}
 		}
 
-		public void Image_Draw(int id, double srcx, double srcy, double srcw, double srch, double x, double y, double w, double h, double orix, double oriy, double opacity, double angle) {
+		public void Image_Draw(int id, double srcx, double srcy, double srcw, double srch, double x, double y, double w, double h, double orix, double oriy, uint color, double angle) {
 			if (!this.Parent.ImageDict.ContainsKey(id)) return;
 
 			var image = this.Parent.ImageDict[id];
-			this.Parent.gl.DrawImage(image, srcx, srcy, srcw, srch, x, y, w, h, orix, oriy, opacity, angle);
+			this.Parent.gl.DrawImage(image, srcx, srcy, srcw, srch, x, y, w, h, orix, oriy, color, angle);
 		}
 		#endregion
 

@@ -13,7 +13,7 @@ function Image()
         local y = self.y - (self.height * self.centery)
         Bridge.Image_Draw(self.id, self.srcx, self.srcy, self.srcwidth,
                           self.srcheight, x, y, self.width, self.height,
-                          self.originx, self.originy, self.opacity, self.angle)
+                          self.originx, self.originy, self.color, self.angle)
     end
 
     local _ = {}
@@ -37,7 +37,7 @@ function Image()
             centery = 0,
             originx = width / 2,
             originy = height / 2,
-            opacity = 1,
+            color = 0xffffffff,
             angle = 0
         }
         return setmetatable(object, {__index = Meta})
