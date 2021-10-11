@@ -1,32 +1,39 @@
-Audio.Master = 0.2 -- 마스터 볼륨
-
+-- DEBUGFUNC(30)
 wait(2)
 
+local shakeId = 0
 tl(function()
     BGM.r "Rattle"
     BGM.fadeIn(2)
-    BG "BG_Cloud_Window"
-end, 2)
 
--- Shake_Week()
+    -- 약한 흔들림 지정
+    shakeId = fx.shake(nil, 0.1, 0.333,
+                       function(scene) -- 1 slot, 0.1 power, 0.333 period
+        BG "1_Airplane window"
+    end)
+end, 2)
 
 t "호주의 하늘이라고 한국과 다를 것은 없다."
 t "그저 조금 더 푸를 뿐이다."
-t(nil)
 
 -- 흔들림 점차 줄이기
--- Shake_Fadeout()
+fx.shakeFadeOut(shakeId, 3)
+
 -- 현재 BGM 페이드아웃
--- BGM_Fadeout()
-BGM.fadeOut()
-
--- 페이드 아웃
-tl(function() BG(nil) end, 2)
-
--- 페이드 인
-tl(function() BG "BG_Airport" end, 2)
+BGM.fadeOut(3)
 
 t "창가에 기댄 손에 턱을 괴고 홀연히 창밖을 바라보며 사색에 잠기자, 곧 비행기는 목적지에 다다랐다."
+t(nil)
+
+-- 페이드 아웃
+tl(function()
+    BG(nil)
+end, 2)
+
+fx.d(shakeId) -- 제거
+
+-- 페이드 인
+tl(function() BG "2_Airport" end, 2)
 
 t "얼른 내리라는 듯이 재촉하며 열리는 문을 빠져나가 마침내 호바트에 발을 내딛었다."
 t "그 첫걸음에 감격할 새도 없이 나는 고개를 두리번거렸다."
@@ -72,7 +79,9 @@ end, 1)
 
 s("유미", "그런데…. 저희 어디서 본 적 있었나요?")
 
--- local Sel = Selection("아니, 전혀.", "갑자기 왜?")
+t"※ 선택지 -> \"아니, 전혀.\" / \"갑자기 왜?\""
+-- local selRet = sel("아니, 전혀.", "갑자기 왜?")
+-- sel("아니, 전혀.", "갑자기 왜?")
 
 tl(function() SCG.off "yumi" end, 0.5)
 t "유미는 우물쭈물거리다 곧 입을 열었다."

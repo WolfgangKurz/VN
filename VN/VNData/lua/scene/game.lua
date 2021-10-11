@@ -10,6 +10,8 @@ local inst = {
     block = false,
     hidden = false, -- UI 감춤 여부
 
+    fx = {}, -- 특수 효과 처리 목록
+
     auto = false, -- 자동 진행 여부
     autoTime = 0,
 
@@ -17,6 +19,9 @@ local inst = {
 
     scriptName = "", -- 진행중인 스크립트 파일
     scriptIndex = 0, -- 스크립트 진행 위치
+    scriptEntryPoint = 0, -- 스크립트 시작 위치
+    scriptReady = false, -- 스크립트를 화면에 반영할지 여부
+
     queue = {}
 }
 
@@ -78,8 +83,17 @@ end
 init()
 init = nil
 
--- 스크립트 진행 위치를 1 증가
-local function step() inst.scriptIndex = inst.scriptIndex + 1 end
+local function stepCheck() -- 스크립트 진행 가능 여부
+    if inst.scriptIndex >= inst.scriptEntryPoint then
+        inst.scriptReady = true
+
+        local bgm = scene:Find("BGM")
+        if bgm ~= nil then bgm:Play() end
+    end
+end
+local function step() -- 스크립트 진행 위치를 1 증가
+    inst.scriptIndex = inst.scriptIndex + 1
+end
 
 -- 입력 대기 함수
 local function Block()
@@ -108,7 +122,8 @@ function BGM.r(name)
     if name ~= nil then
         bgm = Audio.Load("BGM/" .. name .. ".mp3", true)
         bgm:Volume(0.25)
-        bgm:Play()
+
+        if inst.scriptReady then bgm:Play() end
         scene:Add(bgm, "BGM")
     end
 
@@ -118,14 +133,22 @@ function BGM.fadeIn(dur)
     local bgm = scene:Find("BGM")
     if bgm == nil then return end
 
-    bgm:FadeIn(fallback(dur, 1))
+    if inst.scriptReady then
+        bgm:FadeIn(fallback(dur, 1))
+    else
+        bgm:Volume(1)
+    end
     step()
 end
 function BGM.fadeOut(dur)
     local bgm = scene:Find("BGM")
     if bgm == nil then return end
 
-    bgm:FadeOut(fallback(dur, 1))
+    if inst.scriptReady then
+        bgm:FadeOut(fallback(dur, 1))
+    else
+        bgm:Volume(0)
+    end
     step()
 end
 
@@ -205,7 +228,8 @@ local function tBase(teller, text)
         end, 0.5)
     end
 
-    if text ~= nil then Block() end
+    stepCheck()
+    if inst.scriptReady and text ~= nil then Block() end
 end
 function t(text)
     tBase(nil, text)
@@ -217,19 +241,22 @@ function s(teller, text)
 end
 
 function wait(dur, skippable)
-    local start = Time.now()
-    while Time.now() < start + dur do
-        if skippable == true then
-            Input:Update()
-            if #Mouse.Clicks > 0 then
-                Mouse.Clicks = {}
-                break
+    stepCheck()
+    if inst.scriptReady then
+        local start = Time.now()
+        while Time.now() < start + dur do
+            if skippable == true then
+                Input:Update()
+                if #Mouse.Clicks > 0 then
+                    Mouse.Clicks = {}
+                    break
+                end
             end
-        end
 
-        scene:Update()
-        scene:Draw()
-        Game.Update()
+            scene:Update()
+            scene:Draw()
+            Game.Update()
+        end
     end
 
     Mouse.Clicks = {} -- 기록된 입력 전부 무시
@@ -237,16 +264,52 @@ function wait(dur, skippable)
 end
 
 function tl(cb, dur)
-    local before = scene:Clone(function(s)
-        s.Update = scene.Update
-        s.Draw = scene.Draw
-        s.scg = Array.map(scene.scg, function(v) return v end)
-    end)
-    if type(cb) == "function" then cb(scene) end
+    stepCheck()
+    if inst.scriptReady then
+        local before = scene:Clone(function(s)
+            s.Update = scene.Update
+            s.Draw = scene.Draw
+            s.scg = Array.map(scene.scg, function(v) return v end)
+        end)
+        if type(cb) == "function" then cb(scene) end
 
-    Transition.Run(before, scene, fallback(dur, 1))
-    before:Destroy()
+        Transition.Run(before, scene, fallback(dur, 1))
+        before:Destroy()
+    else
+        cb(scene)
+    end
+
     step()
+end
+
+-- 특수 효과 처리자
+fx = {}
+function fx.r(slot, initializer, frame) -- FX를 지정, slot이 nil이라면 비어있는 슬롯에 할당
+    local _slot = slot
+    local data = initializer(scene)
+
+    if _slot == nil then
+        _slot = 1
+        while inst.fx[_slot] ~= nil do _slot = _slot + 1 end
+    end
+    inst.fx[_slot] = {func = frame, data = data}
+    return _slot -- 할당한 슬롯 번호를 반환
+end
+function fx.d(slot) -- FX를 해제
+    inst.fx[slot] = nil
+end
+function fx.data(slot, func) -- 데이터를 처리
+    if inst.fx[slot] ~= nil then
+        func(inst.fx[slot].data) -- 데이터를 전달하여 호출
+        return true
+    else
+        return false -- 사용할 수 없는 FX인 경우
+    end
+end
+import("scene/game/fx") -- 미리 정의된 FX
+
+function DEBUGFUNC(arg1) --
+    inst.scriptEntryPoint = arg1
 end
 
 function next(script) Array.enqueue(inst.queue, script) end
@@ -254,6 +317,13 @@ function next(script) Array.enqueue(inst.queue, script) end
 local oldUpdate = scene.Update
 function scene:Update()
     oldUpdate(self)
+
+    -- 특수 효과 처리
+    Object.foreach(inst.fx, function(slot)
+        if slot ~= nil then -- 혹시 모르니 체크
+            slot.func(self, slot.data)
+        end
+    end)
 
     if inst.block == true and inst.auto == true then
         if inst.autoTime > 0 then -- 자동 진행 시간이 진행중이라면
@@ -382,8 +452,10 @@ function scene:Draw(opacity)
                 -- 51 = tellerBox.height, 16 = fontSize
             end
 
-            local x, y, stroke = textbox.x + 50, textbox.y + 50, 2
+            local x, y, stroke = textbox.x + 40, textbox.y + 80, 2
             local i, j = 0, 0
+
+            if inst.teller == nil then y = y - 40 end -- 화자 없으면 위로 당기기
 
             local txt = ""
             if inst.textTime == 0 then
@@ -412,14 +484,15 @@ function scene:Draw(opacity)
                 textFont.color = 0xFF000000
                 for i = -stroke, stroke do
                     for j = -stroke, stroke do
-                        textFont:Draw(txt, x + i, y + j, 947 - 100) -- 947 = 대화창 가로
+                        textFont:Draw(txt, x + i, y + j,
+                                      947 - (x - textbox.x) * 2) -- 947 = 대화창 가로
                     end
                 end
             end
 
             -- 내용
             textFont.color = 0xFFFFFFFF
-            textFont:Draw(txt, x, y, 947 - 100) -- 947 = 대화창 가로
+            textFont:Draw(txt, x, y, 947 - (x - textbox.x) * 2) -- 947 = 대화창 가로
         end
     end
 
@@ -433,6 +506,8 @@ while #inst.queue > 0 do
     local script = Array.dequeue(inst.queue)
     inst.scriptName = script
     inst.scriptIndex = 0
+    inst.scriptEntryPoint = 0
+    inst.scriptReady = false
     import("script/" .. script)
 end
 

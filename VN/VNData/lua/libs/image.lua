@@ -38,7 +38,8 @@ function Image()
             originx = width / 2,
             originy = height / 2,
             color = 0xffffffff,
-            angle = 0
+            angle = 0,
+            source = {width = width, height = height} -- 원본 정보
         }
         return setmetatable(object, {__index = Meta})
     end

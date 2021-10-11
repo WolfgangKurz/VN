@@ -152,6 +152,7 @@ namespace VN.GL {
 			double x = 0, y = 0;
 			double fs = Size * 96 / 72;
 			double ratio = fs / Font.BaseFontSize;
+			double lineHeight = 2;
 			var MW = MaxWidth / ratio;
 			float a = ((Color >> 24) & 0xFF) / 255f;
 			float r = ((Color >> 16) & 0xFF) / 255f;
@@ -184,7 +185,7 @@ namespace VN.GL {
 
 					if (MaxWidth > 0 && x + cw > MW) {
 						x = bx;
-						y += Font.BaseFontSize * 1.5;
+						y += Font.BaseFontSize * lineHeight;
 					}
 
 					if (c != ' ') { // 공백은 그리지 않음
@@ -203,7 +204,7 @@ namespace VN.GL {
 					x += cw;
 				}
 
-				y += Font.BaseFontSize * 1.5;
+				y += Font.BaseFontSize * lineHeight;
 			}
 		}
 		public PointF Measure(string Text, float Size, bool Bold, bool Italic, bool Underline, bool Strike) {
