@@ -122,7 +122,7 @@ namespace VN.Game {
 				});
 			}
 
-			this.waveOut.Volume = this.Volume;
+			// this.waveOut.Volume = this.Volume;
 			this.waveOut.Play();
 			if (!this.thread.IsAlive)
 				this.thread.Start();
@@ -158,13 +158,14 @@ namespace VN.Game {
 				if (this.Disposed) return -1;
 				if (this.waveOut == null) return -1;
 
-				return this.waveOut.Volume;
+				return this.reader.Volume;
 			}
 			set {
 				if (this.Disposed) return;
 				if (this.waveOut == null) return;
 
-				this.waveOut.Volume = Math.Min(Math.Max(value, 0), 1);
+				// this.waveOut.Volume = Math.Min(Math.Max(value, 0), 1);
+				this.reader.Volume = Math.Min(Math.Max(value, 0), 1);
 			}
 		}
 	}
