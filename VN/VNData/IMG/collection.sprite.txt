@@ -1,0 +1,16 @@
+btn_music	0	0	270	93
+btn_music_hover1	0	93	270	93
+btn_music_hover2	270	0	270	93
+btn_music_hover3	270	93	270	93
+btn_music_hover4	0	186	270	93
+btn_event	270	186	270	93
+btn_event_hover1	0	279	270	93
+btn_event_hover2	270	279	270	93
+btn_event_hover3	0	372	270	93
+btn_event_hover4	5270	372	270	93
+btn_illust	540	0	270	93
+btn_illust_hover1	540	93	270	93
+btn_illust_hover2	540	186	270	93
+btn_illust_hover3	540	279	270	93
+btn_illust_hover4	540	372	270	93
+btn_back	0	465	94	88

@@ -8,7 +8,7 @@ tl(function()
 
     -- 약한 흔들림 지정
     shakeId = fx.shake(nil, 0.1, 0.333,
-                       function(scene) -- 1 slot, 0.1 power, 0.333 period
+                       function(scene) -- free slot, 0.1 power, 0.333 period
         BG "1_Airplane window"
     end)
 end, 2)
@@ -26,9 +26,7 @@ t "창가에 기댄 손에 턱을 괴고 홀연히 창밖을 바라보며 사색
 t(nil)
 
 -- 페이드 아웃
-tl(function()
-    BG(nil)
-end, 2)
+tl(function() BG(nil) end, 2)
 
 fx.d(shakeId) -- 제거
 
@@ -79,7 +77,7 @@ end, 1)
 
 s("유미", "그런데…. 저희 어디서 본 적 있었나요?")
 
-t"※ 선택지 -> \"아니, 전혀.\" / \"갑자기 왜?\""
+t "※ 선택지 -> \"아니, 전혀.\" / \"갑자기 왜?\""
 -- local selRet = sel("아니, 전혀.", "갑자기 왜?")
 -- sel("아니, 전혀.", "갑자기 왜?")
 

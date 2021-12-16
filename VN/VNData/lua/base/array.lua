@@ -17,6 +17,23 @@ function Array()
     end
     function _.foreach(t, cb) for i, v in ipairs(t) do cb(v, i) end end
 
+    function _.remove(t, v) -- Semi-slow
+        local offset = 1
+        for ai, av in ipairs(t) do
+            t[offset] = t[ai]
+            if av ~= v then offset = offset + 1 end
+        end
+        for i = offset, #t do t[i] = nil end
+    end
+    function _.removeAt(t, k) -- Semi-slow
+        local offset = 1
+        for ai, av in ipairs(t) do
+            t[offset] = t[ai]
+            if ai ~= k then offset = offset + 1 end
+        end
+        for i = offset, #t do t[i] = nil end
+    end
+
     function _.first(t, cb)
         if cb == nil then return t[1] end
         for i, v in ipairs(t) do if cb(v, i) then return v end end
@@ -52,6 +69,7 @@ function Array()
         t[#t] = nil
         return v
     end
+    function _.peek(t) return t[#t] end
 
     _.enqueue = _.push
     function _.dequeue(t)
@@ -60,6 +78,7 @@ function Array()
         t[n] = nil
         return r
     end
+    function _.peekqueue(t) return t[1] end
 
     Array = _
 end

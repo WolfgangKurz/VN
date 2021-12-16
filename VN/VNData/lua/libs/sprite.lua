@@ -31,6 +31,8 @@ function Sprite()
         if self.image ~= nil then
             self.image.x = self.x
             self.image.y = self.y
+            self.image.centerx = self.centerx
+            self.image.centery = self.centery
             self.image.color = self.color
             self.image:Draw()
         end
@@ -62,7 +64,7 @@ function Sprite()
     end
 
     local _ = {}
-    function _.Load(filename)
+    function _.Load(filename, init)
         local img = Image.Load(filename .. ".sprite")
 
         local infos = {}
@@ -87,13 +89,17 @@ function Sprite()
             infos = infos,
             x = 0,
             y = 0,
+            centerx = 0,
+            centery = 0,
             frames = nil,
             frame = 0,
             frameTime = 0,
             color = 0xffffffff,
             visible = true
         }
-        return setmetatable(object, {__index = Meta})
+        local ret = setmetatable(object, {__index = Meta})
+        if init ~= nil then ret:Set(init) end
+        return ret
     end
     Sprite = _
 end

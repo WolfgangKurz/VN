@@ -81,14 +81,15 @@ function Scene()
         end)
         self.entities = nil
     end
+    Meta.Unload = Meta.Destroy
+
     function Meta:Clone(cb)
         local new = Scene.Create()
         if cb ~= nil then cb(new) end
         local list = {}
         Array.foreach( --
         Array.filter(self.entities, function(set)
-            local e = set[2]
-            return e.type ~= "audio" -- 오디오가 아닌 경우에만 복제
+            return set[2].type ~= "audio" -- 오디오가 아닌 경우에만 복제
         end), --
         function(set)
             list[set[1]] = set[2]:Clone() -- 각 Entity를 복제
