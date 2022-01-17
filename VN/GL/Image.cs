@@ -44,7 +44,8 @@ namespace VN.GL {
 			image.UnlockBits(bits);
 			image.Dispose();
 		}
-		internal Image(uint id, int width, int height) {
+		internal Image(GL gl, uint id, int width, int height) {
+			this.gl = gl;
 			this.uid = "#";
 			this.textureId = id;
 			this.width = width;
@@ -56,7 +57,7 @@ namespace VN.GL {
 			base.Dispose();
 
 			this.RefCount = 0;
-			this.gl.Untexture(this.textureId);
+			this.gl?.Untexture(this.textureId);
 		}
 	}
 }

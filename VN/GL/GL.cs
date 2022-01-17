@@ -84,7 +84,7 @@ namespace VN.GL {
 			if (this.dc == IntPtr.Zero) return this;
 
 			while (this.FrameBufferStack.Count > 0)
-				this.Exit(1);
+				this.Untexture(this.Exit());
 
 			this.gl.Flush();
 			return this;
@@ -237,8 +237,8 @@ namespace VN.GL {
 			this.FrameBufferStack.Push(new Surface(fb[0], rb[0], tex[0]));
 			return this;
 		}
-		public GL Exit(float opacity) {
-			if (this.FrameBufferStack.Count <= 0) return this;
+		public uint Exit() {
+			if (this.FrameBufferStack.Count <= 0) return 0;
 
 			var b = this.FrameBufferStack.Pop();
 			if (this.FrameBufferStack.Count > 0)
@@ -248,26 +248,20 @@ namespace VN.GL {
 				this.gl.BlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE_MINUS_SRC_ALPHA);
 			}
 
-			var argb = ((uint)(opacity * 255f) << 24) | 0xffffffU;
+			//var _fb = new uint[1] { b.framebuffer };
+			//this.gl.DeleteFramebuffersEXT(1, _fb);
+			//b.framebuffer = 0;
 
-			this.DrawImage(
-				new Image(b.texture, this.Width, -this.Height),
-				0, 0, this.Width, this.Height,
-				0, 0, this.Width, this.Height,
-				0, 0,
-				argb, 0
-			);
+			return b.texture;
+		}
+		public uint Snap() {
+			var data = Marshal.AllocHGlobal(this.Width*this.Height*4);
+			this.gl.ReadPixels(0, 0, this.Width, this.Height, OpenGL.GL_RGBA, OpenGL.GL_UNSIGNED_BYTE, data);
 
-			var _tex = new uint[1] { b.texture };
-			this.gl.DeleteTextures(1, _tex);
+			var ret = this.Texture(this.Width, this.Height, data);
+			Marshal.FreeHGlobal(data);
 
-			//var _rb = new uint[1] { b.renderbuffer };
-			//this.gl.DeleteRenderbuffersEXT(1, _rb);
-
-			var _fb = new uint[1] { b.framebuffer };
-			this.gl.DeleteFramebuffersEXT(1, _fb);
-
-			return this;
+			return ret;
 		}
 
 		public GL RunList(uint id) {

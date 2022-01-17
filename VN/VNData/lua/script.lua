@@ -1,13 +1,10 @@
-import("base/_")
-import("libs/_")
+import("core")
 
-import("ext/transition")
-
+-- 게임 기본 정보
+--  타이틀(제목), 크기, 위치
 Game.Title("남십자성이 보이는 하늘 아래")
 Game.Resize(1280, 720)
 Game.Center()
 
-global = {}
-
-import("scene/title")
--- import("scene/game")
+import("scenes")
+SceneManager:Run(Scene_Title)

@@ -105,7 +105,24 @@ namespace VN.Game {
 		#region Graphics
 		public void Graphics_Fill(uint color) => this.Parent.Fill(color);
 		public void Graphics_EnterSurface() => this.Parent.EnterSurface();
-		public void Graphics_FlushSurface(float opacity = 1.0f) => this.Parent.FlushSurface(opacity);
+		public int Graphics_FlushSurface() {
+			var tex = this.Parent.FlushSurface();
+			if (tex == 0) return 0;
+
+			var idx = 0;
+			while (this.Parent.ImageDict.ContainsKey(idx)) idx++;
+			this.Parent.ImageDict[idx] = new GL.Image(this.Parent.gl, tex, this.Parent.gl.Width, this.Parent.gl.Height);
+			return idx;
+		}
+		public int Graphics_Snap() {
+			var tex = this.Parent.gl.Snap();
+			if (tex == 0) return 0;
+
+			var idx = 0;
+			while (this.Parent.ImageDict.ContainsKey(idx)) idx++;
+			this.Parent.ImageDict[idx] = new GL.Image(this.Parent.gl, tex, this.Parent.gl.Width, this.Parent.gl.Height);
+			return idx;
+		}
 		#endregion
 
 		#region Font
@@ -195,6 +212,26 @@ namespace VN.Game {
 
 			var audio = this.Parent.AudioDict[id];
 			audio.Volume = volume;
+		}
+
+		public void Audio_Seek(int id, double pos) {
+			if (!this.Parent.AudioDict.ContainsKey(id)) return;
+
+			var audio = this.Parent.AudioDict[id];
+			audio.Seek(pos);
+		}
+		public double Audio_Pos(int id) {
+			if (!this.Parent.AudioDict.ContainsKey(id)) return 0;
+
+			var audio = this.Parent.AudioDict[id];
+			return audio.CurrentTime;
+		}
+
+		public bool Audio_isPlaying(int id) {
+			if (!this.Parent.AudioDict.ContainsKey(id)) return false;
+
+			var audio = this.Parent.AudioDict[id];
+			return audio.Playing;
 		}
 		#endregion
 

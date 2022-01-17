@@ -10,6 +10,8 @@ using NAudio.Wave;
 
 namespace VN.Game {
 	internal sealed class Audio : IDisposable {
+		public delegate void AudioStoppedHandler();
+
 		private class LoopStream : WaveStream {
 			WaveStream sourceStream;
 
@@ -53,6 +55,8 @@ namespace VN.Game {
 
 		public string Path { get; private set; }
 
+		public event AudioStoppedHandler Stopped;
+
 		private AudioFileReader reader { get; set; }
 		private WaveOutEvent waveOut { get; set; }
 		private Thread thread { get; set; }
@@ -79,6 +83,8 @@ namespace VN.Game {
 					: (WaveStream)reader
 				);
 				this.Volume = 0.5f;
+
+				this.waveOut.PlaybackStopped += (s, e) => this.Stopped?.Invoke();
 			}
 			catch(Exception e) {
 				this.Path = null;
@@ -141,6 +147,10 @@ namespace VN.Game {
 
 			this.waveOut.Stop();
 		}
+
+		public bool Playing => this.Disposed || this.waveOut == null
+			? false
+			: this.waveOut.PlaybackState == PlaybackState.Playing;
 
 		public double CurrentTime => this.Disposed || this.reader == null
 			? double.NaN

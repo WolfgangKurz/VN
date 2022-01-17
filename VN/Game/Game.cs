@@ -136,7 +136,7 @@ namespace VN.Game {
 
 		public void Fill(uint color) => this.gl.Fill(color);
 		public void EnterSurface() => this.gl.Enter();
-		public void FlushSurface(float opacity) => this.gl.Exit(opacity);
+		public uint FlushSurface() => this.gl.Exit();
 
 		public void Stop() {
 			if (!this.Running) return;
@@ -162,7 +162,10 @@ namespace VN.Game {
 
 			this.lua = new Lua();
 			this.lua.State.Encoding = Encoding.UTF8;
+
+			var lastSource = "";
 			this.lua.SetDebugHook(KeraLua.LuaHookMask.Line, 0);
+			this.lua.DebugHook += (sender, e) => lastSource = e.LuaDebug.Source; // last source
 #if DEBUG
 			this.lua.UseTraceback = true;
 
@@ -181,11 +184,17 @@ namespace VN.Game {
 				var state = this.lua.State;
 				state.PushCFunction(pState => {
 					var state = KeraLua.Lua.FromIntPtr(pState);
+					var chunkName = lastSource;
 
 					var filename = state.CheckString(1);
-					var path = Path.Combine("..", "..", "VNData", "lua", filename + ".lua");
+					var basedir = chunkName.Contains('/') ? Path.GetDirectoryName(chunkName) : "";
+					var chunkPath = string.IsNullOrEmpty(basedir) ? filename : basedir + "/" + filename;
+					var path = Path.Combine("..", "..", "VNData", "lua", chunkPath.Replace('/', '\\') + ".lua");
 					if (!File.Exists(path)) {
-						return state.Error($"Script \"{filename}\" not found.");
+						chunkPath += "/_";
+						path = Path.Combine("..", "..", "VNData", "lua", chunkPath.Replace('/', '\\') + ".lua");
+						if (!File.Exists(path))
+							return state.Error($"Script \"{chunkPath}\" not found.");
 					}
 
 					var script = File.ReadAllText(path);
@@ -193,19 +202,19 @@ namespace VN.Game {
 					//scriptDict[filename] = script;
 #endif
 
-					if (state.LoadString(script, filename) == KeraLua.LuaStatus.OK) {
+					if (state.LoadString(script, chunkPath.Replace('\\', '/')) == KeraLua.LuaStatus.OK) {
 						state.Call(0, -1);
 						return 0;
 					}
 					else
-						return state.Error($"Script \"{filename}\" cannot be loaded.");
+						return state.Error($"Script \"{chunkPath}\" cannot be loaded.");
 				});
 				state.SetGlobal("import");
 			}
 			LuaHelper.Register(this.lua, "Bridge", new Bridge(this));
 
 			try {
-				this.lua.DoString("return import(\"script\")");
+				this.lua.DoString("return import(\"script\")", "");
 			}
 			catch (ThreadAbortException) { }
 			catch (Exception e) {

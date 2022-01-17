@@ -217,7 +217,7 @@ namespace VN.Game {
 
 					case KeraLua.LuaType.Function:
 						// state.Error($"Function argument is not implemented");
-						cb("[Function]");
+						cb("[lua function]");
 						return true;
 
 					case KeraLua.LuaType.UserData:
