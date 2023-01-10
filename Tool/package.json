@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "spritesmith": "^3.4.0"
+    "glob": "^3.2.11",
+    "spritesheet-js": "^1.2.6"
   }
 }

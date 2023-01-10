@@ -1,0 +1,169 @@
+{
+	"meta": {
+		"image": "sprite.png",
+		"size": {"w":810,"h":651},
+		"scale": "1"
+	},
+	"frames": {
+		"btn_collection.png":
+		{
+			"frame": {"x":0,"y":0,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_load.png":
+		{
+			"frame": {"x":270,"y":186,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_option.png":
+		{
+			"frame": {"x":540,"y":0,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_start.png":
+		{
+			"frame": {"x":0,"y":465,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_collection_hover1.png":
+		{
+			"frame": {"x":0,"y":93,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_collection_hover2.png":
+		{
+			"frame": {"x":270,"y":0,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_collection_hover3.png":
+		{
+			"frame": {"x":270,"y":93,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_collection_hover4.png":
+		{
+			"frame": {"x":0,"y":186,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_load_hover1.png":
+		{
+			"frame": {"x":0,"y":279,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_load_hover2.png":
+		{
+			"frame": {"x":270,"y":279,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_load_hover3.png":
+		{
+			"frame": {"x":0,"y":372,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_load_hover4.png":
+		{
+			"frame": {"x":270,"y":372,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_option_hover1.png":
+		{
+			"frame": {"x":540,"y":93,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_option_hover2.png":
+		{
+			"frame": {"x":540,"y":186,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_option_hover3.png":
+		{
+			"frame": {"x":540,"y":279,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_option_hover4.png":
+		{
+			"frame": {"x":540,"y":372,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_start_hover1.png":
+		{
+			"frame": {"x":270,"y":465,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_start_hover2.png":
+		{
+			"frame": {"x":540,"y":465,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_start_hover3.png":
+		{
+			"frame": {"x":0,"y":558,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		},
+		"btn_start_hover4.png":
+		{
+			"frame": {"x":270,"y":558,"w":270,"h":93},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":270,"h":93},
+			"sourceSize": {"w":270,"h":93}
+		}
+	}
+}

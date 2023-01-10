@@ -1,0 +1,97 @@
+{
+	"meta": {
+		"image": "sprite.png",
+		"size": {"w":554,"h":342},
+		"scale": "1"
+	},
+	"frames": {
+		"bar.png":
+		{
+			"frame": {"x":0,"y":0,"w":554,"h":44},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":554,"h":44},
+			"sourceSize": {"w":554,"h":44}
+		},
+		"btn_selected.png":
+		{
+			"frame": {"x":0,"y":64,"w":171,"h":70},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":171,"h":70},
+			"sourceSize": {"w":171,"h":70}
+		},
+		"btn_fast.png":
+		{
+			"frame": {"x":171,"y":64,"w":161,"h":60},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":161,"h":60},
+			"sourceSize": {"w":161,"h":60}
+		},
+		"btn_fast_down.png":
+		{
+			"frame": {"x":332,"y":64,"w":161,"h":60},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":161,"h":60},
+			"sourceSize": {"w":161,"h":60}
+		},
+		"btn_regular.png":
+		{
+			"frame": {"x":0,"y":134,"w":161,"h":60},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":161,"h":60},
+			"sourceSize": {"w":161,"h":60}
+		},
+		"btn_regular_down.png":
+		{
+			"frame": {"x":161,"y":134,"w":161,"h":60},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":161,"h":60},
+			"sourceSize": {"w":161,"h":60}
+		},
+		"btn_slow.png":
+		{
+			"frame": {"x":322,"y":134,"w":161,"h":60},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":161,"h":60},
+			"sourceSize": {"w":161,"h":60}
+		},
+		"btn_slow_down.png":
+		{
+			"frame": {"x":0,"y":194,"w":161,"h":60},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":161,"h":60},
+			"sourceSize": {"w":161,"h":60}
+		},
+		"btn_back.png":
+		{
+			"frame": {"x":0,"y":254,"w":94,"h":88},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":94,"h":88},
+			"sourceSize": {"w":94,"h":88}
+		},
+		"bar_thumb.png":
+		{
+			"frame": {"x":493,"y":64,"w":55,"h":46},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {"x":1,"y":1,"w":55,"h":46},
+			"sourceSize": {"w":57,"h":48}
+		},
+		"bar_active.png":
+		{
+			"frame": {"x":0,"y":44,"w":493,"h":20},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {"x":1,"y":1,"w":493,"h":20},
+			"sourceSize": {"w":495,"h":23}
+		}
+	}
+}
