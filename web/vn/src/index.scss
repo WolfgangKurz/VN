@@ -1,0 +1,42 @@
+:root {
+	font-family: "NanumSquare", Arial, sans-serif;
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 400;
+
+	color: #fefefd;
+	background-color: #111;
+
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-text-size-adjust: 100%;
+}
+
+@import url("fonts/NanumSquare.css");
+
+* {
+	box-sizing: border-box;
+	user-select: none !important;
+}
+input {
+	user-select: auto !important;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	background-color: black;
+	overflow: hidden;
+}
+
+#fontloader {
+	position: absolute;
+	left: 0;
+	top: 0;
+	pointer-events: none !important;
+	opacity: 0;
+}

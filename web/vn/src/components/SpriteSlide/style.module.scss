@@ -1,0 +1,28 @@
+.SpriteSlide {
+	opacity: 0;
+
+	&.Loaded {
+		opacity: 1;
+	}
+
+	> img {
+		display: block;
+	}
+
+	> .Bar {
+		position: relative !important; // for sizing
+	}
+
+	> .Track {
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+	}
+
+	> .Thumb {
+		left: 0;
+
+		top: 50%;
+		transform: translate(0, -50%);
+	}
+}

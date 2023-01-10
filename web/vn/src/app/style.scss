@@ -1,0 +1,13 @@
+#app {
+	display: flex;
+	height: 100%;
+	background-color: #070708;
+
+	> div {
+		margin: auto;
+	}
+
+	* {
+		position: absolute;
+	}
+}
