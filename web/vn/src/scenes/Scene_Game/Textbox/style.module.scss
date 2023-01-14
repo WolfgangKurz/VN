@@ -1,0 +1,131 @@
+@keyframes textbox-char-anim {
+	0% {
+		transform: translateY(5px);
+		opacity: 0;
+	}
+	100% {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+@keyframes textbox-next-anim {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+.Textbox {
+	padding: 20px;
+	left: 120px;
+	bottom: 20px;
+	width: 947px;
+	height: 242px;
+
+	pointer-events: none;
+
+	opacity: 0;
+	&.Fade {
+		transition: opacity 0.5s linear;
+	}
+	&.Display {
+		opacity: 1;
+	}
+
+	&.Skip * {
+		animation-name: none !important;
+	}
+
+	div.Teller {
+		right: 2px;
+		top: 2px;
+		float: right;
+
+		text-align: right;
+		font-weight: 600;
+		font-size: 24px;
+		color: #fff;
+
+		transition: opacity 0.25s linear;
+		opacity: 0;
+
+		> img {
+			position: relative !important;
+			display: block;
+		}
+
+		> span {
+			right: 10px;
+			top: 50%;
+			transform: translate(0, -50%);
+
+			width: 92px; // 102px - 10px padding
+			text-align: center;
+		}
+
+		&.Display {
+			position: relative !important;
+			right: -18px;
+			top: -18px;
+			opacity: 1;
+		}
+	}
+
+	> img:first-child {
+		// background
+		left: 0;
+		top: 0;
+	}
+
+	.Calc {
+		line-height: 1.3;
+
+		&.Text {
+			word-spacing: 1px;
+			font-size: 28px;
+		}
+		&.Teller {
+			font-weight: 600;
+			font-size: 24px;
+		}
+	}
+
+	.NextIndicator {
+		right: 3px;
+		bottom: 2px;
+
+		animation-name: textbox-next-anim;
+		animation-duration: 1s;
+		animation-delay: 0s;
+		animation-iteration-count: infinite;
+		animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+		animation-direction: alternate;
+	}
+
+	.TextContainer {
+		left: 0;
+		top: 0;
+
+		line-height: 1.3;
+		word-spacing: 1px;
+		font-size: 28px;
+
+		text {
+			stroke: rgba(0, 0, 0, 0.875);
+			stroke-width: 5px;
+			fill: #fff;
+			paint-order: stroke fill;
+			dominant-baseline: hanging;
+			dominant-baseline: text-before-edge;
+
+			animation-name: textbox-char-anim;
+			animation-duration: 0.2s;
+			animation-delay: 0s;
+			animation-iteration-count: 1;
+			animation-timing-function: ease-out;
+		}
+	}
+}

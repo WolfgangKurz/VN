@@ -3,6 +3,8 @@ import NodeFS from "node:fs";
 import debounce from "lodash.debounce";
 import { signal } from "@preact/signals";
 
+import Session from "./libs/Session";
+
 const fs: typeof NodeFS = window.nw.require("fs");
 
 type ConfigValue = string | number | boolean;
@@ -52,9 +54,21 @@ function clamp (v: number, min: number, max: number): number {
 
 const config = {
 	// volatile variables
-	volatile_Scene: signal<string>(""),
-	volatile_Script: signal<string>(""),
+	volatile_LoadingText: signal<string>(""),
 
+	volatile_Scene: signal<string>(""),
+
+	volatile_Script: signal<string>(""),
+	volatile_ScriptCursor: signal<number>(-1),
+
+	volatile_Mute: signal<boolean>(false),
+
+	volatile_Title: signal<string>(""),
+
+	// session
+	session_Data: signal<Session>(new Session()),
+
+	// settings
 	volume_SFX: signal<number>(clamp(asInteger(configData["volume.sfx"], 100), 0, 100)),
 	volume_BGM: signal<number>(clamp(asInteger(configData["volume.bgm"], 100), 0, 100)),
 	text_Speed: signal<number>(clamp(asInteger(configData["text.speed"], 100), 0, 2)), // 0-slow, 1-regular, 2-fast

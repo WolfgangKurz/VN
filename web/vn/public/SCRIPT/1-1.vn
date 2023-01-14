@@ -1,20 +1,17 @@
 @fadeout 0
 
-# bgs "파일명" [페이드-인 시간=0]
-@bgs 1-1_Airplane 2
+@bgs 1-1_Airplane 2 0
 @bg "1_Airplane window"
 
-@fadein 2
+@fx shake weak 0.5 -1
 
-# fx shake "세기:weak/normal/strong" [duration=2]
-@fx shake weak -1
+@fadein 2
 
 호주의 하늘이라고 한국과 다를 것은 없다.
 그저 조금 더 푸를 뿐이다.
 
-@fx shake_close 1
+@fx shake_fadeout 5
 
-# bgs - [페이드-아웃 시간]
 @bgs - 2
 
 창가에 기댄 손에 턱을 괴고 홀연히 창밖을 바라보며 사색에 잠긴 동안 비행기는 목적지에 다다라 있었다.
@@ -35,8 +32,8 @@
 안내인과는 여기서 만나기로 되어 있었다.
 @clear
 
-# char "파일명" [위치:left/center/right] [fx:slide from left/right/top/bottom]
 @char STD_01_1
+# 유미
 ??? -> 여기, 여기예요. 여기!
 ??? -> 새로 오신 관리자님 이시죠? 성함이....
 나 -> 당신이 유미 씨?
@@ -44,7 +41,6 @@
 
 @bgm Summer_02
 @pic 1 cut_01 1.5
-# pic "id" "파일명" [페이드-인/아웃 시간] [위치=center:left-top|top|right-top|left|center|right|left-bottom|bottom|right-bottom]
 
 유미 -> 네, 맞아요. 제대로 오신 것 같네요.
 유미 -> 잘 부탁드려요, 관리자님.
@@ -60,7 +56,8 @@
 
 @char STD_01_11
 유미 -> 그런데... 저희 어디서 본 적 있었나요?
-@sel "아니, 전혀." "갑자기 왜?"
+
+@sel "아니, 전혀." - "갑자기 왜?" -
 
 유미는 우물쭈물 거리다 곧 입을 열었다.
 @clear
@@ -130,11 +127,10 @@
 나 -> 혹시 계산 잘못한 거 아니야?
 나 -> 지금 바꾸기에는 너무 늦었으니 어쩔 수 없….
 
-# fx shake2 : 끝날 때 까지 대기하는 shake, loop 사용 불가
-@fx shake2 strong
-@wait fx
-
 @char STD_01_7
+
+@fx shake2 strong 0.01 200
+
 유미 -> 이래 봬도 저 22살이거든요!?
 유미 -> 작다고 어린애 취급하지 말아 주세요!
 나 -> 앗….
@@ -157,5 +153,7 @@
 
 @fadeout 2
 @bgm - 2
+@char - center "" 0
+@fadein 0
 
 @script 1-2

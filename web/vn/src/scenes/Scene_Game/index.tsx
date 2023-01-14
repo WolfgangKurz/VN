@@ -1,60 +1,254 @@
-import { useEffect, useLayoutEffect, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { batch } from "@preact/signals";
 
 import config from "@/config";
 
 import { TRANSPARENT } from "@/libs/Const";
 import { BuildClass } from "@/libs/ClassName";
-import Wait from "@/libs/Wait";
+import Wait, { WaitData } from "@/libs/Wait";
 import ManagedAudio from "@/libs/ManagedAudio";
-import Script from "@/libs/Script";
+import Script, { ScriptArgument, ScriptSelection } from "@/libs/Script";
+
+import { StartupScript } from "./debug";
 
 import Scene_Base from "../Scene_Base";
-
 import Window_Option from "@/windows/Window_Option";
+
+import Image from "@/components/Image";
+import SpriteImage from "@/components/SpriteImage";
+
+import Textbox, { TextboxPhase } from "./Textbox";
 
 import style from "./style.module.scss";
 
+interface CharData {
+	key: string;
+	pos: "<<" | "<" | "left" | "center" | "right" | ">" | ">>";
+	src: string;
+	fx: string;
+	duration: number;
+	state: number; // 0:init, 1:loading, 2:loaded, 3:unloading
+}
+interface PictureData {
+	key: string;
+	layer: "front" | "back";
+	pos: "left-top" | "top" | "right-top" | "left" | "center" | "right" | "left-bottom" | "bottom" | "right-bottom";
+	src: string;
+	fadeDuration: number;
+	state: number; // 0:loading, 1:loaded, 2:unloading
+}
+
 const Scene_Game: FunctionalComponent = () => {
 	const [script, setScript] = useState<Script | null>(null);
-	const [scriptRun, setScriptRun] = useState(0);
-	const next = () => setScriptRun((scriptRun + 1) % 2);
+	const [scriptCursor, setScriptCursor] = useState(0);
+	const [scriptRun, setScriptRun] = useState(false);
+
+	const scriptLoading = !script || script.cursor < scriptCursor;
+
+	const next = () => setScriptRun(!scriptRun);
+
+	const [assetLoaded, setAssetLoaded] = useState(false);
 
 	//////////////////////////////
 
+	const [title, setTitle] = useState("");
+	const [titleShow, setTitleShow] = useState(false);
+
 	const [bgs, setBGS] = useState<ManagedAudio | undefined>(undefined);
 	const [bgm, setBGM] = useState<ManagedAudio | undefined>(undefined);
+	const [_, setSEs] = useState<ManagedAudio[]>([]);
 
 	const [faded, setFaded] = useState(false);
 	const [fadeDuration, setFadeDuration] = useState(0);
 
 	const [bgImage, setBGImage] = useState("");
-	const [bgExt, setBGExt] = useState("");
 
-	useEffect((): void => {
+	const [fx, setFX] = useState<string | null>(null);
+	const [fxDuration, setFXDuration] = useState(0);
+	const [fxArgs, setFXArgs] = useState<ScriptArgument[]>([]);
+	const [fxEnd, setFXEnd] = useState(false);
+	const [fxWaiting, setFXWaiting] = useState(false);
+	const ScreenEl = useRef<HTMLDivElement>(null);
+
+	const [displayText, setDisplayText] = useState("");
+	const [displayTeller, setDisplayTeller] = useState("");
+	const [textState, setTextState] = useState<TextboxPhase>(TextboxPhase.None); // 0:none, 1:fade-in, 2:text-show, 3:text-shown, 4:fade-out
+
+	const [selection, setSelection] = useState<ScriptSelection[]>([]);
+
+	const [chars, setChars] = useState<CharData[]>([]);
+	const [pics, setPics] = useState<PictureData[]>([]);
+	const [bpics, setBPics] = useState<PictureData[]>([]);
+
+	//////////////////////////////
+
+	const [blocks, setBlocks] = useState<WaitData[]>([]);
+	function addBlock (wait: WaitData) {
+		setBlocks(b => [...b, wait]);
+	}
+
+	//////////////////////////////
+
+	const unblock = (force?: boolean) => {
+		if (!script) return;
+		if (!force && script.current()?.type === "sel") return;
+
+		let flushed = false;
+		setBlocks(blocks => {
+			blocks.forEach(b => {
+				if (!b.isDone())
+					flushed = true;
+
+				b.flush();
+			});
+			if (!flushed) next();
+
+			return [];
+		});
+	};
+
+	useEffect(() => { // script load skipper
+		if (!script || !scriptLoading) return;
+
+		if (blocks.length > 0) return unblock();
+	}, [scriptCursor, blocks, displayText]);
+
+	useEffect(() => {
+		if (!scriptLoading)
+			config.volatile_Mute.value = false;
+	}, [scriptLoading]);
+
+	useEffect(() => { // fx worker
+		let running = true;
+		let begin = Date.now();
+		let latest = -1;
+		const fn = () => {
+			if (!running) return;
+
+			const el = ScreenEl.current;
+			if (!el) return requestAnimationFrame(fn);
+
+			const p = (Date.now() - begin) / (fxDuration * 1000);
+			const cur = Math.floor(p);
+
+			switch (fx) {
+				case "shake":
+					{
+						const loop = fxArgs[1] as number;
+						if (loop >= 0 && p >= loop) {
+							running = false;
+							el.style.transform = "";
+							setFXEnd(true);
+							return;
+						}
+					}
+
+					if (latest !== cur) {
+						latest = cur;
+
+						let x = 0, y = 0;
+						const th = {
+							weak: 3,
+							normal: 6,
+							strong: 10,
+						}[fxArgs[0]] || 0; // strength
+
+						x = (Math.random() - 0.5) * th;
+						y = (Math.random() - 0.5) * th;
+
+						el.style.transitionDuration = `${fxDuration}s`;
+						el.style.transform = `translate(${x}px, ${y}px)`;
+					}
+					break;
+
+				case "shake_fadeout":
+					if (p >= 1) {
+						running = false;
+						el.style.transform = "";
+						setFXEnd(true);
+						return;
+					}
+
+					el.style.transitionDuration = `${fxDuration}s`;
+					el.style.transform = "";
+					break;
+
+				case "charfx":
+					{
+						if (scriptLoading) {
+							running = false;
+							unblock();
+							return setFXEnd(true);
+						}
+
+						const target = el.querySelectorAll<HTMLImageElement>(`.${style.Char}.${PosStyles[fxArgs[0].toString()]}`);
+						const charfx = fxArgs[1];
+						const fxClass = style[`charfx-${charfx}`];
+
+						if (p >= 1) {
+							running = false;
+							setFXEnd(true);
+
+							target.forEach(t => {
+								if (t.classList.contains(fxClass)) {
+									t.classList.remove(fxClass);
+									t.style.removeProperty("--charfx-duration");
+								}
+							});
+							return;
+						}
+
+						target.forEach(t => {
+							if (!t.classList.contains(fxClass)) {
+								t.classList.add(fxClass);
+								t.style.setProperty("--charfx-duration", `${fxDuration}s`);
+							}
+						});
+					}
+					break;
+			}
+
+			requestAnimationFrame(fn);
+		};
+		requestAnimationFrame(fn);
+
+		return () => {
+			running = false;
+		};
+	}, [fx, fxDuration, fxArgs]);
+
+	useEffect((): void => { // script processor
 		if (!script) return;
 
 		const s = script.next();
 		if (!s) return;
 
-		console.log(s);
+		const scriptLoading = script.cursor < scriptCursor;
+		console.log(script.cursor, s);
 
 		switch (s.type) {
 			case "fade":
 				setFadeDuration(s.fadeDuration);
 				setFaded(!s.isIn);
 
-				Wait(s.fadeDuration * 1000).then(next);
-				return;
+				addBlock(Wait(s.fadeDuration * 1000, () => {
+					setFadeDuration(0);
+					unblock();
+				}));
+				break;
 
 			case "bg":
-				setBGImage(`/BG/${s.name}`);
-				setBGExt(".jpg");
-				return next();
+				if (s.name === "-")
+					setBGImage("");
+				else
+					setBGImage(`/BG/${s.name}.png`);
+				unblock();
+				break;
 
 			case "bgm":
 				if (!bgm) {
 					console.warn("<BGM> BGM ManagedAudio instance gone");
-					return next();
+					return unblock();
 				}
 
 				{
@@ -62,36 +256,50 @@ const Scene_Game: FunctionalComponent = () => {
 					if (bgm.src() !== src) {
 						if (s.name === "-") {// unload
 							if (s.fadeDuration > 0) {
+								if (scriptLoading) {
+									bgm.fadeOut(0);
+									return unblock();
+								}
 								bgm.fadeOut(s.fadeDuration * 1000);
-								Wait(s.fadeDuration * 1000).then(() => {
+
+								if (!s.wait) unblock();
+								addBlock(Wait(s.fadeDuration * 1000, () => {
 									bgm.stop();
-									next();
-								});
+									if (s.wait) unblock();
+								}));
 								return;
 							} else {
 								bgm.stop();
-								return next();
+								return unblock();
 							}
 						} else {
 							bgm.load(src);
 
 							bgm.play();
 							if (s.fadeDuration > 0) {
+								if (scriptLoading) {
+									bgm.fadeIn(0);
+									return unblock();
+								}
 								bgm.fadeIn(s.fadeDuration * 1000);
-								Wait(s.fadeDuration * 1000).then(() => next());
+
+								if (!s.wait)
+									unblock();
+								else
+									addBlock(Wait(s.fadeDuration * 1000, () => unblock()));
 								return;
 							} else
-								return next();
+								return unblock();
 						}
 					}
 
 					if (s.name !== "-") bgm.play();
-					return next();
+					return unblock();
 				}
 			case "bgs":
 				if (!bgs) {
 					console.warn("<BGS> BGS ManagedAudio instance gone");
-					return next();
+					return unblock();
 				}
 
 				{
@@ -99,39 +307,412 @@ const Scene_Game: FunctionalComponent = () => {
 					if (bgs.src() !== src) {
 						if (s.name === "-") {// unload
 							if (s.fadeDuration > 0) {
+								if (scriptLoading) {
+									bgs.fadeOut(0);
+									return unblock();
+								}
 								bgs.fadeOut(s.fadeDuration * 1000);
-								Wait(s.fadeDuration * 1000).then(() => {
+
+								if (!s.wait) unblock();
+
+								addBlock(Wait(s.fadeDuration * 1000, () => {
 									bgs.stop();
-									next();
-								});
+									if (s.wait) unblock();
+								}));
 								return;
 							} else {
 								bgs.stop();
-								return next();
+								return unblock();
 							}
 						} else {
 							bgs.load(src);
 
 							bgs.play();
 							if (s.fadeDuration > 0) {
+								if (scriptLoading) {
+									bgs.fadeIn(0);
+									return unblock();
+								}
 								bgs.fadeIn(s.fadeDuration * 1000);
-								Wait(s.fadeDuration * 1000).then(() => next());
+
+								if (!s.wait)
+									unblock();
+								else
+									addBlock(Wait(s.fadeDuration * 1000, () => unblock()));
 								return;
 							} else
-								return next();
+								return unblock();
 						}
 					}
 
 					if (s.name !== "-") bgs.play();
-					return next();
+					return unblock();
 				}
+			case "se":
+				{
+					if (s.name === "-") {
+						setSEs(l => {
+							l.forEach(se => se.destroy());
+							return [];
+						});
+					} else {
+						const se = new ManagedAudio(false);
+						se.load(`/SE/${s.name}.mp3`, true);
+
+						setSEs(l => {
+							const arr: ManagedAudio[] = [];
+							l.forEach(r => {
+								if (r.playing) arr.push(r);
+								else r.destroy();
+							});
+							arr.push(se);
+							return arr;
+						});
+					}
+					unblock();
+				}
+				break;
+
+			case "fx":
+				if (s.fx === "-") {
+					setFXEnd(true);
+					setFX(null);
+				} else {
+					setFXEnd(false);
+
+					const args: ScriptArgument[] = [];
+					switch (s.fx) {
+						case "shake":
+							if (!["weak", "normal", "strong"].includes(s.args[0].toString())) {
+								console.warn("shake 1st parameter should be 'weak' or 'normal' or 'strong'");
+								break;
+							}
+							if (typeof s.args[1] !== "number" && typeof s.args[1] !== "undefined") {
+								console.warn("shake 2nd paramter should be Number or Undefined");
+								break;
+							}
+							if (typeof s.args[2] !== "number" && typeof s.args[2] !== "undefined") {
+								console.warn("shake 3rd paramter should be Number or Undefined");
+								break;
+							}
+
+							args.push(
+								s.args[0], // strength
+								typeof s.args[2] === "number"
+									? s.args[2] < 0 //count
+										? -1
+										: s.args[2]
+									: 1,
+							);
+
+							setFX(s.fx);
+							setFXDuration(s.args[1] ?? 2);
+							setFXArgs(args);
+							break;
+
+						case "shake2":
+							{
+								if (scriptLoading) break; // block command
+
+								if (!["weak", "normal", "strong"].includes(s.args[0].toString())) {
+									console.warn("shake2 1st parameter should be 'weak' or 'normal' or 'strong'");
+									break;
+								}
+								if (typeof s.args[1] !== "number" && typeof s.args[1] !== "undefined") {
+									console.warn("shake2 2nd paramter should be Number or Undefined");
+									break;
+								}
+								if (typeof s.args[2] !== "number" && typeof s.args[2] !== "undefined") {
+									console.warn("shake2 3rd paramter should be Number or Undefined");
+									break;
+								}
+
+								const dur = s.args[1] ?? 2;
+								const count = typeof s.args[2] === "number"
+									? s.args[2] < 0 //count
+										? -1
+										: s.args[2]
+									: 1;
+
+								if (count < 0) {
+									console.warn("shake2 cannot looped");
+									break;
+								}
+
+								args.push(
+									s.args[0], // strength
+									count,
+								);
+
+								setFX("shake");
+								setFXDuration(dur);
+								setFXArgs(args);
+
+								addBlock(Wait(dur * count * 1000, () => {
+									unblock();
+								}));
+							}
+							return;
+
+						case "shake_fadeout":
+							{
+								if (typeof s.args[0] !== "number" && typeof s.args[0] !== "undefined") {
+									console.warn("shake_fadeout argument should be Number");
+									break;
+								}
+
+								setFX(s.fx);
+								setFXDuration(s.args[0] ?? 2);
+								setFXArgs([
+									`${s.args[0] ?? 2}s`, // duration
+								]);
+
+								addBlock(Wait((s.args[0] ?? 2) * 1000, () => {
+									unblock();
+								}));
+							}
+							break;
+
+						case "charfx":
+							if (!["left", "center", "right"].includes(s.args[0].toString())) {
+								console.warn("charfx 1st parameter should be 'left' or 'center' or 'right'");
+								break;
+							}
+							if (typeof s.args[1] !== "number") {
+								console.warn("charfx 2nd parameter should be Number");
+								break;
+							}
+							if (!["jump", "jump-short", "shake", "shake-weak"].includes(s.args[2].toString())) {
+								console.warn("charfx 3rd parameter should be 'jump' or 'jump-short' or 'shake'");
+								break;
+							}
+
+							args.push(
+								s.args[0], // position
+								s.args[2], // fx
+							);
+
+							setFX(s.fx);
+							setFXDuration(s.args[1]);
+							setFXArgs(args);
+
+							addBlock(Wait(s.args[1] * 1000, () => {
+								unblock();
+							}));
+							return;
+
+						default:
+							setFXEnd(true);
+							console.warn(`Unknown FX "${s.fx}"`);
+							break;
+					}
+				}
+				return unblock();
+
+			case "script": // load next script
+				batch(() => {
+					config.volatile_Script.value = s.script;
+					config.volatile_ScriptCursor.value = 0;
+				});
+				break;
+
+			case "title": // scene title
+				config.volatile_Title.value = s.title;
+				unblock();
+				break;
+
+			case "set":
+				console.log("Session var set, " + s.name + " -> " + s.value);
+				config.session_Data.peek().set(s.name, s.value);
+				unblock();
+				break;
+
+			case "if":
+				{
+					const v = config.session_Data.peek().get(s.var) || ""; // 값이 지정되지 않았으면 빈 문자열로 취급
+					if (s.conds.some(r => {
+						if (r.value === v) { // 일치하는 경우
+							batch(() => {
+								config.volatile_Script.value = r.to;
+								config.volatile_ScriptCursor.value = 0;
+							});
+							return true;
+						}
+						return false;
+					}))
+						unblock();
+				}
+				break;
+
+			case "wait":
+				if (typeof s.wait === "number")
+					addBlock(Wait(s.wait * 1000, () => unblock()));
+				else
+					setFXWaiting(true);
+				return;
+
+			case "text":
+				if (scriptLoading) return unblock();
+
+				setDisplayText(s.text);
+				setDisplayTeller("");
+				setTextState(s => s === TextboxPhase.None ? TextboxPhase.FadeIn : TextboxPhase.SequencingText);
+				break;
+			case "talk":
+				if (scriptLoading) return unblock();
+
+				setDisplayText(s.text);
+				setDisplayTeller(s.teller);
+				setTextState(s => s === TextboxPhase.None ? TextboxPhase.FadeIn : TextboxPhase.SequencingText);
+				break;
+			case "clear":
+				if (scriptLoading || textState === TextboxPhase.None) return unblock();
+
+				setDisplayTeller("");
+				setTextState(TextboxPhase.FadeOut);
+				break;
+
+			case "sel":
+				if (scriptLoading) return unblock();
+
+				setSelection(s.sels);
+				break;
+
+			case "char":
+				{
+					const removeAt = (position: CharData["pos"], duration: number) => {
+						setChars(_chars => {
+							const chars = [..._chars];
+							let keys: string[] = [];
+
+							chars.forEach(c => {
+								if (c.pos === position) {
+									c.state = 3; // unload same position
+									c.fx = s.fx;
+									c.duration = duration;
+									keys.push(c.key);
+								}
+							});
+
+							if (keys.length > 0) {
+								addBlock(Wait(duration * 1000, () => {
+									setChars(p => p.filter(r => r && !keys.includes(r.key)));
+									unblock();
+								}));
+							} else
+								unblock();
+
+							return chars;
+						});
+					};
+
+					if (s.name === "-")
+						removeAt(s.position, s.fxDuration);
+					else {
+						const src = `/IMG/SCG/${s.name}.png`;
+						if (chars.some(c => c.pos === s.position && c.state <= 2 && c.src === src)) // 표시될/표시중인 동일한 캐릭터가 존재
+							return unblock();
+
+						const img = new window.Image();
+						img.addEventListener("load", (e) => {
+							e.preventDefault();
+
+							removeAt(s.position, s.fxDuration);
+
+							if (s.fxDuration <= 0) {
+								setChars(_chars => {
+									const key = Math.floor(Math.random() * 100000).toString();
+									const chars = [..._chars, {
+										key,
+										pos: s.position,
+										src,
+										fx: s.fx,
+										duration: s.fxDuration,
+										state: 2,
+									} satisfies CharData];
+									unblock();
+
+									return chars;
+								});
+							} else {
+								setChars(_chars => [..._chars, {
+									key: Math.floor(Math.random() * 100000).toString(),
+									pos: s.position,
+									src,
+									fx: s.fx,
+									duration: s.fxDuration,
+									state: 0,
+								} satisfies CharData]);
+							}
+						});
+						img.src = `/IMG/SCG/${s.name}.png`;
+					}
+				}
+				break;
+
+			case "pic":
+			case "bpic":
+				if (s.name === "-") {
+					if (pics[s.id] === undefined) return unblock(); // already empty
+
+					setPics(_pics => {
+						const pics = [..._pics];
+
+						addBlock(Wait(s.fadeDuration * 1000, () => {
+							setPics(_pics => {
+								const pics = [..._pics];
+								delete pics[s.id];
+								return pics;
+							});
+
+							unblock();
+						}));
+
+						pics[s.id].fadeDuration = s.fadeDuration;
+						pics[s.id].state = 3;
+						return pics;
+					});
+				} else {
+					setPics(_pics => {
+						const pics = [..._pics];
+
+						pics[s.id] = {
+							key: Math.floor(Math.random() * 100000).toString(),
+							layer: s.type === "pic" ? "front" : "back",
+							pos: s.position,
+							src: `/IMG/CUT/${s.name}.png`,
+							fadeDuration: s.fadeDuration,
+							state: 0,
+						};
+						return pics;
+					});
+				}
+				break;
 		}
 	}, [script, scriptRun]);
 
+	useEffect(() => {
+		if (!fxEnd || !fxWaiting) return;
+		setFXWaiting(false);
+
+		console.log("fx end");
+		unblock();
+	}, [fxEnd, fxWaiting]);
+
 	useLayoutEffect(() => {
+		if (!assetLoaded) {
+			SpriteImage.load("/IMG/UI/sprite.png")
+				.then(() => setAssetLoaded(true));
+			return;
+		}
+
 		const script = new Script();
 		const unsub = config.volatile_Script.subscribe(v => {
+			console.log("New script requsted -> " + v);
+
 			script.unload();
+			setScript(null);
+			config.volatile_Mute.value = true;
 
 			if (v) {
 				fetch(`/SCRIPT/${v}.vn`)
@@ -139,8 +720,23 @@ const Scene_Game: FunctionalComponent = () => {
 					.then(r => {
 						script.load(r);
 						setScript(script);
+						setScriptCursor(config.volatile_ScriptCursor.peek());
 					});
 			}
+		});
+
+		let lastTitleWait: WaitData | undefined = undefined;
+
+		const titleUnsub = config.volatile_Title.subscribe(v => {
+			setTitle(v);
+			setTitleShow(true);
+
+			if (lastTitleWait) {
+				lastTitleWait.cancel();
+				lastTitleWait = undefined;
+			}
+
+			lastTitleWait = Wait(4000, () => setTitleShow(false));
 		});
 
 		const bgs = new ManagedAudio(false);
@@ -150,34 +746,203 @@ const Scene_Game: FunctionalComponent = () => {
 		const bgm = new ManagedAudio(true);
 		setBGM(bgm);
 
-		config.volatile_Script.value = "1-1";
+		StartupScript();
 
 		return () => {
 			bgs.destroy();
 			bgm.destroy();
+			titleUnsub();
 			unsub();
 		};
-	}, []);
+	}, [assetLoaded]);
 
-	return <Scene_Base>
-		<img
-			class={ style.BG }
-			src={ bgImage ? `${bgImage}${bgExt}` : TRANSPARENT }
-			onError={ e => {
+	useEffect(() => {
+		if (chars.some(r => r.state === 0)) {
+			setChars(_chars => {
+				const dur = _chars
+					.filter(r => r.state === 0)
+					.reduce((p, c) => p > c.duration ? p : c.duration, 0);
+
+				if (scriptLoading)
+					unblock();
+				else
+					Wait(dur * 1000, () => unblock());
+
+				return _chars.map(r => r.state === 0 ? ({ ...r, state: 1 }) : r);
+			});
+		}
+	}, [chars]);
+	useEffect(() => {
+		if (pics.some(r => r && r.state === 0)) {
+			setPics(_pics => {
+				const dur = _pics
+					.filter(r => r && r.state === 0)
+					.reduce((p, c) => p > c.fadeDuration ? p : c.fadeDuration, 0);
+
+				if (scriptLoading)
+					unblock();
+				else
+					Wait(dur * 1000, () => unblock());
+
+				return _pics.map(r => r && r.state === 0 ? ({ ...r, state: 1 }) : r);
+			});
+		}
+	}, [pics]);
+
+	const PosStyles = {
+		"<<": style.LeftMin,
+		"<": style.LeftMinOver,
+		"left-top": style.LeftTop,
+		top: style.Top,
+		"right-top": style.RightTop,
+		left: style.Left,
+		center: style.Center,
+		right: style.Right,
+		"left-bottom": style.LeftBottom,
+		bottom: style.Bottom,
+		"right-bottom": style.RightBottom,
+		">": style.RightMinOver,
+		">>": style.RightMin,
+	};
+
+	return <>
+		<Scene_Base
+			onClick={ e => {
 				e.preventDefault();
 
-				if (bgExt === ".jpg")
-					setBGExt(".png");
-				else
-					console.warn(`<BG> Failed to load image ${bgImage}`);
-			} }
-		/>
-		<div
-			class={ BuildClass(style.Fader, faded && style.Faded) }
-			style={ { "--fade-duration": `${fadeDuration}s` } }
-		/>
+				if (e.target && (e.target instanceof Element) && (e.target.matches(`.${style.Selection}`) || e.target.matches(`.${style.Sel}`)))
+					return; // Selection click
 
-		<Window_Option />
-	</Scene_Base>;
+				if (textState !== TextboxPhase.None) {
+					if (textState === TextboxPhase.Done) // text fully shown
+						unblock();
+					else
+						setTextState(s => s + 1);
+				} else
+					unblock();
+			} }
+		>
+			<div
+				class={ style.Screen }
+				ref={ ScreenEl }
+			>
+				{ bgImage
+					? <Image
+						class={ style.BG }
+						src={ bgImage }
+						exts={ [".jpg", ".png"] }
+						onError={ e => {
+							e.preventDefault();
+							console.warn(`<BG> Failed to load image ${bgImage}`);
+						} }
+					/>
+					: <img class={ style.BG } src={ TRANSPARENT } />
+				}
+
+				{ chars.map((c, i) => c
+					? <img
+						key={ `char-key-${c.key}` }
+						class={ BuildClass(
+							style.Char,
+							PosStyles[c.pos],
+							style[`fx-${c.fx}`],
+							c.state === 1 && style.Loading,
+							c.state === 2 && style.Loaded,
+							c.state === 3 && style.Unloading,
+						) }
+						src={ c.src }
+						style={ { "--fx-duration": `${c.duration}s` } }
+					/>
+					: <></>
+				) }
+
+				{ pics.map((p, i) => p
+					? <Image
+						key={ `pic-key-${p.key}` }
+						class={ BuildClass(
+							style.Picture,
+							p.layer === "front" ? style.FrontLayer : style.BackLayer,
+							PosStyles[p.pos],
+							p.state === 1 && style.Loading,
+							p.state === 2 && style.Loaded,
+							p.state === 3 && style.Unloading,
+						) }
+						src={ p.src }
+						exts={ [".png", ".jpg"] }
+						style={ { "--fx-duration": `${p.fadeDuration}s` } }
+					/>
+					: <></>
+				) }
+
+				<div
+					class={ BuildClass(style.Fader, faded && style.Faded) }
+					style={ {
+						"--fade-duration": `${fadeDuration}s`,
+						transition: fadeDuration === 0 ? "none" : undefined,
+					} }
+				/>
+			</div>
+
+			<Textbox
+				class={ style.Textbox }
+				text={ displayText }
+				teller={ displayTeller }
+
+				phase={ textState }
+
+				onShown={ () => setTextState(TextboxPhase.SequencingText) }
+				onTextDone={ () => setTextState(TextboxPhase.Done) }
+				onHidden={ () => {
+					setTextState(TextboxPhase.None);
+					unblock();
+				} }
+			/>
+
+			{ selection.length > 0
+				? <div class={ style.Selection }>
+					{ selection.map((sel, id) => {
+						return <div
+							class={ style.Sel }
+							onClick={ e => {
+								e.preventDefault();
+								e.stopPropagation();
+
+								if (sel.script !== "-") {
+									batch(() => {
+										config.volatile_Script.value = sel.script;
+										config.volatile_ScriptCursor.value = 0;
+									});
+								} else
+									unblock(true);
+
+								setSelection([]);
+							} }
+						>
+							<SpriteImage
+								src="/IMG/UI/sprite.png"
+								sprite="btn_selection.png"
+							/>
+							{ sel.display }
+						</div>;
+					}) }
+				</div>
+				: <></>
+			}
+
+			<div class={ BuildClass(style.Title, titleShow && style.Display) }>
+				<span>{ title }</span>
+				{ title }
+			</div>
+
+			<div class={ BuildClass(style.ScriptLoading, scriptLoading && style.Display) }>
+				{ config.volatile_LoadingText.value }
+			</div>
+
+		</Scene_Base>
+
+		<div class={ style.Subwindow }>
+			{/* <Window_Option /> */ }
+		</div>
+	</>;
 };
 export default Scene_Game;

@@ -14,7 +14,6 @@ interface GameMetadata {
 }
 
 const App: FunctionalComponent = () => {
-	const [loading, setLoading] = useState("");
 	const [target, setTarget] = useState<LoaderProps["component"] | undefined>(undefined);
 
 	useEffect(() => {
@@ -29,7 +28,7 @@ const App: FunctionalComponent = () => {
 				if (!r.resize) win.setResizable(r.resize);
 				document.title = win.title = r.title;
 
-				setLoading(r.loading);
+				config.volatile_LoadingText.value = r.loading;
 				// config.volatile_Scene.value = "Scene_Title";
 				config.volatile_Scene.value = "Scene_Game";
 			});
@@ -45,7 +44,7 @@ const App: FunctionalComponent = () => {
 		};
 	}, []);
 
-	const _loading = loading || "Game in loading...";
+	const _loading = config.volatile_LoadingText.value || "Game in loading...";
 	return target
 		? <Loader
 			component={ target }

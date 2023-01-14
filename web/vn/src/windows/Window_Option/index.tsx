@@ -49,7 +49,7 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 				e.preventDefault();
 
 				setDisplay(false);
-				Wait(500).then(() => {
+				Wait(500, () => { // window fadeout 0.5s
 					if (props.onClose) props.onClose();
 				});
 			} }

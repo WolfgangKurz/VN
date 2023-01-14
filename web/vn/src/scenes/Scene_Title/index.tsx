@@ -26,15 +26,13 @@ const Scene_Title: FunctionalComponent = () => {
 	}, [phase]);
 
 	useEffect(() => {
-		Wait(1000) // Title wait
-			.then(() => {
-				addPhase("title"); // Title fade-in
-				return Wait(1000);
-			})
-			.then(() => {
+		Wait(1000, () => {
+			addPhase("title"); // Title fade-in
+
+			Wait(1000, () => {
 				addPhase("logo"); // Logo fade-in
-				return Wait(1000);
 			});
+		});
 
 		const bgm = new ManagedAudio(true);
 		bgm.load("/BGM/title_first.mp3", true);
@@ -72,10 +70,10 @@ const Scene_Title: FunctionalComponent = () => {
 							case "start":
 								addPhase("exit");
 								if (bgm) bgm.fadeOut(3000); // 3s fade out
-								Wait(4000) // 3s fade, 1s waiting
-									.then(() => {
-										config.volatile_Scene.value = "Scene_Game";
-									});
+
+								Wait(4000, () => { // 3s fade, 1s waiting
+									config.volatile_Scene.value = "Scene_Game";
+								});
 								break;
 							case "option":
 								setSubwindow(<Window_Option

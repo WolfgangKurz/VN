@@ -1,4 +1,12 @@
-export type ScriptArgs = string | number;
+export type ScriptArgument = string | number;
+export type ScriptSelection = {
+	display: string;
+	script: string;
+};
+export type ScriptVarCondition = {
+	value: string;
+	to: string;
+};
 
 interface ScriptLine_Base {
 	type: string;
@@ -22,25 +30,32 @@ interface ScriptLine_Wait extends ScriptLine_Base {
 interface ScriptLine_Char extends ScriptLine_Base {
 	type: "char";
 	name: string;
-	position: string;
+	position: "<<" | "<" | "left" | "center" | "right" | ">" | ">>";
 	fx: "" | "left" | "right" | "top" | "bottom";
+	fxDuration: number;
 }
 interface ScriptLine_BGM extends ScriptLine_Base {
 	type: "bgm";
 	name: string;
 	fadeDuration: number;
+	wait: boolean;
 }
 interface ScriptLine_BGS extends ScriptLine_Base {
 	type: "bgs";
 	name: string;
 	fadeDuration: number;
+	wait: boolean;
+}
+interface ScriptLine_SE extends ScriptLine_Base {
+	type: "se";
+	name: string;
 }
 interface ScriptLine_BG extends ScriptLine_Base {
 	type: "bg";
 	name: string;
 }
 interface ScriptLine_Picture extends ScriptLine_Base {
-	type: "pic";
+	type: "pic" | "bpic";
 	id: number;
 	name: string;
 	fadeDuration: number;
@@ -54,30 +69,47 @@ interface ScriptLine_Fade extends ScriptLine_Base {
 interface ScriptLine_FX extends ScriptLine_Base {
 	type: "fx";
 	fx: string;
-	args: ScriptArgs[];
+	args: ScriptArgument[];
 }
 interface ScriptLine_Selection extends ScriptLine_Base {
 	type: "sel";
-	sels: ScriptArgs[];
+	sels: ScriptSelection[];
 }
 interface ScriptLine_Script extends ScriptLine_Base {
 	type: "script";
 	script: string;
 }
+interface ScriptLine_Title extends ScriptLine_Base {
+	type: "title";
+	title: string;
+}
+interface ScriptLine_Set extends ScriptLine_Base {
+	type: "set";
+	name: string;
+	value: string;
+}
+interface ScriptLine_If extends ScriptLine_Base {
+	type: "if";
+	var: string;
+	conds: ScriptVarCondition[];
+}
+
 export type ScriptLine = ScriptLine_Text | ScriptLine_Talk | ScriptLine_Clear | ScriptLine_Wait |
-	ScriptLine_Char | ScriptLine_BGM | ScriptLine_BGS | ScriptLine_BG | ScriptLine_Picture |
-	ScriptLine_Fade | ScriptLine_FX | ScriptLine_Selection | ScriptLine_Script;
+	ScriptLine_Char | ScriptLine_BGM | ScriptLine_BGS | ScriptLine_SE | ScriptLine_BG | ScriptLine_Picture |
+	ScriptLine_Fade | ScriptLine_FX | ScriptLine_Selection | ScriptLine_Script | ScriptLine_Title |
+	ScriptLine_Set | ScriptLine_If;
 
 export default class Script {
-	private script: ScriptLine[] = [];
-	private cursor = 0;
+	private _script: ScriptLine[] = [];
+	private _cursor = 0;
 
-	protected parseArgs (source: string): ScriptArgs[] {
-		const ret: ScriptArgs[] = [];
+	protected parseArgs (source: string): ScriptArgument[] {
+		const ret: ScriptArgument[] = [];
 		let buffer = "";
 		let isString = false;
 		let expected = "";
 		let escaping = false;
+		let pc = "";
 
 		for (let i = 0; i < source.length; i++) {
 			const c = source[i];
@@ -95,7 +127,7 @@ export default class Script {
 				continue;
 			}
 
-			if (c === "\"" && !buffer) { // string start
+			if (c === "\"" && !isString) { // string start
 				isString = true;
 			} else if (isString) {
 				if (c === "\"") { // string end
@@ -106,7 +138,7 @@ export default class Script {
 				} else
 					buffer += c;
 			} else if (c === " ") { // part end
-				if (!!buffer) {
+				if (pc !== " ") { // countinue part end char
 					if (/^[0-9]+(\.[0-9]+)?$/.test(buffer))
 						ret.push(parseFloat(buffer));
 					else
@@ -116,6 +148,8 @@ export default class Script {
 				}
 			} else
 				buffer += c;
+
+			pc = c;
 		}
 
 		if (/^[0-9]+(\.[0-9]+)?$/.test(buffer))
@@ -127,7 +161,7 @@ export default class Script {
 	}
 
 	public load (script: string) {
-		this.script = script.split(/[\r\n]/g)
+		this._script = script.split(/[\r\n]/g)
 			.filter(r => r.length > 0 && r[0] !== "#")
 			.map((line): ScriptLine => {
 				if (line[0] === "@") { // functions
@@ -142,50 +176,60 @@ export default class Script {
 					switch (cmd) {
 						case "fadein":
 						case "fadeout":
-							if (args.length !== 1)
+							if (args.length > 1)
 								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
-							if (typeof args[0] !== "number")
+							if (args.length === 1 && typeof args[0] !== "number")
 								throw new Error(`Failed to parse script line, invalid paramter type, Number expected but was "${typeof args[0]}" for "${cmd}"`);
 
 							return {
 								type: "fade",
 								isIn: cmd === "fadein",
-								fadeDuration: args[0],
+								fadeDuration: args.length === 1
+									? args[0] as number
+									: 1,
 							};
 
 						case "bg":
 							if (args.length !== 1)
 								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
-							if (typeof args[0] !== "string")
-								throw new Error(`Failed to parse script line, invalid paramter type, String expected but was "${typeof args[0]}" for "${cmd}"`);
 
 							return {
 								type: "bg",
-								name: args[0],
+								name: args[0].toString(),
 							};
 
 						case "bgs":
 						case "bgm":
-							if (args.length < 1 || args.length > 2)
+							if (args.length < 1 || args.length > 3)
 								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
-							if (args.length === 2 && typeof args[1] !== "number")
+							if (args.length >= 2 && typeof args[1] !== "number")
 								throw new Error(`Failed to parse script line, invalid paramter type, Number expected but was "${typeof args[1]}" for "${cmd}"`);
+							if (args.length >= 3 && args[2] !== 0 && args[2] !== 1)
+								throw new Error(`Failed to parse script line, invalid paramter type, 0 or 1 expected but was "${args[2]}" for "${cmd}"`);
 
 							return {
 								type: cmd,
 								name: args[0].toString(),
-								fadeDuration: (args.length === 2 ? args[1] || 0 : 0) as number,
+								fadeDuration: (args.length >= 2 ? args[1] || 0 : 0) as number,
+								wait: (args.length >= 3 ? args[2] : 1) === 1,
+							};
+
+						case "se":
+							if (args.length !== 1)
+								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
+
+							return {
+								type: cmd,
+								name: args[0].toString(),
 							};
 
 						case "fx":
 							if (args.length < 1)
 								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
-							if (typeof args[0] !== "string")
-								throw new Error(`Failed to parse script line, invalid paramter type, String expected but was "${typeof args[0]}" for "${cmd}"`);
 
 							return {
 								type: "fx",
-								fx: args[0],
+								fx: args[0].toString(),
 								args: args.slice(1),
 							};
 
@@ -209,19 +253,23 @@ export default class Script {
 							};
 
 						case "char":
-							if (args.length < 1 || args.length > 3)
+							if (args.length < 1 || args.length > 4)
 								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
 							if (args.length >= 2) {
 								if (typeof args[1] !== "string")
 									throw new Error(`Failed to parse script line, invalid paramter type, String expected but was "${typeof args[1]}" for "${cmd}"`);
-								if (!["left", "center", "right"].includes(args[1].toLowerCase()))
-									throw new Error(`Failed to parse script line, invalid paramter value, "left" or "center" or "right" expected but was "${args[1]}" for "${cmd}"`);
+								if (!["<<", "<", "left", "center", "right", ">", ">>"].includes(args[1].toLowerCase()))
+									throw new Error(`Failed to parse script line, invalid paramter value, "<<" or "<" or "left" or "center" or "right" or ">" or ">>" expected but was "${args[1]}" for "${cmd}"`);
 							}
 							if (args.length >= 3) {
 								if (typeof args[2] !== "string")
 									throw new Error(`Failed to parse script line, invalid paramter type, String expected but was "${typeof args[2]}" for "${cmd}"`);
 								if (!["", "left", "right", "top", "bottom"].includes(args[2].toLowerCase()))
 									throw new Error(`Failed to parse script line, invalid paramter value, "" or "left" or "right" or "top" or "bottom" expected but was "${args[2]}" for "${cmd}"`);
+							}
+							if (args.length >= 4) {
+								if (typeof args[3] !== "number")
+									throw new Error(`Failed to parse script line, invalid paramter type, Number expected but was "${typeof args[2]}" for "${cmd}"`);
 							}
 
 							return {
@@ -233,9 +281,13 @@ export default class Script {
 								fx: args.length >= 3
 									? (args[2] as string) as ScriptLine_Char["fx"]
 									: "",
+								fxDuration: args.length >= 4
+									? (args[3] as number)
+									: 0.5,
 							};
 
 						case "pic":
+						case "bpic":
 							if (args.length < 2 || args.length > 4)
 								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
 							if (typeof args[0] !== "number")
@@ -250,7 +302,7 @@ export default class Script {
 							}
 
 							return {
-								type: "pic",
+								type: cmd,
 								id: args[0],
 								name: args[1].toString(),
 								fadeDuration: args.length >= 3
@@ -264,21 +316,58 @@ export default class Script {
 						case "sel":
 							if (args.length < 1)
 								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
+							if (args.length % 2 !== 0)
+								throw new Error(`Failed to parse script line, invalid parameter count, should even number for "${cmd}"`);
 
 							return {
 								type: "sel",
-								sels: args,
+								sels: args.filter((_, i) => (i % 2) === 0)
+									.map((r, i) => ({
+										display: r.toString(),
+										script: args[i * 2 + 1].toString(),
+									})),
 							};
 
 						case "script":
 							if (args.length !== 1)
 								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
-							if (typeof args[0] !== "string")
-								throw new Error(`Failed to parse script line, invalid paramter type, String expected but was "${typeof args[0]}" for "${cmd}"`);
 
 							return {
 								type: "script",
-								script: args[0],
+								script: args[0].toString(),
+							};
+
+						case "title":
+							if (args.length !== 1)
+								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
+
+							return {
+								type: "title",
+								title: args[0].toString(),
+							};
+
+						case "set":
+							if (args.length !== 2)
+								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
+
+							return {
+								type: "set",
+								name: args[0].toString(),
+								value: args[1].toString(),
+							};
+
+						case "if":
+							if (args.length < 3 || (args.length % 2) !== 1)
+								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
+
+							return {
+								type: "if",
+								var: args[0].toString(),
+								conds: args.slice(1).filter((_, i) => (i % 2) === 0)
+									.map((r, i) => ({
+										value: r.toString(),
+										to: args[i * 2 + 2].toString(),
+									} satisfies ScriptVarCondition)),
 							};
 
 						default:
@@ -304,19 +393,29 @@ export default class Script {
 				}
 			});
 
-		this.cursor = 0;
+		this._cursor = -1;
 	}
 
 	public unload () {
-		this.script = [];
-		this.cursor = 0;
+		this._script = [];
+		this._cursor = -1;
+	}
+
+	public current (): ScriptLine | null {
+		const sc = this._script[this._cursor];
+		if (!sc) return null;
+
+		return sc;
 	}
 
 	public next (): ScriptLine | null {
-		const sc = this.script[this.cursor];
+		const sc = this._script[++this._cursor];
 		if (!sc) return null;
 
-		this.cursor++;
 		return sc;
+	}
+
+	public get cursor () {
+		return this._cursor;
 	}
 }

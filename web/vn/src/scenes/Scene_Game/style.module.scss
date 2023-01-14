@@ -1,9 +1,245 @@
-.Fader {
+@import "./charfx";
+
+$z-bg: 1;
+$z-bpic: 100;
+$z-char: 200;
+$z-pic: 300;
+$z-text: 400;
+$z-fader: 450;
+$z-title: 500;
+$z-sel: 900;
+$z-subwindow: 9000;
+$z-loading: 10001;
+
+@mixin fullscreen {
 	left: 0;
 	top: 0;
 	width: 100%;
 	height: 100%;
+}
+
+.Screen {
+	@include fullscreen;
 	background-color: #000;
+
+	transition: transform 1s linear;
+}
+
+.Selection {
+	@include fullscreen;
+	background-color: rgba(0, 0, 0, 0.7); // #b0000000
+	z-index: $z-sel;
+	pointer-events: all !important;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+
+	> .Sel {
+		position: relative !important;
+		padding: 20px;
+		width: 462px;
+		height: 56px;
+		overflow: hidden;
+		word-break: keep-all;
+		text-shadow: 0 0 4px #000, 0 0 4px #000, 0 0 4px #000, 0 0 4px #000, 0 0 4px #000;
+		font-size: 24px;
+		color: #fff;
+		cursor: pointer;
+
+		display: flex;
+		justify-content: start;
+		align-items: center;
+
+		> img {
+			@include fullscreen;
+		}
+
+		+ .Sel {
+			margin-top: 24px; // 80 - 56
+		}
+	}
+}
+
+.Char {
+	--fx-duration: 0s;
+
+	bottom: -20px;
+	transform: translate(-50%, 0);
+	z-index: $z-char;
+
+	&.LeftMinOver {
+		left: 0%;
+	}
+	&.LeftMin {
+		left: 0%;
+		transform: translate(-10px, 0);
+	}
+	&.Left {
+		left: 25%;
+	}
+	&.Center {
+		left: 50%;
+	}
+	&.Right {
+		left: 75%;
+	}
+	&.RightMin {
+		left: 100%;
+		transform: translate(calc(-100% + 10px), 0);
+	}
+	&.RightMinOver {
+		left: 100%;
+	}
+
+	&.fx- {
+		transition: opacity var(--fx-duration) linear;
+		opacity: 0;
+
+		&.Loading,
+		&.Loaded {
+			opacity: 1;
+		}
+	}
+
+	&.fx-left,
+	&.fx-right {
+		// slide from left/to left
+		transition: left var(--fx-duration) cubic-bezier(0.65, 0, 0.35, 1); // ease-in-out-cubic
+
+		&:not(.Loading):not(.Loaded) {
+			&.fx-left {
+				left: -25%;
+			}
+			&.fx-right {
+				left: 125%;
+			}
+		}
+	}
+	&.fx-top,
+	&.fx-bottom {
+		// slide from left/to left
+		transition: top var(--fx-duration) cubic-bezier(0.65, 0, 0.35, 1); // ease-in-out-cubic
+
+		&:not(.Loading):not(.Loaded) {
+			&.fx-top {
+				bottom: 100%;
+			}
+			&.fx-bottom {
+				bottom: -100%;
+			}
+		}
+	}
+
+	&.charfx-jump {
+		animation-name: charfx-jump;
+		animation-duration: var(--charfx-duration);
+	}
+	&.charfx-jump-short {
+		animation-name: charfx-jump-short;
+		animation-duration: var(--charfx-duration);
+	}
+	&.charfx-shake {
+		animation-name: charfx-shake;
+		animation-duration: var(--charfx-duration);
+	}
+	&.charfx-shake-weak {
+		animation-name: charfx-shake-weak;
+		animation-duration: var(--charfx-duration);
+	}
+}
+
+.Picture {
+	&.FrontLayer {
+		z-index: $z-pic;
+	}
+	&.BackLayer {
+		z-index: $z-bpic;
+	}
+	opacity: 0;
+
+	&.Loading,
+	&.Unloading {
+		transition: opacity var(--fx-duration) linear;
+	}
+	&.Loading,
+	&.Loaded {
+		opacity: 1;
+	}
+
+	&.LeftTop {
+		left: 0;
+		top: 0;
+	}
+	&.Top {
+		left: 50%;
+		top: 0;
+		transform: translate(-50%, 0);
+	}
+	&.RightTop {
+		right: 0;
+		top: 0;
+	}
+	&.Left {
+		left: 0;
+		top: 50%;
+		transform: translate(0, -50%);
+	}
+	&.Center {
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+	}
+	&.Right {
+		right: 0;
+		top: 50%;
+		transform: translate(0, -50%);
+	}
+	&.LeftBottom {
+		left: 0;
+		bottom: 0;
+	}
+	&.Bottom {
+		left: 50%;
+		bottom: 0;
+		transform: translate(-50%, 0);
+	}
+	&.RightBottom {
+		right: 0%;
+		bottom: 0%;
+	}
+}
+
+.Title {
+	left: 20px;
+	top: 20px;
+	z-index: $z-title;
+	text-shadow: 0 0 10px #000;
+	font-size: 30px;
+	color: #fff;
+
+	transition: opacity 1s linear;
+	opacity: 0;
+
+	position: relative !important;
+	-webkit-text-stroke-color: rgba(0, 0, 0, 0.575);
+	-webkit-text-stroke-width: (2.5px * 2);
+	> span {
+		position: absolute;
+		-webkit-text-stroke-width: 0;
+		color: #fff;
+	}
+
+	&.Display {
+		opacity: 1;
+	}
+}
+
+.Fader {
+	@include fullscreen;
+	background-color: #000;
+	z-index: $z-fader;
 
 	transition: opacity var(--fade-duration) linear;
 	opacity: 0;
@@ -13,10 +249,38 @@
 	}
 }
 
+.ScriptLoading {
+	@include fullscreen;
+	background-color: #000;
+	font-size: 5vh;
+	transition: color 0.1s linear, opacity 1s linear;
+	color: rgba(255, 255, 255, 0);
+	opacity: 0;
+	pointer-events: none !important;
+	z-index: $z-loading;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	&.Display {
+		transition: color 0.1s linear 2s, opacity 1s linear 2s;
+		color: rgba(255, 255, 255, 0.85);
+		opacity: 1;
+		pointer-events: all !important;
+	}
+}
+
+.Textbox {
+	z-index: $z-text;
+}
+
 .BG {
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-	object-fit: contain;
+	@include fullscreen;
+	object-fit: cover;
+	z-index: $z-bg;
+}
+
+.Subwindow {
+	z-index: $z-subwindow;
 }

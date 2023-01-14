@@ -1,0 +1,106 @@
+# 주석
+일반 텍스트 (나레이션 등)
+이름 -> 대사
+
+@명령 인자1 인자2 인자3 ...
+
+# 선택지
+# 인자는 반드시 짝수개여야 함
+# 홀수 인자는 표시되는 선택지 텍스트이고, 짝수 인자는 해당 선택지가 선택되었을 때 이동할 스크립트 이름
+# 스크립트 이름이 - 라면 스크립트를 변경하지 않고 다음 명령을 실행함
+@sel sel1 sel1to [sel2 sel2to ...]
+
+# 장소 등 제목 지정
+@title title
+
+# 대사창 닫기
+@clear
+
+# 각종 효과
+@fx fxName [fxArg1 fxArg2 ...]
+
+# 화면 페이드 인/아웃
+# 검은 색상으로 덮음, duration 시간을 들여서 전환 (초 단위)
+@fadein [duration=1]
+@fadeout [duration=1]
+
+# 특정 시간 또는 효과 대기
+# wait이 숫자일 경우 해당 초만큼 대기, "fx"일 경우 진행중인 효과가 끝날 때까지 대기
+@wait wait
+
+# 스크립트 파일 로드
+@script file
+
+# 배경 이미지
+# 항상 Fade 없으며 - 입력 시 배경 삭제
+@bg image
+
+# 캐릭터 표시
+# image가 "-" 라면 기존 캐릭터를 제거
+# position은 << < left center right > >> 중 선택
+#  각각 0% 0% 25% 50% 75% 100% 100% 지점에 위치
+#  < 및 > 는 절반 잘리게 표시되며, << 및 >> 는 잘리지 않게 표시됨 (마진 처리를 위해 10px 잘림)
+# fx는 진입/제거 효과, "" left top right bottom 중 선택, ""는 페이드 인/아웃
+#   방향 지정 시 해당 방향에서 진입 또는 해당 방향으로 제거됨
+# duration 시간만큼 fx로 표현됨 (초 단위)
+@char image [position=center] [fx=""] [duration=0.5]
+
+# 이미지 표시
+# id는 숫자 형식이어야 함
+# image가 - 라면 기존 이미지를 제거
+# fade는 진입/제거 페이드 시간 (초 단위)
+# position은 left-top top right-top left center right left-bottom bottom right-bottom 중 선택
+# bpic은 char보다 뒤에 표시되며, pic과 id를 공유함
+@pic id image [fade=0] [position=center]
+@bpic id image [fade=0] [position=center]
+
+# BGM/BGS 변경
+# BGM 또는 BGS를 변경, - 입력시 재생 중단
+# duration 시간을 들여서 볼륨 fade (재생 중단도 동일)
+# wait이 1이라면 fade하는 동안 대기하며, 0 1 중 선택
+@bgm bgm [duration=0] [wait=1]
+@bgs bgs [duration=0] [wait=1]
+
+# SE 재생
+# 1회만 재생되는 사운드를 출력
+# 만약 se가 - 라면 재생중인 모든 se를 중단
+@se se
+
+# 값 저장
+@set name value
+
+# @set 으로 저장된 값에 따라 분기
+# 모든 조건을 만족하지 못했다면 다음 명령을 실행
+@if name value1 to1 [value2 to2 ...]
+
+
+##########################################
+
+# 화면 흔들기
+# 배경과 캐릭터, 이미지를 흔듬
+# strength는 weak normal strong 중 선택
+# duration은 화면을 한 번 이동할 때 걸리는 시간
+# count는 총 화면을 몇 번 이동할지 여부, -1 라면 무한 반복
+# 효과 이름이 shake2 인 경우, 무한 반복 사용 불가, 흔들기가 모두 끝난 후에 다음 명령 실행
+@fx shake strength [duration=2] [count=1]
+@fx shake2 strength [duration=2] [count=1]
+
+# 화면 흔들기 중지
+# shake 화면 흔들기를 멈춤
+# duration 시간에 걸쳐서 원래 위치로 돌아옴
+@fx shake_fadeout [duration=2]
+
+# 캐릭터에 효과 적용
+# position 위치에 표시중인 캐릭터에 효과를 적용, position은 left center right 중 선택
+# type 효과로 적용, jump jump-short shake shake-weak 사용 가능
+@fx charfx position duration type
+
+##########################################
+
+## - bg Fade 변경 시 예시
+# bg 이미지를 fade로 전환
+@bpic N "../../BG/filename" fadeTime
+# 이후 실제 bg 반영
+@bg "filename"
+# bpic 제거 (fade 없이)
+@bpic N -

@@ -1,0 +1,7 @@
+# scene end
+@bgm - 2 0
+@fadeout 2
+@char - center "" 0
+@fadein 0
+
+@script 2-1
