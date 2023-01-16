@@ -1,5 +1,6 @@
 @title "마을"
 
+@fadeout 0
 @bg "4_Village street"
 @fadein 2
 

@@ -54,6 +54,22 @@
 @pic id image [fade=0] [position=center]
 @bpic id image [fade=0] [position=center]
 
+# 색상 필터
+# 캐릭터 또는 이미지에 색상 필터를 적용하며, 현재 적용된 색상 필터 매트릭스에서 도착 값까지 서서히 변경함
+# type은 char 또는 pic 중 선택하며, type이 char일 경우 position, pic일 경우 id에 대응됨
+# char은 완전히 표시된 이미지에 한해 적용됨 (같은 위치에 완전히 표시된 이미지는 단 하나로 한정되기 때문)
+# duration 만큼 시간을 들여서 변화시키며, 초 단위임
+# 5x4 색상 매트릭스를 이용하며, 값은 0.0 ~ 1.0 범위를 가짐
+# 0.0 ~ 1.0 범위를 벗어나는 값은 0.0 또는 1.0 으로 잘림
+# RGBA 4개만 입력하여 축약 가능
+# bfilter는 해당 이미지의 뒤쪽에 영향이 감 (실제 이미지가 위치한 영역만 적용됨)
+# 5x4 색상 매트릭스 https://developer.mozilla.org/en-US/docs/Web/SVG/Element/feColorMatrix
+@filter type id_or_position duration m1 m2 m3 m4 m5 m6 m7 m8 m9 m10 m11 m12 m13 m14 m15 m16 m17 m18 m19 m20
+@filter type id_or_position duration R G B A
+
+@bfilter type id_or_position duration m1 m2 m3 m4 m5 m6 m7 m8 m9 m10 m11 m12 m13 m14 m15 m16 m17 m18 m19 m20
+@bfilter type id_or_position duration R G B A
+
 # BGM/BGS 변경
 # BGM 또는 BGS를 변경, - 입력시 재생 중단
 # duration 시간을 들여서 볼륨 fade (재생 중단도 동일)

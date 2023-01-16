@@ -93,11 +93,26 @@ interface ScriptLine_If extends ScriptLine_Base {
 	var: string;
 	conds: ScriptVarCondition[];
 }
+interface ScriptLine_Filter_Char extends ScriptLine_Base {
+	type: "filter" | "bfilter";
+	target: "char";
+	position: ScriptLine_Char["position"];
+	duration: number;
+	values: Tuple<number, 20>;
+}
+interface ScriptLine_Filter_Picture extends ScriptLine_Base {
+	type: "filter" | "bfilter";
+	target: "pic";
+	id: number;
+	duration: number;
+	values: Tuple<number, 20>;
+}
+type ScriptLine_Filter = ScriptLine_Filter_Char | ScriptLine_Filter_Picture;
 
 export type ScriptLine = ScriptLine_Text | ScriptLine_Talk | ScriptLine_Clear | ScriptLine_Wait |
 	ScriptLine_Char | ScriptLine_BGM | ScriptLine_BGS | ScriptLine_SE | ScriptLine_BG | ScriptLine_Picture |
 	ScriptLine_Fade | ScriptLine_FX | ScriptLine_Selection | ScriptLine_Script | ScriptLine_Title |
-	ScriptLine_Set | ScriptLine_If;
+	ScriptLine_Set | ScriptLine_If | ScriptLine_Filter;
 
 export default class Script {
 	private _script: ScriptLine[] = [];
@@ -369,6 +384,57 @@ export default class Script {
 										to: args[i * 2 + 2].toString(),
 									} satisfies ScriptVarCondition)),
 							};
+
+						case "filter":
+						case "bfilter":
+							if (args.length !== 7 && args.length != 23)
+								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
+							if (args[0] !== "char" && args[0] !== "pic")
+								throw new Error(`Failed to parse script line, invalid paramter type, "char" or "pic" expected but was "${args[0]}" for "${cmd}"`);
+
+							if (args[0] === "char") {
+								if (typeof args[1] !== "string")
+									throw new Error(`Failed to parse script line, invalid paramter type, String expected but was "${typeof args[1]}" for "${cmd}"`);
+								if (!["<<", "<", "left", "center", "right", ">", ">>"].includes(args[1].toLowerCase()))
+									throw new Error(`Failed to parse script line, invalid paramter value, "<<" or "<" or "left" or "center" or "right" or ">" or ">>" expected but was "${args[1]}" for "${cmd}"`);
+							} else if (args[0] === "pic") {
+								if (typeof args[1] !== "number")
+									throw new Error(`Failed to parse script line, invalid paramter type, Number expected but was "${typeof args[1]}" for "${cmd}"`);
+							}
+
+							{
+								const idx = args.slice(2).findIndex(r => typeof r !== "number");
+								if (idx >= 0)
+									throw new Error(`Failed to parse script line, invalid paramter type, Number expected but was "${typeof args[idx + 2]}" for "${cmd}"`);
+							}
+
+							{
+								const v = args.slice(3) as number[];
+								const values: Tuple<number, 20> = args.length === 7
+									? [
+										v[0], 0, 0, 0, 0,
+										0, v[1], 0, 0, 0,
+										0, 0, v[2], 0, 0,
+										0, 0, 0, v[3], 0,
+									]
+									: v as Tuple<number, 20>;
+
+								return args[0] === "char"
+									? {
+										type: cmd,
+										target: args[0],
+										position: args[1] as ScriptLine_Filter_Char["position"],
+										duration: args[2] as number,
+										values,
+									}
+									: {
+										type: cmd,
+										target: args[0],
+										id: args[1] as number,
+										duration: args[2] as number,
+										values,
+									};
+							}
 
 						default:
 							throw new Error(`Failed to parse script line, invalid command "${cmd}"`);

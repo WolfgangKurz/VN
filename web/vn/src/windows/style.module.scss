@@ -10,6 +10,10 @@
 
 		transition: opacity var(--transition-duration) linear;
 		opacity: 0.001;
+
+		> * {
+			position: absolute;
+		}
 	}
 
 	&.Display {

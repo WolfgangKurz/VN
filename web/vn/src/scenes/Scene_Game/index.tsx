@@ -3,6 +3,8 @@ import { batch } from "@preact/signals";
 
 import config from "@/config";
 
+import { Matrix4x5Identity } from "@/types/Matrix";
+
 import { TRANSPARENT } from "@/libs/Const";
 import { BuildClass } from "@/libs/ClassName";
 import Wait, { WaitData } from "@/libs/Wait";
@@ -16,10 +18,13 @@ import Window_Option from "@/windows/Window_Option";
 
 import Image from "@/components/Image";
 import SpriteImage from "@/components/SpriteImage";
+import SpriteButton from "@/components/SpriteButton";
 
 import Textbox, { TextboxPhase } from "./Textbox";
 
 import style from "./style.module.scss";
+
+type ColorFilterData = Tuple<number, 20>;
 
 interface CharData {
 	key: string;
@@ -28,6 +33,9 @@ interface CharData {
 	fx: string;
 	duration: number;
 	state: number; // 0:init, 1:loading, 2:loaded, 3:unloading
+
+	colorFilter?: ColorFilterData;
+	backColorFilter?: ColorFilterData;
 }
 interface PictureData {
 	key: string;
@@ -36,18 +44,21 @@ interface PictureData {
 	src: string;
 	fadeDuration: number;
 	state: number; // 0:loading, 1:loaded, 2:unloading
+
+	colorFilter?: ColorFilterData;
+	backColorFilter?: ColorFilterData;
 }
 
 const Scene_Game: FunctionalComponent = () => {
 	const [script, setScript] = useState<Script | null>(null);
 	const [scriptCursor, setScriptCursor] = useState(0);
 	const [scriptRun, setScriptRun] = useState(false);
-
 	const scriptLoading = !script || script.cursor < scriptCursor;
 
 	const next = () => setScriptRun(!scriptRun);
-
 	const [assetLoaded, setAssetLoaded] = useState(false);
+
+	const [subwindow, setSubwindow] = useState<preact.VNode | null>(null);
 
 	//////////////////////////////
 
@@ -78,7 +89,6 @@ const Scene_Game: FunctionalComponent = () => {
 
 	const [chars, setChars] = useState<CharData[]>([]);
 	const [pics, setPics] = useState<PictureData[]>([]);
-	const [bpics, setBPics] = useState<PictureData[]>([]);
 
 	//////////////////////////////
 
@@ -120,7 +130,7 @@ const Scene_Game: FunctionalComponent = () => {
 
 	useEffect(() => { // fx worker
 		let running = true;
-		let begin = Date.now();
+		const begin = Date.now();
 		let latest = -1;
 		const fn = () => {
 			if (!running) return;
@@ -688,6 +698,88 @@ const Scene_Game: FunctionalComponent = () => {
 					});
 				}
 				break;
+
+			case "filter":
+			case "bfilter":
+				if (s.target === "char") {
+					const target = chars.find(c => c.state === 2 && c.pos === s.position);
+					if (!target) return unblock();
+
+					const base = target.colorFilter || Matrix4x5Identity; // identity
+					const key = target.key;
+					const update = (v: number) => {
+						const values = base.map((b, i) => b + (s.values[i] - b) * v) as Tuple<number, 20>;
+						setChars(chars => {
+							return chars.map(c => {
+								if (c.key !== key) return c;
+
+								const ret = { ...c };
+								if (s.type === "filter")
+									ret.colorFilter = values;
+								else
+									ret.backColorFilter = values;
+								return ret;
+							});
+						});
+					};
+
+					let running = true;
+					const begin = Date.now();
+					const fn = () => {
+						const e = Date.now() - begin;
+						const p = Math.min(1, e / (s.duration * 1000));
+						if (!running || p >= 1) return;
+
+						update(p);
+						requestAnimationFrame(fn);
+					};
+					requestAnimationFrame(fn);
+
+					addBlock(Wait(s.duration * 1000, () => {
+						update(1);
+
+						running = false;
+						unblock();
+					}));
+				} else {
+					const target = pics[s.id];
+					if (!target) return unblock();
+
+					const base = target.colorFilter || Matrix4x5Identity; // identity
+					const update = (v: number) => {
+						const values = base.map((b, i) => b + (s.values[i] - b) * v) as Tuple<number, 20>;
+						setPics(_pics => {
+							const pics = [..._pics];
+
+							if (s.type === "filter")
+								pics[s.id].colorFilter = values;
+							else
+								pics[s.id].backColorFilter = values;
+
+							return pics;
+						});
+					};
+
+					let running = true;
+					const begin = Date.now();
+					const fn = () => {
+						const e = Date.now() - begin;
+						const p = Math.min(1, e / (s.duration * 1000));
+						if (!running || p >= 1) return;
+
+						update(p);
+						requestAnimationFrame(fn);
+					};
+					requestAnimationFrame(fn);
+
+					addBlock(Wait(s.duration * 1000, () => {
+						update(1);
+
+						running = false;
+						unblock();
+					}));
+				}
+				break;
 		}
 	}, [script, scriptRun]);
 
@@ -805,8 +897,14 @@ const Scene_Game: FunctionalComponent = () => {
 		">>": style.RightMin,
 	};
 
+	function ColorMatrixToSVGUrl (colorMatrix: Tuple<number, 20>): string {
+		const v = colorMatrix.map(r => parseFloat(r.toFixed(3)));
+		return `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><defs><filter id="f"><feColorMatrix in="SourceGraphic" type="matrix" values="${v.join(" ")}" /></filter></defs></svg>#f')`;
+	}
+
 	return <>
 		<Scene_Base
+			class={ style.Scene_Game }
 			onClick={ e => {
 				e.preventDefault();
 
@@ -851,7 +949,11 @@ const Scene_Game: FunctionalComponent = () => {
 							c.state === 3 && style.Unloading,
 						) }
 						src={ c.src }
-						style={ { "--fx-duration": `${c.duration}s` } }
+						style={ {
+							"--fx-duration": `${c.duration}s`,
+							filter: c.colorFilter ? ColorMatrixToSVGUrl(c.colorFilter) : undefined,
+							backdropFilter: c.backColorFilter ? ColorMatrixToSVGUrl(c.backColorFilter) : undefined,
+						} }
 					/>
 					: <></>
 				) }
@@ -869,7 +971,11 @@ const Scene_Game: FunctionalComponent = () => {
 						) }
 						src={ p.src }
 						exts={ [".png", ".jpg"] }
-						style={ { "--fx-duration": `${p.fadeDuration}s` } }
+						style={ {
+							"--fx-duration": `${p.fadeDuration}s`,
+							filter: p.colorFilter ? ColorMatrixToSVGUrl(p.colorFilter) : undefined,
+							backdropFilter: p.backColorFilter ? ColorMatrixToSVGUrl(p.backColorFilter) : undefined,
+						} }
 					/>
 					: <></>
 				) }
@@ -897,6 +1003,57 @@ const Scene_Game: FunctionalComponent = () => {
 					unblock();
 				} }
 			/>
+
+			<div class={ BuildClass(
+				style.SideButtons,
+				displayText && style.Display,
+			) }>
+				<SpriteButton
+					src="/IMG/UI/sprite.png"
+					idle="btn_history.png"
+					hover="btn_history_hover.png"
+					onClick={ e => {
+						e.preventDefault();
+						e.stopPropagation();
+					} }
+				/>
+				<SpriteButton
+					src="/IMG/UI/sprite.png"
+					idle="btn_auto.png"
+					hover="btn_auto_hover.png"
+					onClick={ e => {
+						e.preventDefault();
+						e.stopPropagation();
+					} }
+				/>
+				<SpriteButton
+					src="/IMG/UI/sprite.png"
+					idle="btn_save.png"
+					hover="btn_save_hover.png"
+					onClick={ e => {
+						e.preventDefault();
+						e.stopPropagation();
+					} }
+				/>
+				<SpriteButton
+					src="/IMG/UI/sprite.png"
+					idle="btn_load.png"
+					hover="btn_load_hover.png"
+					onClick={ e => {
+						e.preventDefault();
+						e.stopPropagation();
+					} }
+				/>
+				<SpriteButton
+					src="/IMG/UI/sprite.png"
+					idle="btn_ui.png"
+					hover="btn_ui_hover.png"
+					onClick={ e => {
+						e.preventDefault();
+						e.stopPropagation();
+					} }
+				/>
+			</div>
 
 			{ selection.length > 0
 				? <div class={ style.Selection }>
@@ -937,11 +1094,31 @@ const Scene_Game: FunctionalComponent = () => {
 			<div class={ BuildClass(style.ScriptLoading, scriptLoading && style.Display) }>
 				{ config.volatile_LoadingText.value }
 			</div>
-
 		</Scene_Base>
 
+		<SpriteButton
+			class={ style.MenuButton }
+			src="/IMG/UI/sprite.png"
+			idle="btn_menu.png"
+			active="btn_menu_down.png"
+		/>
+		<SpriteButton
+			class={ style.OptionButton }
+			src="/IMG/UI/sprite.png"
+			idle="btn_settings.png"
+			active="btn_settings_down.png"
+			onClick={ e => {
+				e.preventDefault();
+				e.stopPropagation();
+
+				setSubwindow(<Window_Option
+					onClose={ () => setSubwindow(null) }
+				/>);
+			} }
+		/>
+
 		<div class={ style.Subwindow }>
-			{/* <Window_Option /> */ }
+			{ subwindow }
 		</div>
 	</>;
 };

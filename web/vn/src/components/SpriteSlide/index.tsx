@@ -87,7 +87,7 @@ const SpriteSlide: FunctionalComponent<SpriteSlideProps> = (props) => {
 	}
 
 	return <div
-		class={ BuildClass(style.SpriteSlide, trackLoaded && style.Loaded, props.class) }
+		class={ BuildClass("sprite-slide", style.SpriteSlide, trackLoaded && style.Loaded, props.class) }
 		onPointerDown={ e => {
 			if (e.button !== 0) return;
 

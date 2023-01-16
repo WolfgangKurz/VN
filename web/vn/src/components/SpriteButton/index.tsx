@@ -65,7 +65,7 @@ const SpriteButton: FunctionalComponent<JSX.HTMLAttributes<HTMLDivElement> & Spr
 	}, [state, timePerFrame, disabled, idle, hover, active]);
 
 	return <div
-		class={ BuildClass(style.SpriteButton, className) }
+		class={ BuildClass("sprite-button", style.SpriteButton, className) }
 		{ ...props }
 
 		onPointerEnter={ e => {

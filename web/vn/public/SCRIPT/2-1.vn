@@ -1,3 +1,5 @@
+@title "???"
+
 @wait 2
 
 @fadeout 0
@@ -52,6 +54,8 @@
 @se -
 @se 2-2_Wake
 @fadeout 0.5
+
+@title 기지국
 
 @char -
 @pic 2 - 0

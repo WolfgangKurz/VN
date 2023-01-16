@@ -1,5 +1,6 @@
 @title 기지국
 
+@fadeout 0
 @bg "5_radar(moss day time)"
 @fadein 2
 

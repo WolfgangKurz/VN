@@ -29,8 +29,8 @@ const App: FunctionalComponent = () => {
 				document.title = win.title = r.title;
 
 				config.volatile_LoadingText.value = r.loading;
-				// config.volatile_Scene.value = "Scene_Title";
-				config.volatile_Scene.value = "Scene_Game";
+				config.volatile_Scene.value = "Scene_Title";
+				// config.volatile_Scene.value = "Scene_Game";
 			});
 
 		const unsub = config.volatile_Scene.subscribe(() => {

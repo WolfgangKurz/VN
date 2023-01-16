@@ -8,6 +8,7 @@ $z-text: 400;
 $z-fader: 450;
 $z-title: 500;
 $z-sel: 900;
+$z-global: 8000;
 $z-subwindow: 9000;
 $z-loading: 10001;
 
@@ -16,6 +17,15 @@ $z-loading: 10001;
 	top: 0;
 	width: 100%;
 	height: 100%;
+}
+
+.Scene_Game {
+	@include fullscreen;
+
+	&,
+	* {
+		position: absolute;
+	}
 }
 
 .Screen {
@@ -74,7 +84,7 @@ $z-loading: 10001;
 	}
 	&.LeftMin {
 		left: 0%;
-		transform: translate(-10px, 0);
+		transform: translate3d(-10px, 0);
 	}
 	&.Left {
 		left: 25%;
@@ -151,13 +161,14 @@ $z-loading: 10001;
 }
 
 .Picture {
+	opacity: 0;
+
 	&.FrontLayer {
 		z-index: $z-pic;
 	}
 	&.BackLayer {
 		z-index: $z-bpic;
 	}
-	opacity: 0;
 
 	&.Loading,
 	&.Unloading {
@@ -245,6 +256,7 @@ $z-loading: 10001;
 	opacity: 0;
 
 	&.Faded {
+		transition: opacity var(--fade-duration) linear;
 		opacity: 1;
 	}
 }
@@ -273,6 +285,30 @@ $z-loading: 10001;
 
 .Textbox {
 	z-index: $z-text;
+
+	left: 120px;
+	bottom: 20px;
+}
+
+.SideButtons {
+	z-index: $z-sel;
+
+	left: (120px + 947px + 5px);
+	top: 458px;
+	transition: opacity 0.5s linear;
+	pointer-events: none;
+	opacity: 0;
+
+	@for $i from 1 through 5 {
+		> *:nth-child(#{$i}) {
+			top: (($i - 1) * 49.8px);
+		}
+	}
+
+	&.Display {
+		pointer-events: auto;
+		opacity: 1;
+	}
 }
 
 .BG {
@@ -282,5 +318,21 @@ $z-loading: 10001;
 }
 
 .Subwindow {
+	position: absolute;
 	z-index: $z-subwindow;
+}
+
+.MenuButton {
+	position: absolute;
+	top: 15px;
+	right: 20px;
+
+	z-index: $z-global;
+}
+.OptionButton {
+	position: absolute;
+	top: 65px;
+	right: 20px;
+
+	z-index: $z-global;
 }

@@ -6,6 +6,7 @@
 	}
 
 	> img {
+		position: absolute;
 		display: block;
 	}
 
@@ -14,12 +15,14 @@
 	}
 
 	> .Track {
+		position: absolute;
 		left: 50%;
 		top: 50%;
 		transform: translate(-50%, -50%);
 	}
 
 	> .Thumb {
+		position: absolute;
 		left: 0;
 
 		top: 50%;
