@@ -1,0 +1,98 @@
+{
+	"btn_event.png": {
+		"x": 1,
+		"y": 1,
+		"w": 270,
+		"h": 93
+	},
+	"btn_event_hover1.png": {
+		"x": 1,
+		"y": 96,
+		"w": 270,
+		"h": 93
+	},
+	"btn_event_hover2.png": {
+		"x": 1,
+		"y": 191,
+		"w": 270,
+		"h": 93
+	},
+	"btn_event_hover3.png": {
+		"x": 1,
+		"y": 286,
+		"w": 270,
+		"h": 93
+	},
+	"btn_event_hover4.png": {
+		"x": 1,
+		"y": 381,
+		"w": 270,
+		"h": 93
+	},
+	"btn_illust.png": {
+		"x": 273,
+		"y": 1,
+		"w": 270,
+		"h": 93
+	},
+	"btn_illust_hover1.png": {
+		"x": 273,
+		"y": 96,
+		"w": 270,
+		"h": 93
+	},
+	"btn_illust_hover2.png": {
+		"x": 273,
+		"y": 191,
+		"w": 270,
+		"h": 93
+	},
+	"btn_illust_hover3.png": {
+		"x": 273,
+		"y": 286,
+		"w": 270,
+		"h": 93
+	},
+	"btn_illust_hover4.png": {
+		"x": 273,
+		"y": 381,
+		"w": 270,
+		"h": 93
+	},
+	"btn_music.png": {
+		"x": 545,
+		"y": 1,
+		"w": 270,
+		"h": 93
+	},
+	"btn_music_hover1.png": {
+		"x": 545,
+		"y": 96,
+		"w": 270,
+		"h": 93
+	},
+	"btn_music_hover2.png": {
+		"x": 545,
+		"y": 191,
+		"w": 270,
+		"h": 93
+	},
+	"btn_music_hover3.png": {
+		"x": 545,
+		"y": 286,
+		"w": 270,
+		"h": 93
+	},
+	"btn_music_hover4.png": {
+		"x": 545,
+		"y": 381,
+		"w": 270,
+		"h": 93
+	},
+	"btn_back.png": {
+		"x": 817,
+		"y": 1,
+		"w": 94,
+		"h": 88
+	}
+}

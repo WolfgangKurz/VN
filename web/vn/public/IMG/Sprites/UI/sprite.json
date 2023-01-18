@@ -1,0 +1,296 @@
+{
+	"history_box.png": {
+		"x": 1,
+		"y": 1,
+		"w": 747,
+		"h": 666
+	},
+	"text_box.png": {
+		"x": 750,
+		"y": 1,
+		"w": 947,
+		"h": 242
+	},
+	"menu_text.png": {
+		"x": 1,
+		"y": 669,
+		"w": 371,
+		"h": 151
+	},
+	"btn_selection.png": {
+		"x": 750,
+		"y": 245,
+		"w": 462,
+		"h": 56
+	},
+	"btn_selection_down.png": {
+		"x": 750,
+		"y": 303,
+		"w": 462,
+		"h": 56
+	},
+	"btn_menu_continue.png": {
+		"x": 1,
+		"y": 822,
+		"w": 270,
+		"h": 93
+	},
+	"btn_menu_continue_hover1.png": {
+		"x": 1,
+		"y": 917,
+		"w": 270,
+		"h": 93
+	},
+	"btn_menu_continue_hover2.png": {
+		"x": 374,
+		"y": 669,
+		"w": 270,
+		"h": 93
+	},
+	"btn_menu_continue_hover3.png": {
+		"x": 374,
+		"y": 764,
+		"w": 270,
+		"h": 93
+	},
+	"btn_menu_continue_hover4.png": {
+		"x": 374,
+		"y": 859,
+		"w": 270,
+		"h": 93
+	},
+	"btn_menu_quit.png": {
+		"x": 1699,
+		"y": 1,
+		"w": 270,
+		"h": 93
+	},
+	"btn_menu_quit_hover1.png": {
+		"x": 1699,
+		"y": 96,
+		"w": 270,
+		"h": 93
+	},
+	"btn_menu_quit_hover2.png": {
+		"x": 750,
+		"y": 361,
+		"w": 270,
+		"h": 93
+	},
+	"btn_menu_quit_hover3.png": {
+		"x": 750,
+		"y": 456,
+		"w": 270,
+		"h": 93
+	},
+	"btn_menu_quit_hover4.png": {
+		"x": 750,
+		"y": 551,
+		"w": 270,
+		"h": 93
+	},
+	"btn_auto_on01.png": {
+		"x": 374,
+		"y": 954,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on02.png": {
+		"x": 497,
+		"y": 954,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on03.png": {
+		"x": 1022,
+		"y": 361,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on04.png": {
+		"x": 1022,
+		"y": 456,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on05.png": {
+		"x": 1022,
+		"y": 551,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on06.png": {
+		"x": 750,
+		"y": 646,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on07.png": {
+		"x": 750,
+		"y": 715,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on08.png": {
+		"x": 750,
+		"y": 784,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on09.png": {
+		"x": 750,
+		"y": 853,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on10.png": {
+		"x": 750,
+		"y": 922,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on11.png": {
+		"x": 873,
+		"y": 646,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on12.png": {
+		"x": 996,
+		"y": 646,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on13.png": {
+		"x": 873,
+		"y": 715,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on14.png": {
+		"x": 996,
+		"y": 715,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on15.png": {
+		"x": 873,
+		"y": 784,
+		"w": 121,
+		"h": 67
+	},
+	"btn_auto_on16.png": {
+		"x": 873,
+		"y": 853,
+		"w": 121,
+		"h": 67
+	},
+	"teller_box.png": {
+		"x": 1699,
+		"y": 191,
+		"w": 151,
+		"h": 51
+	},
+	"btn_auto.png": {
+		"x": 996,
+		"y": 784,
+		"w": 129,
+		"h": 44
+	},
+	"btn_auto_hover.png": {
+		"x": 996,
+		"y": 830,
+		"w": 129,
+		"h": 44
+	},
+	"btn_load.png": {
+		"x": 996,
+		"y": 876,
+		"w": 129,
+		"h": 44
+	},
+	"btn_load_hover.png": {
+		"x": 996,
+		"y": 922,
+		"w": 129,
+		"h": 44
+	},
+	"btn_save.png": {
+		"x": 996,
+		"y": 968,
+		"w": 129,
+		"h": 44
+	},
+	"btn_save_hover.png": {
+		"x": 1214,
+		"y": 245,
+		"w": 129,
+		"h": 44
+	},
+	"btn_history.png": {
+		"x": 1345,
+		"y": 245,
+		"w": 129,
+		"h": 43
+	},
+	"btn_history_hover.png": {
+		"x": 1476,
+		"y": 245,
+		"w": 129,
+		"h": 43
+	},
+	"btn_ui.png": {
+		"x": 1607,
+		"y": 245,
+		"w": 129,
+		"h": 43
+	},
+	"btn_ui_hover.png": {
+		"x": 1738,
+		"y": 245,
+		"w": 129,
+		"h": 43
+	},
+	"btn_menu.png": {
+		"x": 273,
+		"y": 822,
+		"w": 69,
+		"h": 43
+	},
+	"btn_menu_down.png": {
+		"x": 273,
+		"y": 867,
+		"w": 69,
+		"h": 43
+	},
+	"btn_settings.png": {
+		"x": 273,
+		"y": 917,
+		"w": 69,
+		"h": 43
+	},
+	"btn_settings_down.png": {
+		"x": 273,
+		"y": 962,
+		"w": 69,
+		"h": 43
+	},
+	"text_next.png": {
+		"x": 646,
+		"y": 669,
+		"w": 76,
+		"h": 38
+	},
+	"history_text.png": {
+		"x": 646,
+		"y": 709,
+		"w": 84,
+		"h": 26
+	},
+	"btn_history_close.png": {
+		"x": 344,
+		"y": 822,
+		"w": 20,
+		"h": 22
+	}
+}

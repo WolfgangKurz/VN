@@ -1,0 +1,122 @@
+{
+	"btn_collection.png": {
+		"x": 1,
+		"y": 1,
+		"w": 270,
+		"h": 93
+	},
+	"btn_collection_hover1.png": {
+		"x": 273,
+		"y": 1,
+		"w": 270,
+		"h": 93
+	},
+	"btn_collection_hover2.png": {
+		"x": 545,
+		"y": 1,
+		"w": 270,
+		"h": 93
+	},
+	"btn_collection_hover3.png": {
+		"x": 1,
+		"y": 96,
+		"w": 270,
+		"h": 93
+	},
+	"btn_collection_hover4.png": {
+		"x": 273,
+		"y": 96,
+		"w": 270,
+		"h": 93
+	},
+	"btn_load.png": {
+		"x": 545,
+		"y": 96,
+		"w": 270,
+		"h": 93
+	},
+	"btn_load_hover1.png": {
+		"x": 1,
+		"y": 191,
+		"w": 270,
+		"h": 93
+	},
+	"btn_load_hover2.png": {
+		"x": 1,
+		"y": 286,
+		"w": 270,
+		"h": 93
+	},
+	"btn_load_hover3.png": {
+		"x": 1,
+		"y": 381,
+		"w": 270,
+		"h": 93
+	},
+	"btn_load_hover4.png": {
+		"x": 1,
+		"y": 476,
+		"w": 270,
+		"h": 93
+	},
+	"btn_option.png": {
+		"x": 1,
+		"y": 571,
+		"w": 270,
+		"h": 93
+	},
+	"btn_option_hover1.png": {
+		"x": 1,
+		"y": 666,
+		"w": 270,
+		"h": 93
+	},
+	"btn_option_hover2.png": {
+		"x": 1,
+		"y": 761,
+		"w": 270,
+		"h": 93
+	},
+	"btn_option_hover3.png": {
+		"x": 1,
+		"y": 856,
+		"w": 270,
+		"h": 93
+	},
+	"btn_option_hover4.png": {
+		"x": 273,
+		"y": 191,
+		"w": 270,
+		"h": 93
+	},
+	"btn_start.png": {
+		"x": 545,
+		"y": 191,
+		"w": 270,
+		"h": 93
+	},
+	"btn_start_hover1.png": {
+		"x": 273,
+		"y": 286,
+		"w": 270,
+		"h": 93
+	},
+	"btn_start_hover2.png": {
+		"x": 545,
+		"y": 286,
+		"w": 270,
+		"h": 93
+	},
+	"btn_start_hover3.png": {
+		"x": 273,
+		"y": 381,
+		"w": 270,
+		"h": 93
+	},
+	"btn_start_hover4.png": {
+		"x": 545,
+		"y": 381,
+		"w": 270,
+		"h": 93
+	}
+}
