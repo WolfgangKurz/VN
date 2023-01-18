@@ -57,7 +57,7 @@ const Scene_Title: FunctionalComponent = () => {
 			{ ["start", "load", "collection", "option"].map(k =>
 				<SpriteButton
 					class={ style.Button }
-					src="/IMG/Title/sprite.png"
+					src="Title/sprite.png"
 					idle={ `btn_${k}.png` }
 					hover={ new Array(4).fill(0).map((_, i) => `btn_${k}_hover${i + 1}.png`) }
 

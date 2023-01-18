@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { batch } from "@preact/signals";
 
 import config from "@/config";
@@ -15,6 +15,7 @@ import { StartupScript } from "./debug";
 
 import Scene_Base from "../Scene_Base";
 import Window_Option from "@/windows/Window_Option";
+import Window_SaveLoad from "@/windows/Window_SaveLoad";
 
 import Image from "@/components/Image";
 import SpriteImage from "@/components/SpriteImage";
@@ -116,6 +117,18 @@ const Scene_Game: FunctionalComponent = () => {
 			return [];
 		});
 	};
+
+	const tryNext = useCallback(() => {
+		if (textState !== TextboxPhase.None) {
+			if (textState === TextboxPhase.Done) // text fully shown
+				unblock();
+			else
+				setTextState(s => s + 1);
+		} else
+			unblock();
+	}, [script, textState]);
+
+	//////////////////////////////
 
 	useEffect(() => { // script load skipper
 		if (!script || !scriptLoading) return;
@@ -793,7 +806,7 @@ const Scene_Game: FunctionalComponent = () => {
 
 	useLayoutEffect(() => {
 		if (!assetLoaded) {
-			SpriteImage.load("/IMG/UI/sprite.png")
+			SpriteImage.load("UI/sprite.png")
 				.then(() => setAssetLoaded(true));
 			return;
 		}
@@ -881,6 +894,24 @@ const Scene_Game: FunctionalComponent = () => {
 		}
 	}, [pics]);
 
+	useEffect(() => { // Global effect register
+		const fn = (e: KeyboardEvent) => {
+			if (selection.length > 0)
+				return; // Selection exists
+
+			if (e.key === "Enter" || e.key === " ") {
+				if (!e.repeat)
+					tryNext();
+			} else if (e.key === "Control")
+				tryNext(); // keep run
+		};
+
+		window.addEventListener("keydown", fn);
+		return () => {
+			window.removeEventListener("keydown", fn);
+		};
+	}, [script, selection, textState]);
+
 	const PosStyles = {
 		"<<": style.LeftMin,
 		"<": style.LeftMinOver,
@@ -902,6 +933,18 @@ const Scene_Game: FunctionalComponent = () => {
 		return `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><defs><filter id="f"><feColorMatrix in="SourceGraphic" type="matrix" values="${v.join(" ")}" /></filter></defs></svg>#f')`;
 	}
 
+	function SetSaveLoadWindow (isSave: boolean) {
+		setSubwindow(<Window_SaveLoad
+			isSave={ isSave }
+			onClose={ () => setSubwindow(null) }
+			onModeChange={ mode => {
+				if ((mode === "save" && isSave) || (mode === "load" && !isSave)) return;
+
+				SetSaveLoadWindow(!isSave);
+			} }
+		/>);
+	}
+
 	return <>
 		<Scene_Base
 			class={ style.Scene_Game }
@@ -911,13 +954,7 @@ const Scene_Game: FunctionalComponent = () => {
 				if (e.target && (e.target instanceof Element) && (e.target.matches(`.${style.Selection}`) || e.target.matches(`.${style.Sel}`)))
 					return; // Selection click
 
-				if (textState !== TextboxPhase.None) {
-					if (textState === TextboxPhase.Done) // text fully shown
-						unblock();
-					else
-						setTextState(s => s + 1);
-				} else
-					unblock();
+				tryNext();
 			} }
 		>
 			<div
@@ -1009,7 +1046,7 @@ const Scene_Game: FunctionalComponent = () => {
 				displayText && style.Display,
 			) }>
 				<SpriteButton
-					src="/IMG/UI/sprite.png"
+					src="UI/sprite.png"
 					idle="btn_history.png"
 					hover="btn_history_hover.png"
 					onClick={ e => {
@@ -1018,7 +1055,7 @@ const Scene_Game: FunctionalComponent = () => {
 					} }
 				/>
 				<SpriteButton
-					src="/IMG/UI/sprite.png"
+					src="UI/sprite.png"
 					idle="btn_auto.png"
 					hover="btn_auto_hover.png"
 					onClick={ e => {
@@ -1027,25 +1064,29 @@ const Scene_Game: FunctionalComponent = () => {
 					} }
 				/>
 				<SpriteButton
-					src="/IMG/UI/sprite.png"
+					src="UI/sprite.png"
 					idle="btn_save.png"
 					hover="btn_save_hover.png"
 					onClick={ e => {
 						e.preventDefault();
 						e.stopPropagation();
+
+						SetSaveLoadWindow(true);
 					} }
 				/>
 				<SpriteButton
-					src="/IMG/UI/sprite.png"
+					src="UI/sprite.png"
 					idle="btn_load.png"
 					hover="btn_load_hover.png"
 					onClick={ e => {
 						e.preventDefault();
 						e.stopPropagation();
+
+						SetSaveLoadWindow(false);
 					} }
 				/>
 				<SpriteButton
-					src="/IMG/UI/sprite.png"
+					src="UI/sprite.png"
 					idle="btn_ui.png"
 					hover="btn_ui_hover.png"
 					onClick={ e => {
@@ -1076,7 +1117,7 @@ const Scene_Game: FunctionalComponent = () => {
 							} }
 						>
 							<SpriteImage
-								src="/IMG/UI/sprite.png"
+								src="UI/sprite.png"
 								sprite="btn_selection.png"
 							/>
 							{ sel.display }
@@ -1098,13 +1139,13 @@ const Scene_Game: FunctionalComponent = () => {
 
 		<SpriteButton
 			class={ style.MenuButton }
-			src="/IMG/UI/sprite.png"
+			src="UI/sprite.png"
 			idle="btn_menu.png"
 			active="btn_menu_down.png"
 		/>
 		<SpriteButton
 			class={ style.OptionButton }
-			src="/IMG/UI/sprite.png"
+			src="UI/sprite.png"
 			idle="btn_settings.png"
 			active="btn_settings_down.png"
 			onClick={ e => {

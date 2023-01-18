@@ -170,13 +170,13 @@ const Textbox: FunctionalComponent<TextboxProps> = (props) => {
 		} }
 	>
 		<SpriteImage
-			src="/IMG/UI/sprite.png"
+			src="UI/sprite.png"
 			sprite="text_box.png"
 		/>
 
 		<div class={ BuildClass(style.Teller, props.teller && style.Display) }>
 			<SpriteImage
-				src="/IMG/UI/sprite.png"
+				src="UI/sprite.png"
 				sprite="teller_box.png"
 			/>
 
@@ -194,7 +194,7 @@ const Textbox: FunctionalComponent<TextboxProps> = (props) => {
 		{ texts.length > 0 && cursor >= texts.length && props.phase === 3
 			? <SpriteImage
 				class={ style.NextIndicator }
-				src="/IMG/UI/sprite.png"
+				src="UI/sprite.png"
 				sprite="text_next.png"
 			/>
 			: <></>

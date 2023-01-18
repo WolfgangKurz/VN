@@ -19,7 +19,7 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 	const [display, setDisplay] = useState(false);
 
 	useEffect(() => {
-		SpriteImage.load("/IMG/Option/sprite.png")
+		SpriteImage.load("Option/sprite.png")
 			.then(() => setLoaded(true));
 	}, []);
 
@@ -42,7 +42,7 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 
 		<SpriteButton
 			class={ style.BackButton }
-			src="/IMG/Option/sprite.png"
+			src="Option/sprite.png"
 			idle="btn_back.png"
 
 			onClick={ e => {
@@ -59,7 +59,7 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 		<SpriteSlide
 			class={ BuildClass(style.Slider, style.SliderSFX) }
 
-			src="/IMG/Option/sprite.png"
+			src="Option/sprite.png"
 			bar="bar.png"
 			track="bar_active.png"
 			thumb="bar_thumb.png"
@@ -72,7 +72,7 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 		<SpriteSlide
 			class={ BuildClass(style.Slider, style.SliderBGM) }
 
-			src="/IMG/Option/sprite.png"
+			src="Option/sprite.png"
 			bar="bar.png"
 			track="bar_active.png"
 			thumb="bar_thumb.png"
@@ -83,13 +83,13 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 
 		<SpriteImage
 			class={ BuildClass(style.SpeedButton, [style.Slow, style.Regular, style.Fast][config.text_Speed.value]) }
-			src="/IMG/Option/sprite.png"
+			src="Option/sprite.png"
 			sprite="btn_selected.png"
 		/>
 
 		<SpriteButton
 			class={ BuildClass(style.SpeedButton, style.Slow) }
-			src="/IMG/Option/sprite.png"
+			src="Option/sprite.png"
 			idle="btn_slow.png"
 
 			onClick={ e => {
@@ -99,7 +99,7 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 		/>
 		<SpriteButton
 			class={ BuildClass(style.SpeedButton, style.Regular) }
-			src="/IMG/Option/sprite.png"
+			src="Option/sprite.png"
 			idle="btn_regular.png"
 
 			onClick={ e => {
@@ -109,7 +109,7 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 		/>
 		<SpriteButton
 			class={ BuildClass(style.SpeedButton, style.Fast) }
-			src="/IMG/Option/sprite.png"
+			src="Option/sprite.png"
 			idle="btn_fast.png"
 
 			onClick={ e => {

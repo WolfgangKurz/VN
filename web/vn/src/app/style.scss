@@ -1,3 +1,15 @@
+@keyframes -app-fade-in {
+	from {
+		opacity: 0.35;
+	}
+	50% {
+		opacity: 1;
+	}
+	to {
+		opacity: 0.35;
+	}
+}
+
 #app {
 	display: flex;
 	height: 100%;
@@ -5,5 +17,15 @@
 
 	> div {
 		margin: auto;
+	}
+
+	div.loading-text {
+		animation-name: -app-fade-in;
+		animation-iteration-count: infinite;
+		animation-timing-function: linear;
+		animation-duration: 3s;
+
+		font-size: 5vh;
+		color: rgba(255, 255, 255, 0.85);
 	}
 }

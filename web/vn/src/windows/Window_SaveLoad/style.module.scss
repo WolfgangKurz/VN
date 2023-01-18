@@ -1,0 +1,38 @@
+.BackButton {
+	left: (1280px - 114px);
+	top: 12px;
+}
+
+.ModeButton {
+	left: 1058px;
+
+	&.Save {
+		top: 210px;
+	}
+	&.Load {
+		top: 288px;
+	}
+
+	&.Disabled {
+		cursor: default;
+	}
+}
+
+.PageButtons {
+	left: 585px;
+	top: 173px;
+
+	.PageButton {
+		position: absolute;
+
+		&.Current {
+			cursor: default;
+		}
+	}
+
+	@for $i from 0 to 10 {
+		.PageButton:nth-child(#{$i + 1}) {
+			left: ($i * 44px);
+		}
+	}
+}

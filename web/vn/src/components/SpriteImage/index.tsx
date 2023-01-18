@@ -6,12 +6,7 @@ import RECT from "@/types/RECT";
 
 import { TRANSPARENT } from "@/libs/Const";
 
-interface SpriteData {
-	frame: RECT;
-}
-interface SpriteJson {
-	frames: Record<string, SpriteData>;
-}
+type SpriteJson = Record<string, RECT>;
 
 const SpriteLoading: Record<string, VoidFunction[]> = {};
 const SpriteCache: Record<string, Record<string, string>> = {};
@@ -64,7 +59,9 @@ const SpriteImage = Object.assign(
 					SpriteLoading[src] = [];
 
 					const jsonName = src.substring(0, src.lastIndexOf(".")) + ".json";
-					fetch(jsonName).then(r => r.json())
+					const jsonUrl = `/IMG/Sprites/${jsonName}`;
+					console.log(src, jsonUrl);
+					fetch(jsonUrl).then(r => r.json())
 						.then(async (json: SpriteJson) => { // loaded
 							const ret: Record<string, string> = {};
 
@@ -84,17 +81,17 @@ const SpriteImage = Object.assign(
 
 								image.addEventListener("load", loadHandler);
 								image.addEventListener("error", errorHandler);
-								image.src = src;
+								image.src = `/IMG/Sprites/${src}`;
 							});
 
 							const cv = document.createElement("canvas");
 							const ctx = cv.getContext("2d");
 							if (!ctx) throw new Error("Failed to get canvas 2d context"); // :(
 
-							const frames = Object.keys(json.frames);
+							const frames = Object.keys(json);
 							for (const name of frames) {
 
-								const frame = json.frames[name].frame;
+								const frame = json[name];
 								cv.width = frame.w;
 								cv.height = frame.h;
 

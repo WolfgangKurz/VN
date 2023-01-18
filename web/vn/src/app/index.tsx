@@ -3,6 +3,8 @@ import { useEffect, useState } from "preact/hooks";
 import config from "@/config";
 import Loader, { LoaderProps } from "@/loader";
 
+import SpriteImage from "@/components/SpriteImage";
+
 import "./style.scss";
 
 interface GameMetadata {
@@ -16,10 +18,14 @@ interface GameMetadata {
 const App: FunctionalComponent = () => {
 	const [target, setTarget] = useState<LoaderProps["component"] | undefined>(undefined);
 
+	function RequireSprite (src: string): Promise<void> {
+		return SpriteImage.load(src);
+	}
+
 	useEffect(() => {
 		fetch("/game.json")
 			.then(r => r.json())
-			.then((r: GameMetadata) => {
+			.then(async (r: GameMetadata) => {
 				console.log("Game Metadata : ", r);
 
 				const win = window.nw.Window.get();
@@ -29,8 +35,13 @@ const App: FunctionalComponent = () => {
 				document.title = win.title = r.title;
 
 				config.volatile_LoadingText.value = r.loading;
-				config.volatile_Scene.value = "Scene_Title";
-				// config.volatile_Scene.value = "Scene_Game";
+
+				await RequireSprite("UI/sprite.png");
+				await RequireSprite("Option/sprite.png");
+				await RequireSprite("SaveLoad/sprite.png");
+
+				// config.volatile_Scene.value = "Scene_Title";
+				config.volatile_Scene.value = "Scene_Game";
 			});
 
 		const unsub = config.volatile_Scene.subscribe(() => {
@@ -50,6 +61,6 @@ const App: FunctionalComponent = () => {
 			component={ target }
 			loading={ _loading }
 		/>
-		: <>{ _loading }</>;
+		: <div class="loading-text">{ _loading }</div>;
 };
 export default App;
