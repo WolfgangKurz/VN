@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "glob": "^3.2.11",
-    "spritesheet-js": "^1.2.6"
+    "rimraf": "^4.1.0"
   }
 }
