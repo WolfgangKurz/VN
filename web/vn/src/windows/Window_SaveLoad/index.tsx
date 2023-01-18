@@ -1,19 +1,27 @@
-import { useEffect, useState } from "preact/hooks";
+import NodeFS from "node:fs";
+import NodePATH from "node:path";
 
+import { useEffect, useState } from "preact/hooks";
+import { batch } from "@preact/signals-core";
+import html2canvas from "html2canvas";
+
+import config from "@/config";
+
+import { __dirname } from "@/libs/Const";
 import Wait from "@/libs/Wait";
 import { BuildClass } from "@/libs/ClassName";
+import SaveData from "@/libs/SaveData";
 
 import SpriteImage from "@/components/SpriteImage";
 import SpriteButton from "@/components/SpriteButton";
-import SpriteSlide from "@/components/SpriteSlide";
 
 import Window_Base, { WindowBaseProps } from "../Window_Base";
 
 import style from "./style.module.scss";
-import config from "@/config";
 
 interface WindowSaveLoadProps extends WindowBaseProps {
 	isSave: boolean;
+	scriptCursor?: number;
 
 	onModeChange?: (mode: "save" | "load") => void;
 }
@@ -32,9 +40,75 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 			setDisplay(true);
 	}, [loaded]);
 
+	const [saveUpdator, setSaveUpdator] = useState(false);
+	const [saves, setSaves] = useState<Array<SaveData | undefined>>([]);
 	const [page, setPage] = useState(0);
 
+	useEffect(() => {
+		const list: SaveData[] = [];
+
+		const fs: typeof NodeFS = window.nw.require("fs");
+		const path: typeof NodePATH = window.nw.require("path");
+
+		const reg = /^VNSave([0-9]{2})\.vnsave$/;
+
+		const dir = path.join(__dirname, "saves");
+		fs.readdirSync(dir, "utf-8")
+			.forEach(f => {
+				if (!reg.test(f)) return;
+
+				const m = reg.exec(f);
+				const idx = parseInt(m![1], 10);
+
+				const data = fs.readFileSync(path.join(dir, f));
+				const saveData = new SaveData();
+				if (!saveData.read(data)) return;
+
+				list[idx] = saveData;
+			});
+
+		setSaves(r => {
+			r.forEach(s => {
+				if (s) s.dispose();
+			});
+
+			return list;
+		});
+	}, [props.isSave, saveUpdator]);
+
+	const updateSaves = () => setSaveUpdator(!saveUpdator);
+
+	async function doSave (idx: number) {
+		const fs: typeof NodeFS = window.nw.require("fs");
+		const path: typeof NodePATH = window.nw.require("path");
+
+		const now = new Date();
+
+		const target = path.join(__dirname, "saves", `VNSave${idx.toString().padStart(2, "0")}.vnsave`);
+
+		const saveData = new SaveData();
+		saveData.chapter = config.volatile_Chapter.peek();
+		saveData.title = config.volatile_Title.peek();
+		saveData.date = now;
+
+		saveData.script = config.volatile_Script.peek();
+		saveData.cursor = props.scriptCursor ?? 0;
+
+		const screen = document.querySelector<HTMLDivElement>(".Scene_Game .Screen");
+		if (screen) {
+			const captured = await html2canvas(screen);
+			await saveData.setImage(captured);
+		}
+
+		const buffer = await saveData.save();
+		if (!buffer) return false;
+
+		fs.writeFileSync(target, buffer);
+	}
+
 	return <Window_Base
+		class={ BuildClass(props.isSave && style.SaveWindow, !props.isSave && style.LoadWindow) }
+
 		left={ 0 }
 		top={ 0 }
 		width={ 1280 }
@@ -110,9 +184,61 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 
 		{/* Slots */ }
 		<div class={ style.Slots }>
-			{ new Array(6).fill(0).map((_, i) => <div class={ style.Slot }>
-				{/* <SpriteImage /> */ }
-			</div>) }
+			{ new Array(6).fill(0).map((_, i) => {
+				const save = saves[i + page * 6];
+				return <div
+					class={ BuildClass(style.Slot, !save && style.Empty) }
+					onClick={ e => {
+						e.preventDefault();
+						e.stopPropagation();
+
+						if (!save) return;
+
+						if (props.isSave) {
+							doSave(i + page * 6)
+								.then(() => updateSaves());
+						} else {
+							console.log(save);
+							batch(() => {
+								config.volatile_Scene.value = "Scene_GameReady";
+								config.volatile_Script.value = save.script;
+								config.volatile_ScriptCursor.value = save.cursor;
+
+								config.volatile_Chapter.value = save.chapter;
+								config.volatile_Title.value = save.title;
+							});
+						}
+					} }
+				>
+					{
+						save ? <>
+							<SpriteImage
+								src="SaveLoad/sprite.png"
+								sprite="data_box.png"
+							/>
+
+							<div class={ style.Chapter }>{ save.chapter }</div>
+							<div class={ style.Title }>{ save.title }</div>
+							<div class={ style.Date }>{ save.formattedDate }</div>
+
+							{ save.imageUrl
+								? <img class={ style.Thumbnail } src={ save.imageUrl } />
+								: <></>
+							}
+
+							<SpriteImage
+								class={ style.Down }
+								src="SaveLoad/sprite.png"
+								sprite="data_box_b.png"
+							/>
+						</>
+							: <SpriteImage
+								src="SaveLoad/sprite.png"
+								sprite="data_empty.png"
+							/>
+					}
+				</div>;
+			}) }
 		</div>
 	</Window_Base>;
 };

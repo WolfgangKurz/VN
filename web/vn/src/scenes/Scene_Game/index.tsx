@@ -11,8 +11,6 @@ import Wait, { WaitData } from "@/libs/Wait";
 import ManagedAudio from "@/libs/ManagedAudio";
 import Script, { ScriptArgument, ScriptSelection } from "@/libs/Script";
 
-import { StartupScript } from "./debug";
-
 import Scene_Base from "../Scene_Base";
 import Window_Option from "@/windows/Window_Option";
 import Window_SaveLoad from "@/windows/Window_SaveLoad";
@@ -544,6 +542,11 @@ const Scene_Game: FunctionalComponent = () => {
 				unblock();
 				break;
 
+			case "chapter": // chapter text
+				config.volatile_Chapter.value = s.chapter;
+				unblock();
+				break;
+
 			case "set":
 				console.log("Session var set, " + s.name + " -> " + s.value);
 				config.session_Data.peek().set(s.name, s.value);
@@ -826,6 +829,8 @@ const Scene_Game: FunctionalComponent = () => {
 						script.load(r);
 						setScript(script);
 						setScriptCursor(config.volatile_ScriptCursor.peek());
+
+						console.log(config.volatile_ScriptCursor.peek());
 					});
 			}
 		});
@@ -850,8 +855,6 @@ const Scene_Game: FunctionalComponent = () => {
 
 		const bgm = new ManagedAudio(true);
 		setBGM(bgm);
-
-		StartupScript();
 
 		return () => {
 			bgs.destroy();
@@ -936,6 +939,7 @@ const Scene_Game: FunctionalComponent = () => {
 	function SetSaveLoadWindow (isSave: boolean) {
 		setSubwindow(<Window_SaveLoad
 			isSave={ isSave }
+			scriptCursor={ script?.cursor ?? 0 }
 			onClose={ () => setSubwindow(null) }
 			onModeChange={ mode => {
 				if ((mode === "save" && isSave) || (mode === "load" && !isSave)) return;
@@ -947,7 +951,7 @@ const Scene_Game: FunctionalComponent = () => {
 
 	return <>
 		<Scene_Base
-			class={ style.Scene_Game }
+			class={ BuildClass("Scene_Game", style.Scene_Game) }
 			onClick={ e => {
 				e.preventDefault();
 
@@ -958,7 +962,7 @@ const Scene_Game: FunctionalComponent = () => {
 			} }
 		>
 			<div
-				class={ style.Screen }
+				class={ BuildClass("Screen", style.Screen) }
 				ref={ ScreenEl }
 			>
 				{ bgImage

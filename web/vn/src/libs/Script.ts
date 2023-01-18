@@ -83,6 +83,10 @@ interface ScriptLine_Title extends ScriptLine_Base {
 	type: "title";
 	title: string;
 }
+interface ScriptLine_Chapter extends ScriptLine_Base {
+	type: "chapter";
+	chapter: string;
+}
 interface ScriptLine_Set extends ScriptLine_Base {
 	type: "set";
 	name: string;
@@ -111,8 +115,8 @@ type ScriptLine_Filter = ScriptLine_Filter_Char | ScriptLine_Filter_Picture;
 
 export type ScriptLine = ScriptLine_Text | ScriptLine_Talk | ScriptLine_Clear | ScriptLine_Wait |
 	ScriptLine_Char | ScriptLine_BGM | ScriptLine_BGS | ScriptLine_SE | ScriptLine_BG | ScriptLine_Picture |
-	ScriptLine_Fade | ScriptLine_FX | ScriptLine_Selection | ScriptLine_Script | ScriptLine_Title |
-	ScriptLine_Set | ScriptLine_If | ScriptLine_Filter;
+	ScriptLine_Fade | ScriptLine_FX | ScriptLine_Selection | ScriptLine_Script | ScriptLine_Filter |
+	ScriptLine_Set | ScriptLine_If | ScriptLine_Title | ScriptLine_Chapter;
 
 export default class Script {
 	private _script: ScriptLine[] = [];
@@ -359,6 +363,15 @@ export default class Script {
 							return {
 								type: "title",
 								title: args[0].toString(),
+							};
+
+						case "chapter":
+							if (args.length !== 1)
+								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
+
+							return {
+								type: "chapter",
+								chapter: args[0].toString(),
 							};
 
 						case "set":

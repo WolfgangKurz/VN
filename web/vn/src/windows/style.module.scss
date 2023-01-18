@@ -1,6 +1,6 @@
 .Window {
 	pointer-events: none;
-	transition: backdrop-filter var(--transition-duration) linear;
+	transition: backdrop-filter var(--transition-duration) ease-in-out;
 	backdrop-filter: blur(0px);
 
 	> .Content {
@@ -8,7 +8,7 @@
 		height: 100%;
 		z-index: 10001;
 
-		transition: opacity var(--transition-duration) linear;
+		transition: opacity var(--transition-duration) ease-in-out;
 		opacity: 0.001;
 
 		> * {

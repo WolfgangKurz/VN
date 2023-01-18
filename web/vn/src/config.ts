@@ -63,6 +63,7 @@ const config = {
 
 	volatile_Mute: signal<boolean>(false),
 
+	volatile_Chapter: signal<string>(""),
 	volatile_Title: signal<string>(""),
 
 	// session

@@ -10,6 +10,9 @@
 # 스크립트 이름이 - 라면 스크립트를 변경하지 않고 다음 명령을 실행함
 @sel sel1 sel1to [sel2 sel2to ...]
 
+# 챕터 이름 지정 (문자열)
+@chapter chap
+
 # 장소 등 제목 지정
 @title title
 

@@ -36,3 +36,63 @@
 		}
 	}
 }
+
+.Slots .Slot {
+	position: absolute;
+	width: 464px;
+	height: 138px;
+	cursor: pointer;
+
+	@for $i from 0 to 6 {
+		&:nth-child(#{$i + 1}) {
+			left: (53px + 478px * ($i % 2));
+			top: (231px + 150px * math.floor(math.div($i, 2)));
+		}
+	}
+
+	> * {
+		position: absolute;
+	}
+
+	img.Down {
+		display: none;
+	}
+
+	&:active {
+		img.Down {
+			display: block;
+		}
+	}
+
+	.Chapter {
+		left: 218px;
+		top: 20px;
+		font-weight: bold;
+		font-size: 30px;
+		color: #afa9a9;
+	}
+	.Title {
+		left: 218px;
+		top: 54px;
+		font-weight: bold;
+		font-size: 20px;
+		color: #756f6f;
+	}
+	.Date {
+		left: 218px;
+		top: 95px;
+		font-weight: bold;
+		font-size: 18px;
+		color: #615757;
+	}
+	.Thumbnail {
+		left: 16px;
+		top: 16px;
+		width: 185px;
+		height: 104px;
+	}
+}
+
+.LoadWindow .Slots .Slot.Empty {
+	cursor: not-allowed;
+}
