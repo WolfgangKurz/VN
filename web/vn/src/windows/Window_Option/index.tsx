@@ -1,5 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 
+import config from "@/config";
+
 import Wait from "@/libs/Wait";
 import { BuildClass } from "@/libs/ClassName";
 
@@ -10,7 +12,6 @@ import SpriteSlide from "@/components/SpriteSlide";
 import Window_Base, { WindowBaseProps } from "../Window_Base";
 
 import style from "./style.module.scss";
-import config from "@/config";
 
 interface WindowOptionProps extends WindowBaseProps { }
 
@@ -32,7 +33,7 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 		left={ 0 }
 		top={ 0 }
 		width={ 1280 }
-		height={ 1280 }
+		height={ 720 }
 
 		display={ display }
 

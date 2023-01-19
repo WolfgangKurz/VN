@@ -16,6 +16,7 @@ import ManagedAudio from "@/libs/ManagedAudio";
 import Script, { ScriptArgument, ScriptSelection } from "@/libs/Script";
 
 import Scene_Base from "../Scene_Base";
+import Window_Menu from "@/windows/Window_Menu";
 import Window_Option from "@/windows/Window_Option";
 import Window_SaveLoad from "@/windows/Window_SaveLoad";
 
@@ -73,6 +74,8 @@ const Scene_Game: FunctionalComponent = () => {
 	const [subwindow, setSubwindow] = useState<preact.VNode | null>(null);
 
 	//////////////////////////////
+
+	const [hideUI, setHideUI] = useState(false);
 
 	const [title, setTitle] = useState("");
 	const [titleShow, setTitleShow] = useState(false);
@@ -134,6 +137,11 @@ const Scene_Game: FunctionalComponent = () => {
 	};
 
 	const tryNext = useCallback(() => {
+		if (hideUI) {
+			setHideUI(false);
+			return;
+		}
+
 		if (textState !== TextboxPhase.None) {
 			if (textState === TextboxPhase.Done) // text fully shown
 				unblock();
@@ -141,7 +149,7 @@ const Scene_Game: FunctionalComponent = () => {
 				setTextState(s => s + 1);
 		} else
 			unblock();
-	}, [script, textState]);
+	}, [script, textState, hideUI]);
 
 	//////////////////////////////
 
@@ -980,7 +988,7 @@ const Scene_Game: FunctionalComponent = () => {
 
 	return <>
 		<Scene_Base
-			class={ BuildClass("Scene_Game", style.Scene_Game) }
+			class={ BuildClass("Scene_Game", style.Scene_Game, hideUI && style.HideUI) }
 			onClick={ e => {
 				e.preventDefault();
 
@@ -1127,6 +1135,8 @@ const Scene_Game: FunctionalComponent = () => {
 					onClick={ e => {
 						e.preventDefault();
 						e.stopPropagation();
+
+						setHideUI(true);
 					} }
 				/>
 			</div>
@@ -1230,6 +1240,14 @@ const Scene_Game: FunctionalComponent = () => {
 			src="UI/sprite.png"
 			idle="btn_menu.png"
 			active="btn_menu_down.png"
+			onClick={ e => {
+				e.preventDefault();
+				e.stopPropagation();
+
+				setSubwindow(<Window_Menu
+					onClose={ () => setSubwindow(null) }
+				/>);
+			} }
 		/>
 		<SpriteButton
 			class={ style.OptionButton }

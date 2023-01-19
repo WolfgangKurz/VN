@@ -114,7 +114,7 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 		left={ 0 }
 		top={ 0 }
 		width={ 1280 }
-		height={ 1280 }
+		height={ 720 }
 
 		display={ display }
 

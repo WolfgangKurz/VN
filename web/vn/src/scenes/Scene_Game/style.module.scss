@@ -28,6 +28,13 @@ $z-loading: 10001;
 	* {
 		position: absolute;
 	}
+
+	&.HideUI {
+		> *:not(.Screen):not(.ScriptLoading) {
+			transform: translateY(99999px);
+			// display: none;
+		}
+	}
 }
 
 .Screen {
