@@ -939,6 +939,7 @@ const Scene_Game: FunctionalComponent = () => {
 	function SetSaveLoadWindow (isSave: boolean) {
 		setSubwindow(<Window_SaveLoad
 			isSave={ isSave }
+			canSave
 			scriptCursor={ script?.cursor ?? 0 }
 			onClose={ () => setSubwindow(null) }
 			onModeChange={ mode => {

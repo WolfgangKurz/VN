@@ -20,7 +20,9 @@ import Window_Base, { WindowBaseProps } from "../Window_Base";
 import style from "./style.module.scss";
 
 interface WindowSaveLoadProps extends WindowBaseProps {
+	canSave: boolean;
 	isSave: boolean;
+
 	scriptCursor?: number;
 
 	onModeChange?: (mode: "save" | "load") => void;
@@ -136,15 +138,15 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 		/>
 
 		<SpriteButton
-			class={ BuildClass(style.ModeButton, style.Save, props.isSave && style.Disabled) }
+			class={ BuildClass(style.ModeButton, style.Save, (!props.canSave || props.isSave) && style.Disabled) }
 			src="SaveLoad/sprite.png"
 			idle={ props.isSave ? "btn_save_down.png" : "btn_save.png" }
-			disabled={ props.isSave }
+			disabled={ !props.canSave || props.isSave }
 
 			onClick={ e => {
 				e.preventDefault();
 
-				if (props.isSave) return;
+				if (!props.canSave || props.isSave) return;
 				if (props.onModeChange)
 					props.onModeChange("save");
 			} }

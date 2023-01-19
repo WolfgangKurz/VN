@@ -11,6 +11,7 @@ import SpriteButton from "@/components/SpriteButton";
 
 import Scene_Base from "../Scene_Base";
 import Window_Option from "@/windows/Window_Option";
+import Window_SaveLoad from "@/windows/Window_SaveLoad";
 
 import style from "./style.module.scss";
 
@@ -74,6 +75,14 @@ const Scene_Title: FunctionalComponent = () => {
 								Wait(4000, () => { // 3s fade, 1s waiting
 									config.volatile_Scene.value = "Scene_Game";
 								});
+								break;
+							case "load":
+								setSubwindow(<Window_SaveLoad
+									isSave={ false }
+									canSave={ false }
+
+									onClose={ () => setSubwindow(undefined) }
+								/>);
 								break;
 							case "option":
 								setSubwindow(<Window_Option
