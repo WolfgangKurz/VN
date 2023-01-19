@@ -1,5 +1,6 @@
 @import "./charfx";
 
+// z-order list
 $z-bg: 1;
 $z-bpic: 100;
 $z-char: 200;
@@ -7,7 +8,8 @@ $z-pic: 300;
 $z-text: 400;
 $z-fader: 450;
 $z-title: 500;
-$z-sel: 900;
+$z-sel: 600;
+$z-history: 900;
 $z-global: 8000;
 $z-subwindow: 9000;
 $z-loading: 10001;
@@ -64,6 +66,18 @@ $z-loading: 10001;
 
 		> img {
 			@include fullscreen;
+			&.Active {
+				display: none;
+			}
+		}
+
+		&:active {
+			> img.Normal {
+				display: none;
+			}
+			> img.Active {
+				display: block;
+			}
 		}
 
 		+ .Sel {
@@ -315,6 +329,81 @@ $z-loading: 10001;
 	@include fullscreen;
 	object-fit: cover;
 	z-index: $z-bg;
+}
+
+.History {
+	@include fullscreen;
+
+	background-color: rgba(0, 0, 0, 0.001);
+	transition: opacity 0.4s ease-in-out;
+	opacity: 0;
+	pointer-events: none;
+	z-index: $z-history;
+
+	&.Display {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.HistoryBox {
+		position: absolute;
+		left: 20px;
+		top: 20px;
+		width: 747px;
+		height: 666px;
+
+		.Background,
+		.HistoryContent {
+			position: absolute;
+			@include fullscreen;
+		}
+
+		.HistoryContent {
+			padding: 10px;
+			width: 747px;
+			height: 666px;
+			overflow: auto;
+
+			:global(.simplebar-track) {
+				z-index: ($z-history + 1);
+			}
+			:global(.simplebar-scrollbar)::before {
+				background-color: #fff;
+			}
+
+			.TextHistory,
+			.SelectionHistory {
+				> * {
+					position: static;
+				}
+
+				line-height: 1.5;
+				font-size: 20px;
+				color: #fff;
+
+				& + .TextHistory,
+				& + .SelectionHistory {
+					margin-top: 12px;
+				}
+			}
+
+			.TellerHistory {
+				display: inline-block;
+				margin-right: 20px;
+				color: #f4cf25;
+			}
+
+			.SelectionHistory {
+				color: #8d8d8d;
+
+				> .Selection {
+					&.Selected {
+						color: #f4cf25;
+					}
+				}
+			}
+		}
+	}
 }
 
 .Subwindow {

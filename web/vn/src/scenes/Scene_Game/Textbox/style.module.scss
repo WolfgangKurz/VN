@@ -22,6 +22,7 @@
 	padding: 20px;
 	width: 947px;
 	height: 242px;
+	overflow: hidden;
 
 	pointer-events: none;
 
@@ -47,7 +48,9 @@
 		font-size: 24px;
 		color: #fff;
 
-		transition: opacity 0.25s linear;
+		// ease-out-cubic
+		transition: transform 0.25s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.25s cubic-bezier(0.33, 1, 0.68, 1);
+		transform: translate3d(102px, 0, 0);
 		opacity: 0;
 
 		> img {
@@ -68,6 +71,7 @@
 			position: relative !important;
 			right: -18px;
 			top: -18px;
+			transform: translate3d(0, 0, 0);
 			opacity: 1;
 		}
 	}

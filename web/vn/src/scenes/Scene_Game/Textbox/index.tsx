@@ -43,7 +43,7 @@ const Textbox: FunctionalComponent<TextboxProps> = (props) => {
 	const TextEl = useRef<SVGTextElement>(null);
 	const TellerEl = useRef<SVGTextElement>(null);
 
-	const charSpeed = [15, 30, 50][config.text_Speed.value];
+	const charSpeed = [50, 30, 10][config.text_Speed.value];
 
 	useEffect(() => void (setLastPhase(props.phase)), [props.phase]);
 

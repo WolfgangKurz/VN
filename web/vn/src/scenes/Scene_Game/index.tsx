@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { batch } from "@preact/signals";
 
+import SimpleBar from "simplebar-react";
+import SimpleBarCore from "simplebar-core";
+import "simplebar-react/dist/simplebar.min.css";
+
 import config from "@/config";
 
 import { Matrix4x5Identity } from "@/types/Matrix";
@@ -47,14 +51,23 @@ interface PictureData {
 	colorFilter?: ColorFilterData;
 	backColorFilter?: ColorFilterData;
 }
+interface HistoryTextData {
+	teller?: string;
+	text: string;
+}
+interface HistorySelectionData {
+	selections: string[];
+	selected: number;
+}
+type HistoryData = HistoryTextData | HistorySelectionData;
 
 const Scene_Game: FunctionalComponent = () => {
 	const [script, setScript] = useState<Script | null>(null);
 	const [scriptCursor, setScriptCursor] = useState(0);
-	const [scriptRun, setScriptRun] = useState(false);
+	const [scriptRun, setScriptRun] = useState(0);
 	const scriptLoading = !script || script.cursor < scriptCursor;
 
-	const next = () => setScriptRun(!scriptRun);
+	const next = () => setScriptRun(scriptRun + 1);
 	const [assetLoaded, setAssetLoaded] = useState(false);
 
 	const [subwindow, setSubwindow] = useState<preact.VNode | null>(null);
@@ -63,6 +76,10 @@ const Scene_Game: FunctionalComponent = () => {
 
 	const [title, setTitle] = useState("");
 	const [titleShow, setTitleShow] = useState(false);
+
+	const [history, setHistory] = useState<HistoryData[]>([]);
+	const [historyDisplay, setHistoryDisplay] = useState(false);
+	const historyScrollboxRef = useRef<HTMLDivElement>();
 
 	const [bgs, setBGS] = useState<ManagedAudio | undefined>(undefined);
 	const [bgm, setBGM] = useState<ManagedAudio | undefined>(undefined);
@@ -579,6 +596,7 @@ const Scene_Game: FunctionalComponent = () => {
 
 			case "text":
 				if (scriptLoading) return unblock();
+				setHistory(prev => [...prev, { text: s.text }]);
 
 				setDisplayText(s.text);
 				setDisplayTeller("");
@@ -586,6 +604,7 @@ const Scene_Game: FunctionalComponent = () => {
 				break;
 			case "talk":
 				if (scriptLoading) return unblock();
+				setHistory(prev => [...prev, { teller: s.teller, text: s.text }]);
 
 				setDisplayText(s.text);
 				setDisplayTeller(s.teller);
@@ -915,6 +934,15 @@ const Scene_Game: FunctionalComponent = () => {
 		};
 	}, [script, selection, textState]);
 
+	useEffect(() => {
+		const ref = historyScrollboxRef.current;
+		if (!ref) return;
+
+		ref.scrollTo({
+			top: ref.scrollHeight,
+		});
+	}, [history, historyScrollboxRef]);
+
 	const PosStyles = {
 		"<<": style.LeftMin,
 		"<": style.LeftMinOver,
@@ -1057,6 +1085,8 @@ const Scene_Game: FunctionalComponent = () => {
 					onClick={ e => {
 						e.preventDefault();
 						e.stopPropagation();
+
+						setHistoryDisplay(true);
 					} }
 				/>
 				<SpriteButton
@@ -1110,6 +1140,11 @@ const Scene_Game: FunctionalComponent = () => {
 								e.preventDefault();
 								e.stopPropagation();
 
+								setHistory(prev => [...prev, {
+									selections: selection.map(r => r.display),
+									selected: id,
+								}]);
+
 								if (sel.script !== "-") {
 									batch(() => {
 										config.volatile_Script.value = sel.script;
@@ -1122,9 +1157,16 @@ const Scene_Game: FunctionalComponent = () => {
 							} }
 						>
 							<SpriteImage
+								class={ style.Normal }
 								src="UI/sprite.png"
 								sprite="btn_selection.png"
 							/>
+							<SpriteImage
+								class={ style.Active }
+								src="UI/sprite.png"
+								sprite="btn_selection_down.png"
+							/>
+
 							{ sel.display }
 						</div>;
 					}) }
@@ -1141,6 +1183,47 @@ const Scene_Game: FunctionalComponent = () => {
 				{ config.volatile_LoadingText.value }
 			</div>
 		</Scene_Base>
+
+		<div
+			class={ BuildClass(style.History, historyDisplay && style.Display) }
+			onClick={ e => {
+				e.preventDefault();
+				e.stopPropagation();
+
+				if (historyDisplay)
+					setHistoryDisplay(false);
+			} }
+		>
+			<div class={ style.HistoryBox }>
+				<SpriteImage
+					class={ style.Background }
+					src="UI/sprite.png"
+					sprite="history_box.png"
+				/>
+
+				<div class={ style.HistoryContent }>
+					<SimpleBar
+						forceVisible="y"
+						autoHide={ false }
+						style={ { paddingRight: 15, height: 646 } }
+						scrollableNodeProps={ { ref: historyScrollboxRef } }
+					>
+						{ history.map(h =>
+							"text" in h
+								? <div class={ style.TextHistory }>
+									{ h.teller && <span class={ style.TellerHistory }>{ h.teller }</span> }
+									{ h.text }
+								</div>
+								: <div class={ style.SelectionHistory }>
+									{ h.selections.map((s, i) => <div class={ BuildClass(style.Selection, i === h.selected && style.Selected) }>
+										{ s }
+									</div>) }
+								</div>
+						) }
+					</SimpleBar>
+				</div>
+			</div>
+		</div>
 
 		<SpriteButton
 			class={ style.MenuButton }
