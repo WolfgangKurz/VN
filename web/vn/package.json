@@ -1,27 +1,28 @@
 {
-  "name": "vn",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@preact/signals": "^1.1.3",
-    "html2canvas": "^1.4.1",
-    "lodash.debounce": "^4.0.8",
-    "preact": "^10.11.3",
-    "simplebar-react": "^3.1.1"
-  },
-  "devDependencies": {
-    "@preact/preset-vite": "^2.4.0",
-    "@types/lodash.debounce": "^4.0.7",
-    "@types/node": "^18.11.18",
-    "@types/nw.js": "^0.13.16",
-    "sass": "^1.57.1",
-    "typescript": "^4.9.3",
-    "vite": "^4.0.0"
-  }
+	"name": "vn",
+	"private": true,
+	"version": "0.7.3",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"postbuild": "node build"
+	},
+	"dependencies": {
+		"@preact/signals": "^1.1.3",
+		"html2canvas": "^1.4.1",
+		"lodash.debounce": "^4.0.8",
+		"preact": "^10.11.3",
+		"simplebar-react": "^3.1.1"
+	},
+	"devDependencies": {
+		"@preact/preset-vite": "^2.4.0",
+		"@types/lodash.debounce": "^4.0.7",
+		"@types/node": "^18.11.18",
+		"@types/nw.js": "^0.13.16",
+		"rimraf": "^4.1.1",
+		"sass": "^1.57.1",
+		"typescript": "^4.9.3",
+		"vite": "^4.0.0"
+	}
 }

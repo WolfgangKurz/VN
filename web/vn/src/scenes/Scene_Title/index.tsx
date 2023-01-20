@@ -27,10 +27,10 @@ const Scene_Title: FunctionalComponent = () => {
 	}, [phase]);
 
 	useEffect(() => {
-		Wait(1000, () => {
+		Wait(2000, () => {
 			addPhase("title"); // Title fade-in
 
-			Wait(1000, () => {
+			Wait(2000, () => {
 				addPhase("logo"); // Logo fade-in
 			});
 		});

@@ -31,9 +31,7 @@
 		"types": [
 			"node",
 			"nw.js",
-			"vite/client",
-			"vite-env",
-			"types"
+			"vite/client"
 		],
 		"lib": [
 			"esnext",

@@ -38,17 +38,17 @@
 
 	&[data-phase*="title"] {
 		.BG {
-			transition: opacity 1s linear;
+			transition: opacity 2s linear;
 			opacity: 1;
 		}
 	}
 	&[data-phase*="logo"] {
 		.Logo {
-			transition: opacity 1s linear;
+			transition: opacity 2s linear;
 			opacity: 1;
 		}
 		.ButtonLayer {
-			transition: opacity 1s linear;
+			transition: opacity 2s linear;
 			opacity: 1;
 		}
 	}

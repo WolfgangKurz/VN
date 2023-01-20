@@ -40,8 +40,8 @@ const App: FunctionalComponent = () => {
 				await RequireSprite("Option/sprite.png");
 				await RequireSprite("SaveLoad/sprite.png");
 
-				// config.volatile_Scene.value = "Scene_Title";
-				config.volatile_Scene.value = "Scene_Game";
+				config.volatile_Scene.value = "Scene_Title";
+				// config.volatile_Scene.value = "Scene_Game";
 			});
 
 		const unsub = config.volatile_Scene.subscribe(() => {
