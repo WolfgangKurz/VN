@@ -1,4 +1,5 @@
 import NodeFS from "node:fs";
+import NodePATH from "node:path";
 
 import debounce from "lodash.debounce";
 import { signal } from "@preact/signals";
@@ -6,9 +7,10 @@ import { signal } from "@preact/signals";
 import Session from "./libs/Session";
 
 const fs: typeof NodeFS = window.nw.require("fs");
+const path: typeof NodePATH = window.nw.require("path");
 
 type ConfigValue = string | number | boolean;
-const CONFIG_FILENAME = "vn-config.json";
+const CONFIG_FILENAME = path.resolve(path.dirname(process.execPath), "vn-config.json");
 
 /** Read from config file */
 const configData: Record<string, ConfigValue> = (() => {
