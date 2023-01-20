@@ -89,13 +89,14 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 
 		const dir = path.join(__dirname, "saves");
 		if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true }); // 폴더 없는 경우
-		const target = path.join(__dirname, "saves", `VNSave${idx.toString().padStart(2, "0")}.vnsave`);
+		const target = path.join(dir, `VNSave${idx.toString().padStart(2, "0")}.vnsave`);
 
 		const saveData = new SaveData();
 		saveData.chapter = config.volatile_Chapter.peek();
 		saveData.title = config.volatile_Title.peek();
 		saveData.date = now;
 
+		saveData.session = config.session_Data.peek().serialize();
 		saveData.script = config.volatile_Script.peek();
 		saveData.cursor = props.scriptCursor ?? 0;
 
@@ -197,18 +198,18 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 						e.preventDefault();
 						e.stopPropagation();
 
-						if (!save) return;
-
 						if (props.isSave) {
 							doSave(i + page * 6)
 								.then(() => updateSaves());
 						} else {
-							console.log(save);
+							if (!save) return;
+	
 							batch(() => {
 								config.volatile_Scene.value = "Scene_GameReady";
 								config.volatile_Script.value = save.script;
 								config.volatile_ScriptCursor.value = save.cursor;
 
+								config.session_Data.peek().deserialize(save.session);
 								config.volatile_Chapter.value = save.chapter;
 								config.volatile_Title.value = save.title;
 							});

@@ -1,6 +1,6 @@
 # for load state
 @bg ../IMG/CUT/cut_03
-@bgm Talk_07 2 0
+@bgm Talk_07 0 0
 @char STD_01_10
 
 어떤 질문을 해야 할까….

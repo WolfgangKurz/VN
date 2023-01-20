@@ -4,6 +4,7 @@ export default class ManagedAudio {
 	private _isBGM: boolean;
 	private _fading = false;
 	private _audio: HTMLAudioElement;
+	private _src: string;
 
 	private _muteUnsub: () => void;
 	private _volUnsub: () => void;
@@ -26,6 +27,7 @@ export default class ManagedAudio {
 			});
 		}
 
+		this._src = "";
 		this._audio.muted = config.volatile_Mute.value;
 		this._muteUnsub = config.volatile_Mute.subscribe(v => {
 			this._audio.muted = v;
@@ -42,7 +44,7 @@ export default class ManagedAudio {
 	}
 
 	public load (src: string, play?: boolean) {
-		this._audio.src = src;
+		this._audio.src = this._src = src;
 
 		const _vol = (this._isBGM ? config.volume_BGM.peek() : config.volume_SFX.peek()) / 100;
 		this._audio.volume = _vol;
@@ -74,7 +76,7 @@ export default class ManagedAudio {
 	}
 
 	public src () {
-		return this._audio.src;
+		return this._src;
 	}
 
 	public loop (loop: boolean) {

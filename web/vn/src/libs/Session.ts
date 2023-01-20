@@ -23,6 +23,10 @@ export default class Session {
 		return JSON.stringify(this._vars);
 	}
 
+	public deserialize (data: string) {
+		this._vars = JSON.parse(data) || {};
+	}
+
 	public toString () {
 		return this.serialize();
 	}

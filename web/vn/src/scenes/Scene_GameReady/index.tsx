@@ -1,12 +1,19 @@
 import { FunctionalComponent } from "preact";
 import { useEffect } from "preact/hooks";
+import { batch } from "@preact/signals";
 
 import config from "@/config";
 
-// Proxy scene
+// Game load Proxy scene
 const Scene_GameReady: FunctionalComponent = () => {
 	useEffect(() => {
-		config.volatile_Scene.value = "Scene_Game";
+		batch(() => {
+			config.volatile_Chapter.value = "";
+			config.volatile_Title.value = "";
+
+			config.volatile_Scene.value = "Scene_Game";
+			config.volatile_Mute.value = true;
+		});
 	}, []);
 
 	return <></>;

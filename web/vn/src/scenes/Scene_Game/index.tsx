@@ -738,6 +738,18 @@ const Scene_Game: FunctionalComponent = () => {
 							fadeDuration: s.fadeDuration,
 							state: 0,
 						};
+
+						// for skip
+						addBlock(Wait(s.fadeDuration * 1000, () => {
+							unblock();
+							setPics(_pics => {
+								const pics = [..._pics];
+
+								if (pics[s.id]) pics[s.id].state = 2;
+								return pics;
+							});
+						}));
+
 						return pics;
 					});
 				}
@@ -852,7 +864,6 @@ const Scene_Game: FunctionalComponent = () => {
 
 			script.unload();
 			setScript(null);
-			config.volatile_Mute.value = true;
 
 			if (v) {
 				fetch(`/SCRIPT/${v}.vn`)

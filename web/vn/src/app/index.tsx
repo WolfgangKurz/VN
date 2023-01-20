@@ -31,6 +31,7 @@ const App: FunctionalComponent = () => {
 				const win = window.nw.Window.get();
 				win.setResizable(true);
 				win.resizeTo(r.width, r.height);
+				win.setPosition("center");
 				if (!r.resize) win.setResizable(r.resize);
 				document.title = win.title = r.title;
 

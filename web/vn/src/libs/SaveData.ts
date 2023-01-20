@@ -3,10 +3,21 @@ const Buffer = window.Buffer;
 // 0000/00/00 00:00
 const dateReg = /^([0-9]{4})\/([0-9]{2})\/([0-9]{2}) ([0-9]{2}):([0-9]{2})$/;
 
+const validVersions = ["VN1.1"];
+
 export default class SaveData {
+	private _version: string = "VN1.1";
+	public get version () {
+		return this._version;
+	}
+	private set version (value: string) {
+		this._version = value;
+	}
+
 	public chapter: string = "";
 	public title: string = "";
 	public date: Date = new Date();
+	public session: string = "";
 
 	public get formattedDate (): string {
 		const date = this.date;
@@ -53,44 +64,71 @@ export default class SaveData {
 	}
 
 	public async save (): Promise<Buffer | null> {
-		const buffer = Buffer.alloc(500);
+		let buffer = Buffer.alloc(440);
 		let cursor = 0;
 
 		function write (text: string, length: number) {
 			const len = buffer.write(text, cursor, "utf-8");
-			buffer.write(" ".repeat(length - len), cursor + len);
+			if (length >= 0)
+				buffer.write(" ".repeat(length - len), cursor + len);
 			cursor += length;
 		}
+
+		write(this.version, 10);
 
 		write(this.chapter, 200);
 		write(this.title, 200);
 		write(this.formattedDate, 20);
 
-		write(this.script, 70);
+		{
+			const subBuffer = Buffer.from(this.session, "utf-8");
+			console.log(subBuffer.length, subBuffer.byteLength);
+			write(subBuffer.byteLength.toString(), 10);
+			buffer = Buffer.concat([buffer, subBuffer], buffer.length + subBuffer.length + 60);
+			cursor = buffer.length - 60;
+		}
+
+		write(this.script, 50);
 		write(this.cursor.toString(), 10);
 
 		if (this._image)
-			return Buffer.concat([buffer, Buffer.from(await this._image.arrayBuffer())]);
-		else
-			return buffer;
+			buffer = Buffer.concat([buffer, Buffer.from(await this._image.arrayBuffer())]);
+
+		return buffer;
 	}
 
 	public read (data: Buffer): boolean {
-		// 200 (chapter) + 200 (title) + 20 (date) + 70 (script) + 10 (cursor)
+		// 10 (version) + 200 (chapter) + 200 (title) + 20 (date) + 10 (session length) + 50 (script) + 10 (cursor)
 		if (data.byteLength < 500) return false;
 
-		this.chapter = data.subarray(0, 200).toString("utf-8").trim();
-		this.title = data.subarray(200, 400).toString("utf-8").trim();
+		let offset = 0;
+		function read (length: number): string;
+		function read (length: number, raw: true): Buffer;
+		function read (length: number, raw?: boolean): Buffer | string {
+			const v = data.subarray(offset, offset + length);
+			offset += length;
+			if (raw) return v;
+			return v.toString("utf-8").trim();
+		}
 
-		const date = data.subarray(400, 420).toString("utf-8").trim();
+		this.version = read(10);
+		if (!validVersions.includes(this.version)) return false;
+
+		this.chapter = read(200);
+		this.title = read(200);
+
+		const date = read(20);
 		if (!dateReg.test(date)) return false;
 
 		const dateMatch = dateReg.exec(date)!;
 		this.date = new Date(`${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]} ${dateMatch[4]}:${dateMatch[5]}`);
 
-		this.script = data.subarray(420, 490).toString("utf-8").trim();
-		this.cursor = parseInt(data.subarray(490, 500).toString("utf-8").trim(), 10);
-		this._image = new Blob([data.subarray(500)]);
+		const sessionLength = parseInt(read(10), 10);
+		this.session = read(sessionLength);
+
+		this.script = read(50);
+		this.cursor = parseInt(read(10), 10);
+		this._image = new Blob([data.subarray(offset)]);
 
 		return true;
 	}

@@ -27,12 +27,10 @@ const Scene_Title: FunctionalComponent = () => {
 	}, [phase]);
 
 	useEffect(() => {
-		Wait(2000, () => {
-			addPhase("title"); // Title fade-in
+		addPhase("title"); // Title fade-in
 
-			Wait(2000, () => {
-				addPhase("logo"); // Logo fade-in
-			});
+		Wait(2000, () => {
+			addPhase("logo"); // Logo fade-in
 		});
 
 		const bgm = new ManagedAudio(true);
