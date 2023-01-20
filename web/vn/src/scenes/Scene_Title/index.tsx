@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "preact/hooks";
-import { useSignal } from "@preact/signals";
+import { batch, useSignal } from "@preact/signals";
 
 import config from "@/config";
 import withToClassComponent from "@/loader/hoc";
@@ -74,7 +74,12 @@ const Scene_Title: FunctionalComponent = () => {
 								if (bgm) bgm.fadeOut(3000); // 3s fade out
 
 								Wait(4000, () => { // 3s fade, 1s waiting
-									config.volatile_Scene.value = "Scene_Game";
+									batch(() => {
+										config.volatile_Script.value = "0";
+										config.volatile_ScriptCursor.value = 0;
+
+										config.volatile_Scene.value = "Scene_Game";
+									});
 								});
 								break;
 							case "load":
