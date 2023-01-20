@@ -147,7 +147,7 @@ const Scene_Game: FunctionalComponent = () => {
 			if (textState === TextboxPhase.Done) // text fully shown
 				unblock();
 			else
-				setTextState(s => s + 1);
+				setTextState(s => Math.min(s + 1, TextboxPhase.Hide));
 		} else
 			unblock();
 	}, [script, textState, hideUI]);
@@ -623,7 +623,7 @@ const Scene_Game: FunctionalComponent = () => {
 				if (scriptLoading || textState === TextboxPhase.None) return unblock();
 
 				setDisplayTeller("");
-				setTextState(TextboxPhase.FadeOut);
+				setTextState(_ => TextboxPhase.FadeOut);
 				break;
 
 			case "sel":
@@ -1090,10 +1090,10 @@ const Scene_Game: FunctionalComponent = () => {
 
 				phase={ textState }
 
-				onShown={ () => setTextState(TextboxPhase.SequencingText) }
-				onTextDone={ () => setTextState(TextboxPhase.Done) }
+				onShown={ () => setTextState(_ => TextboxPhase.SequencingText) }
+				onTextDone={ () => setTextState(_ => TextboxPhase.Done) }
 				onHidden={ () => {
-					setTextState(TextboxPhase.None);
+					setTextState(_ => TextboxPhase.None);
 					unblock();
 				} }
 			/>
