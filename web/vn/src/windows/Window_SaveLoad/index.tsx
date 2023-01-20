@@ -55,6 +55,7 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 		const reg = /^VNSave([0-9]{2})\.vnsave$/;
 
 		const dir = path.join(__dirname, "saves");
+		if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true }); // 폴더 없는 경우
 		fs.readdirSync(dir, "utf-8")
 			.forEach(f => {
 				if (!reg.test(f)) return;
@@ -86,6 +87,8 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 
 		const now = new Date();
 
+		const dir = path.join(__dirname, "saves");
+		if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true }); // 폴더 없는 경우
 		const target = path.join(__dirname, "saves", `VNSave${idx.toString().padStart(2, "0")}.vnsave`);
 
 		const saveData = new SaveData();
