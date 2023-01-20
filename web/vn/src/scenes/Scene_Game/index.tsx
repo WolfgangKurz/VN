@@ -13,6 +13,7 @@ import { TRANSPARENT } from "@/libs/Const";
 import { BuildClass } from "@/libs/ClassName";
 import Wait, { WaitData } from "@/libs/Wait";
 import ManagedAudio from "@/libs/ManagedAudio";
+import ScriptCommand from "@/libs/ScriptCommand";
 import Script, { ScriptArgument, ScriptSelection } from "@/libs/Script";
 
 import Scene_Base from "../Scene_Base";
@@ -822,6 +823,10 @@ const Scene_Game: FunctionalComponent = () => {
 						unblock();
 					}));
 				}
+				break;
+
+			case "command":
+				ScriptCommand.run(s.command, s.args);
 				break;
 		}
 	}, [script, scriptRun]);

@@ -112,11 +112,16 @@ interface ScriptLine_Filter_Picture extends ScriptLine_Base {
 	values: Tuple<number, 20>;
 }
 type ScriptLine_Filter = ScriptLine_Filter_Char | ScriptLine_Filter_Picture;
+interface ScriptLine_Command extends ScriptLine_Base {
+	type: "command";
+	command: string;
+	args: ScriptArgument[];
+}
 
 export type ScriptLine = ScriptLine_Text | ScriptLine_Talk | ScriptLine_Clear | ScriptLine_Wait |
 	ScriptLine_Char | ScriptLine_BGM | ScriptLine_BGS | ScriptLine_SE | ScriptLine_BG | ScriptLine_Picture |
 	ScriptLine_Fade | ScriptLine_FX | ScriptLine_Selection | ScriptLine_Script | ScriptLine_Filter |
-	ScriptLine_Set | ScriptLine_If | ScriptLine_Title | ScriptLine_Chapter;
+	ScriptLine_Set | ScriptLine_If | ScriptLine_Title | ScriptLine_Chapter | ScriptLine_Command;
 
 export default class Script {
 	private _script: ScriptLine[] = [];
@@ -448,6 +453,16 @@ export default class Script {
 										values,
 									};
 							}
+
+						case "command":
+							if (args.length < 1)
+								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
+
+							return {
+								type: "command",
+								command: args[0].toString(),
+								args: args.slice(1),
+							};
 
 						default:
 							throw new Error(`Failed to parse script line, invalid command "${cmd}"`);

@@ -1,0 +1,7 @@
+@command set 
+
+# 모든 컬렉션 요소 해금
+@command unlock-all
+
+# 타이틀 화면으로 이동
+@command title

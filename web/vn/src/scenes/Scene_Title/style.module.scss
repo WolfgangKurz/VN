@@ -5,6 +5,10 @@
 		opacity: 0;
 	}
 
+	.BG > * {
+		position: absolute;
+	}
+
 	.Logo {
 		top: 40px;
 		left: (1200px - 857px); // 1200px, anchor x = 1

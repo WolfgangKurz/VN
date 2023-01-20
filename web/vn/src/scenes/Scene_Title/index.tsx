@@ -45,10 +45,11 @@ const Scene_Title: FunctionalComponent = () => {
 	}, []);
 
 	return <Scene_Base id={ style.Scene_Title } data-phase={ phase.value.join(",") }>
-		<img
-			class={ style.BG }
-			src="/BG/BG_Title.png"
-		/>
+		<div class={ style.BG }>
+			<img src="/BG/BG_Title.png" />
+			<img src="/BG/BG_Title1.png" />
+		</div>
+
 		<img
 			class={ style.Logo }
 			src="/IMG/logo1.png"
