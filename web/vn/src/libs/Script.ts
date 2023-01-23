@@ -163,7 +163,7 @@ export default class Script {
 					buffer += c;
 			} else if (c === " ") { // part end
 				if (pc !== " ") { // countinue part end char
-					if (/^[0-9]+(\.[0-9]+)?$/.test(buffer))
+					if (/^-?[0-9]+(\.[0-9]+)?$/.test(buffer))
 						ret.push(parseFloat(buffer));
 					else
 						ret.push(buffer);
@@ -176,7 +176,7 @@ export default class Script {
 			pc = c;
 		}
 
-		if (/^[0-9]+(\.[0-9]+)?$/.test(buffer))
+		if (/^-?[0-9]+(\.[0-9]+)?$/.test(buffer))
 			ret.push(parseFloat(buffer));
 		else
 			ret.push(buffer);
