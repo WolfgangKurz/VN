@@ -34,7 +34,8 @@ const Scene_Title: FunctionalComponent = () => {
 		});
 
 		const bgm = new ManagedAudio(true);
-		bgm.load("/BGM/title_first.mp3", true);
+		bgm.load("/BGM/title_first.mp3");
+		bgm.play();
 		setBGM(bgm);
 
 		return () => {

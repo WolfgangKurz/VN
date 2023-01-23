@@ -321,27 +321,28 @@ const Scene_Game: FunctionalComponent = () => {
 							}
 						} else {
 							bgm.load(src);
+							bgm.play().then(() => {
+								if (s.fadeDuration > 0) {
+									if (scriptLoading) {
+										bgm.fadeIn(0);
+										return unblock();
+									}
+									bgm.fadeIn(s.fadeDuration * 1000);
 
-							bgm.play();
-							if (s.fadeDuration > 0) {
-								if (scriptLoading) {
-									bgm.fadeIn(0);
+									if (!s.wait)
+										unblock();
+									else
+										addBlock(Wait(s.fadeDuration * 1000, () => unblock()));
+									return;
+								} else
 									return unblock();
-								}
-								bgm.fadeIn(s.fadeDuration * 1000);
-
-								if (!s.wait)
-									unblock();
-								else
-									addBlock(Wait(s.fadeDuration * 1000, () => unblock()));
-								return;
-							} else
-								return unblock();
+							});
 						}
 					}
 
-					if (s.name !== "-") bgm.play();
-					return unblock();
+					if (s.name !== "-")
+						bgm.play().then(() => unblock());
+					return;
 				}
 			case "bgs":
 				if (!bgs) {
@@ -373,27 +374,28 @@ const Scene_Game: FunctionalComponent = () => {
 							}
 						} else {
 							bgs.load(src);
+							bgs.play().then(() => {
+								if (s.fadeDuration > 0) {
+									if (scriptLoading) {
+										bgs.fadeIn(0);
+										return unblock();
+									}
+									bgs.fadeIn(s.fadeDuration * 1000);
 
-							bgs.play();
-							if (s.fadeDuration > 0) {
-								if (scriptLoading) {
-									bgs.fadeIn(0);
+									if (!s.wait)
+										unblock();
+									else
+										addBlock(Wait(s.fadeDuration * 1000, () => unblock()));
+									return;
+								} else
 									return unblock();
-								}
-								bgs.fadeIn(s.fadeDuration * 1000);
-
-								if (!s.wait)
-									unblock();
-								else
-									addBlock(Wait(s.fadeDuration * 1000, () => unblock()));
-								return;
-							} else
-								return unblock();
+							});
 						}
 					}
 
-					if (s.name !== "-") bgs.play();
-					return unblock();
+					if (s.name !== "-")
+						bgs.play().then(() => unblock());
+					return;
 				}
 			case "se":
 				{
@@ -404,7 +406,8 @@ const Scene_Game: FunctionalComponent = () => {
 						});
 					} else {
 						const se = new ManagedAudio(false);
-						se.load(`/SE/${s.name}.mp3`, true);
+						se.load(`/SE/${s.name}.mp3`);
+						se.play();
 
 						setSEs(l => {
 							const arr: ManagedAudio[] = [];

@@ -2,7 +2,7 @@ import config from "@/config";
 
 export default class ManagedAudio {
 	private _isBGM: boolean;
-	private _fading = false;
+	private _fading: number | null = null;
 	private _audio: HTMLAudioElement;
 	private _src: string;
 
@@ -43,18 +43,18 @@ export default class ManagedAudio {
 		this._volUnsub();
 	}
 
-	public load (src: string, play?: boolean) {
+	public load (src: string) {
 		this._audio.src = this._src = src;
 
 		const _vol = (this._isBGM ? config.volume_BGM.peek() : config.volume_SFX.peek()) / 100;
 		this._audio.volume = _vol;
-
-		if (play) this._audio.play();
 	}
 
-	public play () {
+	public play (): Promise<void> {
 		if (this._audio.paused)
-			this._audio.play();
+			return this._audio.play();
+
+		return Promise.resolve();
 	}
 
 	public pause () {
@@ -94,24 +94,31 @@ export default class ManagedAudio {
 	}
 
 	public fadeSkip () {
-		this._fading = false;
+		if (this._fading !== null) {
+			window.clearInterval(this._fading);
+			this._fading = null;
+		}
 	}
 
 	protected fade (duration: number, is_out: boolean) {
 		if (this._fading) {
-			console.warn("[ManagedAudio] Already fading");
+			console.warn("[ManagedAudio] Already fading, recreate fading");
+			this.fadeSkip();
 			return;
 		}
-		this._fading = true;
 
 		const begin = Date.now();
 		const _vol = (this._isBGM ? config.volume_BGM.peek() : config.volume_SFX.peek()) / 100;
-		const interval = setInterval(() => {
+		this._fading = window.setInterval(() => {
 			const p = Math.min(1, (Date.now() - begin) / duration);
+
 			if (p >= 1 || !this._fading) {
 				this._audio.volume = (is_out ? 0 : 1) * _vol;
-				this._fading = false;
-				clearInterval(interval);
+
+				if (this._fading !== null) {
+					window.clearInterval(this._fading);
+					this._fading = null;
+				}
 			}
 
 			this._audio.volume = (is_out ? 1 - p : p) * _vol;
