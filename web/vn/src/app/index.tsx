@@ -37,9 +37,12 @@ const App: FunctionalComponent = () => {
 
 				config.volatile_LoadingText.value = r.loading;
 
-				await RequireSprite("UI/sprite.png");
-				await RequireSprite("Option/sprite.png");
-				await RequireSprite("SaveLoad/sprite.png");
+				await Promise.all([
+					RequireSprite("UI/sprite.png"),
+					RequireSprite("Option/sprite.png"),
+					RequireSprite("SaveLoad/sprite.png"),
+					RequireSprite("Collection/sprite.png"),
+				]);
 
 				config.volatile_Scene.value = "Scene_Title";
 				// config.volatile_Scene.value = "Scene_Game";
