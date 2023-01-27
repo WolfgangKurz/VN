@@ -77,7 +77,7 @@ const config = {
 	session_Data: signal<Session<SessionStorage>>(new Session({})),
 
 	// settings
-	volume_SFX: signal<number>(clamp(asInteger(configData["volume.sfx"], 100), 0, 100)),
+	volume_SFX: signal<number>(clamp(asInteger(configData["volume.sfx"], 75), 0, 100)),
 	volume_BGM: signal<number>(clamp(asInteger(configData["volume.bgm"], 100), 0, 100)),
 	text_Speed: signal<number>(clamp(asInteger(configData["text.speed"], 100), 0, 2)), // 0-slow, 1-regular, 2-fast
 };
