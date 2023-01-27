@@ -1,5 +1,25 @@
+@keyframes star-fx {
+	from {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.35;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
 #Scene_Title {
-	.BG,
+	.StarFX {
+		animation-name: star-fx;
+		animation-duration: 3s;
+		animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+		animation-iteration-count: infinite;
+		animation-fill-mode: both;
+		mix-blend-mode: overlay;
+	}
+
 	.Logo,
 	.ButtonLayer {
 		opacity: 0;
@@ -11,7 +31,7 @@
 
 	.Logo {
 		top: 40px;
-		left: (1200px - 857px); // 1200px, anchor x = 1
+		left: (1200px - 807px); // 1200px, anchor x = 1
 	}
 	.ButtonLayer {
 		left: 50px;
@@ -31,15 +51,15 @@
 		height: 100%;
 
 		background-color: #000;
-		opacity: 0;
+		opacity: 1;
 		pointer-events: none;
 		z-index: 90000;
 	}
 
 	&[data-phase*="title"] {
-		.BG {
+		.BlackScreen {
 			transition: opacity 2s linear;
-			opacity: 1;
+			opacity: 0;
 		}
 	}
 	&[data-phase*="logo"] {

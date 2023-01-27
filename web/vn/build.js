@@ -83,7 +83,7 @@ const nwjsJson = JSON.stringify({
 	},
 	"nwjs-packager": {
 		nwVersion: "stable",
-		nwFlavor: "normal",
+		nwFlavor: "sdk",
 		appFriendlyName: "VN",
 		appWinIcon: "icon.ico",
 		files: ["./**"],

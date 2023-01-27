@@ -1,0 +1,378 @@
+.CollectionWindow {
+	.BackButton {
+		left: (1280px - 114px);
+		top: 12px;
+	}
+
+	.SD {
+		right: 3px;
+		bottom: 0;
+		opacity: 1;
+	}
+
+	.Buttons {
+		left: 100px;
+		top: (10px + 110px + math.div(720px - 20px - 110px, 2));
+		transform: translate(0, -50%);
+
+		.Button + .Button {
+			margin-top: 40px;
+		}
+	}
+
+	.CursorLeft {
+		left: 50px;
+		top: 380px;
+	}
+	.CursorRight {
+		right: 50px;
+		top: 380px;
+	}
+
+	&.CollectionIllust {
+		.CursorLeft {
+			left: 20px;
+		}
+		.CursorRight {
+			right: 20px;
+		}
+	}
+
+	.Events {
+		left: 162px;
+		top: 211px;
+
+		> .Item {
+			position: absolute;
+			width: 289px;
+			height: 175px;
+			cursor: pointer;
+
+			@for $i from 1 through 6 {
+				&:nth-child(#{$i}) {
+					$x: (($i - 1) % 3);
+					$y: math.floor(math.div($i - 1, 3));
+
+					left: $x * 325px;
+					top: $y * 212px;
+				}
+			}
+
+			> img.Hover {
+				position: absolute;
+				display: none;
+				left: -10px;
+				top: -10px;
+				z-index: 1;
+			}
+
+			> img.Entity {
+				position: relative;
+				width: 289px;
+				height: 175px;
+				object-fit: cover;
+				z-index: 2;
+			}
+
+			> img.Cover {
+				position: absolute;
+				left: 0;
+				top: 0;
+				z-index: 3;
+			}
+
+			&:hover {
+				> img.Hover {
+					display: block;
+				}
+			}
+		}
+	}
+	.EventSelected {
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 10;
+
+		transition: opacity 0.25s linear;
+		pointer-events: none;
+		opacity: 0;
+
+		&.Display {
+			pointer-events: auto;
+			opacity: 1;
+			cursor: url("/cursor/back.svg") 8 12, pointer;
+		}
+	}
+
+	.Chars {
+		left: 120px;
+		top: 195px;
+
+		> .Item {
+			position: absolute;
+			height: (356px + 76px);
+			cursor: pointer;
+
+			@for $i from 1 through 4 {
+				&:nth-child(#{$i}) {
+					left: (($i - 1) * 266px);
+				}
+			}
+
+			> img {
+				pointer-events: none;
+			}
+
+			> .Button {
+				position: absolute;
+				left: 0;
+				top: 356px;
+				z-index: 1;
+
+				&.Active {
+					display: none;
+				}
+			}
+			&:active > .Button.Active {
+				display: block;
+			}
+
+			.CharName {
+				position: absolute;
+				top: (356px + math.div(76px, 2));
+				left: 50%;
+				font-size: 24px;
+				color: #fdf9cf;
+				transform: translate(-50%, -50%);
+				z-index: 1;
+			}
+
+			.SCG {
+				position: absolute;
+				left: 50%;
+				top: 15px;
+				height: (356px + 10px - 15px); // box height + bottom overflow - top
+				transform: translate(-50%, 0);
+
+				$grad: linear-gradient(to bottom, #000 calc(100% - 40px), transparent calc(100% - 10px));
+				-webkit-mask-box-image: $grad;
+				mask-image: $grad;
+			}
+
+			&.NotSeen {
+				cursor: not-allowed;
+				&:active > .Button.Active {
+					display: none !important;
+				}
+				.CharName {
+					opacity: 0.1;
+				}
+				.SCG {
+					filter: url(#locked-filter);
+					opacity: 0.5;
+				}
+			}
+		}
+	}
+
+	.TitleText {
+		left: 11px;
+		top: 11px;
+
+		> svg {
+			letter-spacing: 2px;
+			font-weight: bold;
+			font-size: 42px;
+			fill: #f9f1bd;
+		}
+	}
+
+	.Faces {
+		left: 56px;
+		top: 180px;
+
+		> .Item {
+			position: absolute;
+			width: 172px;
+			height: 62px;
+			cursor: pointer;
+
+			@for $i from 1 through 12 {
+				&:nth-child(#{$i}) {
+					left: (20px + (($i - 1) % 2) * 185px);
+					top: (19px + math.floor(math.div($i - 1, 2)) * 75px);
+				}
+			}
+
+			.Selected {
+				position: absolute;
+				left: -10px;
+				top: -11px;
+				z-index: 1;
+			}
+
+			> .Button {
+				position: absolute;
+				left: -3px;
+				top: -4px;
+				z-index: 2;
+
+				&.Active {
+					display: none;
+				}
+			}
+			&:active > .Button.Active {
+				display: block;
+			}
+
+			.FaceName {
+				$x: math.div(172px, 2);
+				$y: math.div(62px, 2);
+				position: absolute;
+				font-size: 24px;
+				color: #dcc98b;
+				z-index: 2;
+
+				transform: translate($x, $y) translate(-50%, -50%);
+			}
+
+			&.NotSeen {
+				cursor: not-allowed;
+				&:active > .Button.Active {
+					display: none !important;
+				}
+				.FaceName {
+					opacity: 0.1;
+				}
+			}
+		}
+	}
+
+	.CursorUp {
+		left: (56px + 20px + math.div(357px, 2) - math.div(61px, 2));
+		top: (180px - 32px - 5px);
+	}
+	.CursorDown {
+		left: (56px + 20px + math.div(357px, 2) - math.div(61px, 2));
+		top: (180px + 437px + 38px + 5px);
+	}
+
+	.SCGBox {
+		left: 495px;
+		top: 137px;
+		width: 751px;
+		height: 553px;
+		overflow: hidden;
+
+		> .SCG {
+			position: absolute;
+			left: 50%;
+			top: 0;
+			height: calc(100% + 20px);
+			object-fit: contain;
+			transform: translate(-50%, 0);
+		}
+	}
+
+	.MusicBox {
+		left: 188px;
+		top: 210px;
+	}
+	.PlayingTitle {
+		left: 188px;
+		top: 210px + 48px;
+		width: 902px;
+		transform: translate(0, -50%);
+		text-align: center;
+		font-family: "NanumMyeongjo", serif;
+		font-weight: bold;
+		font-size: 36px;
+		color: #fff;
+	}
+	.MusicSprite {
+		left: (188px + 902px - 80px - 70px);
+		top: (210px + 28px);
+		cursor: default;
+	}
+
+	.PageDisplay {
+		left: (186px + 902px - 333px);
+		top: (208px + 417px - 50px);
+		letter-spacing: 10px;
+		font-weight: bold;
+		font-size: 20px;
+		transform: translate(-50%, -50%);
+	}
+
+	.PageLeft {
+		left: (186px + 902px - 223px);
+		top: (208px + 417px - 55px - 25px);
+	}
+	.PageRight {
+		left: (186px + 902px - 123px);
+		top: (208px + 417px - 55px - 25px);
+	}
+
+	.Musics {
+		left: 201px;
+		top: 318px;
+
+		> .Item {
+			position: absolute;
+			width: 423px;
+			height: 64px;
+			cursor: pointer;
+
+			@for $i from 1 through 7 {
+				&:nth-child(#{$i}) {
+					left: (8px + (($i - 1) % 2) * 432px);
+					top: (7px + math.floor(math.div($i - 1, 2)) * 70px);
+				}
+			}
+
+			> img {
+				position: absolute;
+				left: 0;
+				top: 0;
+			}
+
+			.Selected {
+				left: -16px;
+				top: -16px;
+			}
+			> .Active {
+				display: none;
+			}
+			&:active > .Active {
+				display: block;
+			}
+
+			.BGMName {
+				$x: math.div(423px, 2);
+				$y: math.div(64px, 2);
+
+				position: absolute;
+				font-family: "NanumMyeongjo", serif;
+				font-weight: bold;
+				font-size: 20px;
+				color: #898180;
+
+				transform: translate($x, $y) translate(-50%, -50%);
+			}
+
+			&.NotSeen {
+				cursor: not-allowed;
+
+				> .Active {
+					display: none !important;
+				}
+
+				.BGMName {
+					opacity: 0.5;
+				}
+			}
+		}
+	}
+}

@@ -3,6 +3,8 @@ import { useEffect, useState } from "preact/hooks";
 import config from "@/config";
 import Loader, { LoaderProps } from "@/loader";
 
+import { PrepareCollections } from "@/libs/Collection";
+
 import SpriteImage from "@/components/SpriteImage";
 
 import "./style.scss";
@@ -42,6 +44,7 @@ const App: FunctionalComponent = () => {
 					RequireSprite("Option/sprite.png"),
 					RequireSprite("SaveLoad/sprite.png"),
 					RequireSprite("Collection/sprite.png"),
+					PrepareCollections(),
 				]);
 
 				config.volatile_Scene.value = "Scene_Title";

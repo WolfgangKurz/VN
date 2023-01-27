@@ -4,6 +4,7 @@ import config from "@/config";
 
 import Wait from "@/libs/Wait";
 import { BuildClass } from "@/libs/ClassName";
+import Preloader from "@/libs/Preloader";
 
 import SpriteImage from "@/components/SpriteImage";
 import SpriteButton from "@/components/SpriteButton";
@@ -20,8 +21,10 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 	const [display, setDisplay] = useState(false);
 
 	useEffect(() => {
-		SpriteImage.load("Option/sprite.png")
-			.then(() => setLoaded(true));
+		Promise.all([
+			Preloader.image("/BG/BG_Option.png"),
+			SpriteImage.load("Option/sprite.png"),
+		]).then(() => setLoaded(true));
 	}, []);
 
 	useEffect(() => {

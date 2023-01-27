@@ -2,13 +2,13 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "preac
 import { batch } from "@preact/signals";
 
 import SimpleBar from "simplebar-react";
-import SimpleBarCore from "simplebar-core";
 import "simplebar-react/dist/simplebar.min.css";
 
 import config from "@/config";
 
 import { Matrix4x5Identity } from "@/types/Matrix";
 
+import GlobalStorage from "@/libs/GlobalStorage";
 import { TRANSPARENT } from "@/libs/Const";
 import { BuildClass } from "@/libs/ClassName";
 import Wait, { WaitData } from "@/libs/Wait";
@@ -138,6 +138,7 @@ const Scene_Game: FunctionalComponent = () => {
 	};
 
 	const tryNext = useCallback(() => {
+		if (!script) return; // 스크립트를 불러오기 전 or 불러오는 중
 		if (hideUI) {
 			setHideUI(false);
 			return;
@@ -151,6 +152,16 @@ const Scene_Game: FunctionalComponent = () => {
 		} else
 			unblock();
 	}, [script, textState, hideUI]);
+
+	//////////////////////////////
+
+	function sessionSeen (type: "bgm" | "pic" | "char", name: string) {
+		const arr = GlobalStorage.Instance.seen[type];
+		if (!arr.includes(name)) {
+			arr.push(name);
+			GlobalStorage.Instance.Save();
+		}
+	}
 
 	//////////////////////////////
 
@@ -340,8 +351,10 @@ const Scene_Game: FunctionalComponent = () => {
 						}
 					}
 
-					if (s.name !== "-")
+					if (s.name !== "-") {
+						sessionSeen("bgm", s.name);
 						bgm.play().then(() => unblock());
+					}
 					return;
 				}
 			case "bgs":
@@ -577,14 +590,19 @@ const Scene_Game: FunctionalComponent = () => {
 				break;
 
 			case "set":
-				console.log("Session var set, " + s.name + " -> " + s.value);
-				config.session_Data.peek().set(s.name, s.value);
-				unblock();
+				{
+					const _session = config.session_Data.peek();
+					_session.data[s.name] = s.value;
+
+					console.log("Session var set, " + s.name + " -> " + s.value);
+					unblock();
+				}
 				break;
 
 			case "if":
 				{
-					const v = config.session_Data.peek().get(s.var) || ""; // 값이 지정되지 않았으면 빈 문자열로 취급
+					const _session = config.session_Data.peek();
+					const v = _session.data[s.var] || ""; // 값이 지정되지 않았으면 빈 문자열로 취급
 					if (s.conds.some(r => {
 						if (r.value === v) { // 일치하는 경우
 							batch(() => {
@@ -666,6 +684,8 @@ const Scene_Game: FunctionalComponent = () => {
 					if (s.name === "-")
 						removeAt(s.position, s.fxDuration);
 					else {
+						sessionSeen("char", s.name);
+
 						const src = `/IMG/SCG/${s.name}.png`;
 						if (chars.some(c => c.pos === s.position && c.state <= 2 && c.src === src)) // 표시될/표시중인 동일한 캐릭터가 존재
 							return unblock();
@@ -730,6 +750,9 @@ const Scene_Game: FunctionalComponent = () => {
 						return pics;
 					});
 				} else {
+					if (!s.name.includes(".."))
+						sessionSeen("pic", s.name);
+
 					setPics(_pics => {
 						const pics = [..._pics];
 
@@ -945,8 +968,8 @@ const Scene_Game: FunctionalComponent = () => {
 
 	useEffect(() => { // Global effect register
 		const fn = (e: KeyboardEvent) => {
-			if (selection.length > 0)
-				return; // Selection exists
+			if (selection.length > 0 || script?.current()?.type === "sel")
+				return; // Selection
 
 			if (e.key === "Enter" || e.key === " ") {
 				if (!e.repeat)

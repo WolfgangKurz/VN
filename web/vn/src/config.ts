@@ -4,6 +4,8 @@ import NodePATH from "node:path";
 import debounce from "lodash.debounce";
 import { signal } from "@preact/signals";
 
+import SessionStorage from "./types/SessionStorage";
+
 import Session from "./libs/Session";
 import { __dirname } from "./libs/Const";
 
@@ -59,6 +61,8 @@ const config = {
 	// volatile variables
 	volatile_LoadingText: signal<string>(""),
 
+	volatile_TitleBGMPause: signal(false),
+
 	volatile_Scene: signal<string>(""),
 
 	volatile_Script: signal<string>(""),
@@ -70,7 +74,7 @@ const config = {
 	volatile_Title: signal<string>(""),
 
 	// session
-	session_Data: signal<Session>(new Session()),
+	session_Data: signal<Session<SessionStorage>>(new Session({})),
 
 	// settings
 	volume_SFX: signal<number>(clamp(asInteger(configData["volume.sfx"], 100), 0, 100)),

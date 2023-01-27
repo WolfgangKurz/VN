@@ -11,6 +11,7 @@ import { __dirname } from "@/libs/Const";
 import Wait from "@/libs/Wait";
 import { BuildClass } from "@/libs/ClassName";
 import SaveData from "@/libs/SaveData";
+import Preloader from "@/libs/Preloader";
 
 import SpriteImage from "@/components/SpriteImage";
 import SpriteButton from "@/components/SpriteButton";
@@ -33,8 +34,11 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 	const [display, setDisplay] = useState(false);
 
 	useEffect(() => {
-		SpriteImage.load("SaveLoad/sprite.png")
-			.then(() => setLoaded(true));
+		Promise.all([
+			Preloader.image("/BG/BG_Save.png"),
+			Preloader.image("/BG/BG_Load.png"),
+			SpriteImage.load("SaveLoad/sprite.png"),
+		]).then(() => setLoaded(true));
 	}, []);
 
 	useEffect(() => {

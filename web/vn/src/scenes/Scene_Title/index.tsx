@@ -10,21 +10,64 @@ import ManagedAudio from "@/libs/ManagedAudio";
 import SpriteButton from "@/components/SpriteButton";
 
 import Scene_Base from "../Scene_Base";
-import Window_Option from "@/windows/Window_Option";
 import Window_SaveLoad from "@/windows/Window_SaveLoad";
+import Window_Collection from "@/windows/Window_Collection";
+import Window_Option from "@/windows/Window_Option";
 
 import style from "./style.module.scss";
+
+interface TitleStarFX {
+	x: number;
+	y: number;
+	s: number;
+	t: number;
+}
 
 const Scene_Title: FunctionalComponent = () => {
 	const phase = useSignal<string[]>([]);
 	const [subwindow, setSubwindow] = useState<preact.VNode | undefined>(undefined);
 	const [bgm, setBGM] = useState<ManagedAudio | undefined>(undefined);
 
+	const [titleStars] = useState<TitleStarFX[]>(() => {
+		const r2 = () => Math.random() * 2;
+		return [
+			{ x: 116, y: 79, s: 0.67, t: r2() },
+			{ x: 22, y: 160, s: 0.63, t: r2() },
+			{ x: 185, y: 143, s: 1.12, t: r2() },
+			{ x: 126, y: 236, s: 1.05, t: r2() },
+			{ x: 382, y: 66, s: 1.21, t: r2() },
+			{ x: 396, y: 190, s: 0.77, t: r2() },
+			{ x: 312, y: 287, s: 0.7, t: r2() },
+			{ x: 577, y: 377, s: 0.54, t: r2() },
+			{ x: 723, y: 217, s: 1.33, t: r2() },
+			{ x: 881, y: 43, s: 0.75, t: r2() },
+			{ x: 1173, y: 58, s: 1.12, t: r2() },
+		];
+	});
+
 	const addPhase = useCallback((p: string): void => {
 		const list = [...phase.value];
 		list.push(p);
 		phase.value = list;
 	}, [phase]);
+
+	useEffect(() => {
+		if (!bgm) return;
+
+		const unsub = config.volatile_TitleBGMPause.subscribe(pause => {
+			if (pause) {
+				if (bgm.playing) {
+					bgm.fadeOut(500);
+					Wait(500, () => bgm.pause());
+				}
+			} else {
+				if (!bgm.playing)
+					bgm.play().then(() => bgm.fadeIn(500));
+			}
+		});
+
+		return () => unsub();
+	}, [bgm]);
 
 	useEffect(() => {
 		addPhase("title"); // Title fade-in
@@ -34,7 +77,7 @@ const Scene_Title: FunctionalComponent = () => {
 		});
 
 		const bgm = new ManagedAudio(true);
-		bgm.load("/BGM/title_first.mp3");
+		bgm.load("/BGM/Title1.mp3");
 		bgm.play();
 		setBGM(bgm);
 
@@ -53,6 +96,30 @@ const Scene_Title: FunctionalComponent = () => {
 			class={ style.Logo }
 			src="/IMG/logo1.png"
 		/>
+
+		{ titleStars.map(l => <>
+			<img
+				class={ style.StarFX }
+				src="/IMG/FX/star.png"
+				style={ {
+					left: `${l.x}px`,
+					top: `${l.y}px`,
+					animationDelay: `${l.t}s`,
+					transform: `translate(-50%, -50%) scale(${l.s * 1.7})`,
+				} }
+			/>
+			<img
+				class={ style.StarFX }
+				src="/IMG/FX/star.png"
+				style={ {
+					left: `${l.x}px`,
+					top: `${l.y}px`,
+					animationDelay: `${l.t}s`,
+					transform: `translate(-50%, -50%) scale(${l.s * 2.2})`,
+					filter: "opacity(0.4)",
+				} }
+			/>
+		</>) }
 
 		<div class={ style.ButtonLayer }>
 			{ ["start", "load", "collection", "option"].map(k =>
@@ -86,6 +153,11 @@ const Scene_Title: FunctionalComponent = () => {
 									isSave={ false }
 									canSave={ false }
 
+									onClose={ () => setSubwindow(undefined) }
+								/>);
+								break;
+							case "collection":
+								setSubwindow(<Window_Collection
 									onClose={ () => setSubwindow(undefined) }
 								/>);
 								break;

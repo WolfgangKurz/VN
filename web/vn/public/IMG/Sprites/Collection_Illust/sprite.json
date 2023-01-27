@@ -35,27 +35,51 @@
 		"w": 178,
 		"h": 69
 	},
-	"illuplus_bd_1.png": {
+	"tb_left_1.png": {
 		"x": 181,
 		"y": 437,
-		"w": 61,
-		"h": 32
+		"w": 68,
+		"h": 65
 	},
-	"illuplus_bd_2.png": {
-		"x": 181,
-		"y": 471,
-		"w": 61,
-		"h": 32
+	"tb_left_2.png": {
+		"x": 432,
+		"y": 162,
+		"w": 68,
+		"h": 65
 	},
-	"illuplus_bu_1.png": {
+	"tb_right_1.png": {
+		"x": 252,
+		"y": 233,
+		"w": 68,
+		"h": 65
+	},
+	"tb_right_2.png": {
+		"x": 322,
+		"y": 233,
+		"w": 68,
+		"h": 65
+	},
+	"illuplus_bd_1.png": {
 		"x": 446,
 		"y": 79,
 		"w": 61,
 		"h": 32
 	},
-	"illuplus_bu_2.png": {
+	"illuplus_bd_2.png": {
 		"x": 446,
 		"y": 113,
+		"w": 61,
+		"h": 32
+	},
+	"illuplus_bu_1.png": {
+		"x": 392,
+		"y": 233,
+		"w": 61,
+		"h": 32
+	},
+	"illuplus_bu_2.png": {
+		"x": 252,
+		"y": 300,
 		"w": 61,
 		"h": 32
 	}
