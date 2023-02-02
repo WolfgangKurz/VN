@@ -5,6 +5,7 @@ import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 
 import config from "@/config";
+import { static_PlayUISE } from "@/static";
 
 import { Matrix4x5Identity } from "@/types/Matrix";
 
@@ -972,8 +973,10 @@ const Scene_Game: FunctionalComponent = () => {
 				return; // Selection
 
 			if (e.key === "Enter" || e.key === " ") {
-				if (!e.repeat)
+				if (!e.repeat) {
+					static_PlayUISE("dialog");
 					tryNext();
+				}
 			} else if (e.key === "Control")
 				tryNext(); // keep run
 		};
@@ -1037,6 +1040,7 @@ const Scene_Game: FunctionalComponent = () => {
 				if (e.target && (e.target instanceof Element) && (e.target.matches(`.${style.Selection}`) || e.target.matches(`.${style.Sel}`)))
 					return; // Selection click
 
+				static_PlayUISE("dialog");
 				tryNext();
 			} }
 		>
@@ -1136,6 +1140,7 @@ const Scene_Game: FunctionalComponent = () => {
 						e.preventDefault();
 						e.stopPropagation();
 
+						static_PlayUISE("stop");
 						setHistoryDisplay(true);
 					} }
 				/>
@@ -1146,6 +1151,8 @@ const Scene_Game: FunctionalComponent = () => {
 					onClick={ e => {
 						e.preventDefault();
 						e.stopPropagation();
+
+						static_PlayUISE("stop");
 					} }
 				/>
 				<SpriteButton
@@ -1156,6 +1163,7 @@ const Scene_Game: FunctionalComponent = () => {
 						e.preventDefault();
 						e.stopPropagation();
 
+						static_PlayUISE("stop");
 						SetSaveLoadWindow(true);
 					} }
 				/>
@@ -1167,6 +1175,7 @@ const Scene_Game: FunctionalComponent = () => {
 						e.preventDefault();
 						e.stopPropagation();
 
+						static_PlayUISE("stop");
 						SetSaveLoadWindow(false);
 					} }
 				/>
@@ -1178,6 +1187,7 @@ const Scene_Game: FunctionalComponent = () => {
 						e.preventDefault();
 						e.stopPropagation();
 
+						static_PlayUISE("stop");
 						setHideUI(true);
 					} }
 				/>
@@ -1192,6 +1202,7 @@ const Scene_Game: FunctionalComponent = () => {
 								e.preventDefault();
 								e.stopPropagation();
 
+								static_PlayUISE("click");
 								setHistory(prev => [...prev, {
 									selections: selection.map(r => r.display),
 									selected: id,
@@ -1286,6 +1297,7 @@ const Scene_Game: FunctionalComponent = () => {
 				e.preventDefault();
 				e.stopPropagation();
 
+				static_PlayUISE("stop");
 				setSubwindow(<Window_Menu
 					onClose={ () => setSubwindow(null) }
 				/>);
@@ -1300,6 +1312,7 @@ const Scene_Game: FunctionalComponent = () => {
 				e.preventDefault();
 				e.stopPropagation();
 
+				static_PlayUISE("stop");
 				setSubwindow(<Window_Option
 					onClose={ () => setSubwindow(null) }
 				/>);

@@ -3,6 +3,7 @@ import NodePATH from "node:path";
 import { useEffect, useState } from "preact/hooks";
 
 import config from "@/config";
+import { static_PlayUISE } from "@/static";
 
 import { __dirname } from "@/libs/Const";
 import Wait from "@/libs/Wait";
@@ -10,6 +11,7 @@ import Preloader from "@/libs/Preloader";
 import { BuildClass } from "@/libs/ClassName";
 import ManagedAudio from "@/libs/ManagedAudio";
 import { BGMNames, Lists as CollectionLists } from "@/libs/Collection";
+import GlobalStorage from "@/libs/GlobalStorage";
 
 import SpriteImage from "@/components/SpriteImage";
 import SpriteButton from "@/components/SpriteButton";
@@ -17,7 +19,6 @@ import SpriteButton from "@/components/SpriteButton";
 import Window_Base, { WindowBaseProps } from "../Window_Base";
 
 import style from "./style.module.scss";
-import GlobalStorage from "@/libs/GlobalStorage";
 
 interface WindowCollectionProps extends WindowBaseProps { }
 
@@ -94,6 +95,7 @@ const Window_CollectionMusic: FunctionalComponent<WindowCollectionProps> = (prop
 
 				config.volatile_TitleBGMPause.value = false;
 
+				static_PlayUISE("stop");
 				setDisplay(false);
 				Wait(500, () => { // window fadeout 0.5s
 					if (props.onClose) props.onClose();
@@ -129,6 +131,7 @@ const Window_CollectionMusic: FunctionalComponent<WindowCollectionProps> = (prop
 
 			onClick={ e => {
 				e.preventDefault();
+				static_PlayUISE("arrow");
 				setPage(page - 1);
 			} }
 		/> }
@@ -140,6 +143,7 @@ const Window_CollectionMusic: FunctionalComponent<WindowCollectionProps> = (prop
 
 			onClick={ e => {
 				e.preventDefault();
+				static_PlayUISE("arrow");
 				setPage(page + 1);
 			} }
 		/> }
@@ -151,7 +155,10 @@ const Window_CollectionMusic: FunctionalComponent<WindowCollectionProps> = (prop
 					onClick={ e => {
 						e.preventDefault();
 
-						if (!isSeen(r)) return;
+						if (!isSeen(r)) {
+							static_PlayUISE("arrow_disabled");
+							return;
+						}
 						setSelected(r);
 					} }
 				>

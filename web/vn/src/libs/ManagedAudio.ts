@@ -9,6 +9,8 @@ export default class ManagedAudio {
 	private _muteUnsub: () => void;
 	private _volUnsub: () => void;
 
+	public destroyAfterPlay: boolean = false;
+
 	constructor (is_bgm?: boolean) {
 		this._audio = new Audio();
 
@@ -31,6 +33,11 @@ export default class ManagedAudio {
 		this._audio.muted = config.volatile_Mute.value;
 		this._muteUnsub = config.volatile_Mute.subscribe(v => {
 			this._audio.muted = v;
+		});
+
+		this._audio.addEventListener("ended", () => {
+			if (!this._audio.loop && this.destroyAfterPlay)
+				this.destroy();
 		});
 	}
 

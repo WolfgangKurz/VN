@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from "preact/hooks";
 
+import { static_PlayUISE } from "@/static";
+
 import { __dirname } from "@/libs/Const";
 import Wait from "@/libs/Wait";
 import Preloader from "@/libs/Preloader";
@@ -64,6 +66,7 @@ const Window_Collection: FunctionalComponent<WindowCollectionProps> = (props) =>
 			onClick={ e => {
 				e.preventDefault();
 
+				static_PlayUISE("stop");
 				setDisplay(false);
 				Wait(500, () => { // window fadeout 0.5s
 					if (props.onClose) props.onClose();
@@ -88,8 +91,13 @@ const Window_Collection: FunctionalComponent<WindowCollectionProps> = (props) =>
 					"btn_event_hover4.png",
 				] }
 
+				onPointerEnter={ e => {
+					static_PlayUISE("hover");
+				} }
 				onClick={ e => {
 					e.preventDefault();
+
+					static_PlayUISE("click");
 					setSubwindow(<Window_CollectionEvent
 						onClose={ () => setSubwindow(undefined) }
 					/>);
@@ -107,8 +115,13 @@ const Window_Collection: FunctionalComponent<WindowCollectionProps> = (props) =>
 					"btn_illust_hover4.png",
 				] }
 
+				onPointerEnter={ e => {
+					static_PlayUISE("hover");
+				} }
 				onClick={ e => {
 					e.preventDefault();
+
+					static_PlayUISE("click");
 					setSubwindow(<Window_CollectionIllust
 						onClose={ () => setSubwindow(undefined) }
 					/>);
@@ -126,8 +139,13 @@ const Window_Collection: FunctionalComponent<WindowCollectionProps> = (props) =>
 					"btn_music_hover4.png",
 				] }
 
+				onPointerEnter={ e => {
+					static_PlayUISE("hover");
+				} }
 				onClick={ e => {
 					e.preventDefault();
+
+					static_PlayUISE("click");
 					setSubwindow(<Window_CollectionMusic
 						onClose={ () => setSubwindow(undefined) }
 					/>);

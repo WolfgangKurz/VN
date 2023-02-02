@@ -3,6 +3,7 @@ import { batch, useSignal } from "@preact/signals";
 
 import config from "@/config";
 import withToClassComponent from "@/loader/hoc";
+import { static_PlayUISE } from "@/static";
 
 import Wait from "@/libs/Wait";
 import ManagedAudio from "@/libs/ManagedAudio";
@@ -97,7 +98,7 @@ const Scene_Title: FunctionalComponent = () => {
 			src="/IMG/logo1.png"
 		/>
 
-		{ titleStars.map(l => <>
+		{ /* Star FX */ titleStars.map(l => <>
 			<img
 				class={ style.StarFX }
 				src="/IMG/FX/star.png"
@@ -130,9 +131,16 @@ const Scene_Title: FunctionalComponent = () => {
 					hover={ new Array(4).fill(0).map((_, i) => `btn_${k}_hover${i + 1}.png`) }
 
 					disabled={ phase.value.includes("exit") }
+
+					onPointerEnter={ e => {
+						static_PlayUISE("hover");
+					} }
+
 					onClick={ e => {
 						e.preventDefault();
 						if (phase.value.includes("exit")) return; // fading out
+
+						static_PlayUISE("click");
 
 						switch (k) {
 							case "start":

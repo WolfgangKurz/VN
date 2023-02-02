@@ -6,6 +6,7 @@ import { batch } from "@preact/signals-core";
 import html2canvas from "html2canvas";
 
 import config from "@/config";
+import { static_PlayUISE } from "@/static";
 
 import { __dirname } from "@/libs/Const";
 import Wait from "@/libs/Wait";
@@ -138,6 +139,7 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 			onClick={ e => {
 				e.preventDefault();
 
+				static_PlayUISE("stop");
 				setDisplay(false);
 				Wait(500, () => { // window fadeout 0.5s
 					if (props.onClose) props.onClose();
@@ -148,13 +150,18 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 		<SpriteButton
 			class={ BuildClass(style.ModeButton, style.Save, (!props.canSave || props.isSave) && style.Disabled) }
 			src="SaveLoad/sprite.png"
-			idle={ props.isSave ? "btn_save_down.png" : "btn_save.png" }
+			idle={ !props.canSave || props.isSave ? "btn_save_down.png" : "btn_save.png" }
 			disabled={ !props.canSave || props.isSave }
 
 			onClick={ e => {
 				e.preventDefault();
 
-				if (!props.canSave || props.isSave) return;
+				if (!props.canSave || props.isSave) {
+					static_PlayUISE("arrow_disabled");
+					return;
+				}
+				static_PlayUISE("arrow");
+
 				if (props.onModeChange)
 					props.onModeChange("save");
 			} }
@@ -168,7 +175,12 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 			onClick={ e => {
 				e.preventDefault();
 
-				if (!props.isSave) return;
+				if (!props.isSave) {
+					static_PlayUISE("arrow_disabled");
+					return;
+				}
+				static_PlayUISE("arrow");
+
 				if (props.onModeChange)
 					props.onModeChange("load");
 			} }
@@ -186,7 +198,12 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 				onClick={ e => {
 					e.preventDefault();
 
-					if (page === i) return;
+					if (page === i) {
+						static_PlayUISE("arrow_disabled");
+						return;
+					}
+
+					static_PlayUISE("arrow");
 					setPage(i);
 				} }
 			/>) }
@@ -203,11 +220,17 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 						e.stopPropagation();
 
 						if (props.isSave) {
+							static_PlayUISE("arrow");
+
 							doSave(i + page * 6)
 								.then(() => updateSaves());
 						} else {
-							if (!save) return;
-	
+							if (!save) {
+								static_PlayUISE("arrow_disabled");
+								return;
+							}
+
+							static_PlayUISE("arrow");
 							batch(() => {
 								config.volatile_Scene.value = "Scene_GameReady";
 								config.volatile_Script.value = save.script;

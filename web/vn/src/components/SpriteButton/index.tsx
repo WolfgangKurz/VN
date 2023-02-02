@@ -64,30 +64,39 @@ const SpriteButton: FunctionalComponent<JSX.HTMLAttributes<HTMLDivElement> & Spr
 		};
 	}, [state, timePerFrame, disabled, idle, hover, active]);
 
+	function proxy<T extends "onPointerEnter" | "onPointerDown" | "onPointerUp" | "onPointerLeave"> (this: any, ev: T, fn: JSX.PointerEventHandler<HTMLDivElement>) {
+		return (e: JSX.TargetedPointerEvent<HTMLDivElement>) => {
+			fn.call(this as never, e);
+
+			if (props[ev])
+				props[ev]!.call(this as never, e);
+		};
+	}
+
 	return <div
 		class={ BuildClass("sprite-button", style.SpriteButton, className) }
 		{ ...props }
 
-		onPointerEnter={ e => {
+		onPointerEnter={ proxy("onPointerEnter", e => {
 			setState(1);
-		} }
-		onPointerDown={ e => {
+		}) }
+		onPointerDown={ proxy("onPointerDown", e => {
 			e.preventDefault();
 
 			if (!buttonRef.current) return;
 			buttonRef.current.setPointerCapture(e.pointerId);
 
 			setState(2);
-		} }
-		onPointerUp={ e => {
+		}) }
+		onPointerUp={ proxy("onPointerUp", e => {
 			if (!buttonRef.current) return;
 			buttonRef.current.releasePointerCapture(e.pointerId);
 
 			setState(1);
-		} }
-		onPointerLeave={ e => {
+		}) }
+		onPointerLeave={ proxy("onPointerLeave", e => {
 			setState(0);
-		} }
+		}) }
 		ref={ buttonRef }
 	>
 		{ src && sprite

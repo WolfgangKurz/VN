@@ -1,6 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 
 import config from "@/config";
+import { static_PlayUISE } from "@/static";
 
 import Wait from "@/libs/Wait";
 import { BuildClass } from "@/libs/ClassName";
@@ -54,9 +55,13 @@ const Window_Menu: FunctionalComponent<WindowMenuProps> = (props) => {
 						"btn_menu_continue_hover4.png",
 					] }
 
+					onPointerEnter={ e => {
+						static_PlayUISE("hover");
+					} }
 					onClick={ e => {
 						e.preventDefault();
 
+						static_PlayUISE("click");
 						setDisplay(false);
 						Wait(500, () => { // window fadeout 0.5s
 							if (props.onClose) props.onClose();
@@ -74,9 +79,13 @@ const Window_Menu: FunctionalComponent<WindowMenuProps> = (props) => {
 						"btn_menu_quit_hover4.png",
 					] }
 
+					onPointerEnter={ e => {
+						static_PlayUISE("hover");
+					} }
 					onClick={ e => {
 						e.preventDefault();
 
+						static_PlayUISE("click");
 						setFade(true);
 						Wait(500, () => { // window fadeout 0.5s
 							config.volatile_Scene.value = "Scene_Title";

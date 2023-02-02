@@ -2,6 +2,8 @@ import NodePATH from "node:path";
 
 import { useEffect, useState } from "preact/hooks";
 
+import { static_PlayUISE } from "@/static";
+
 import { __dirname } from "@/libs/Const";
 import GlobalStorage from "@/libs/GlobalStorage";
 import Wait from "@/libs/Wait";
@@ -99,6 +101,7 @@ const Window_CollectionIllust: FunctionalComponent<WindowCollectionProps> = (pro
 			onClick={ e => {
 				e.preventDefault();
 
+				static_PlayUISE("stop");
 				setDisplay(false);
 				Wait(500, () => { // window fadeout 0.5s
 					if (props.onClose) props.onClose();
@@ -114,6 +117,7 @@ const Window_CollectionIllust: FunctionalComponent<WindowCollectionProps> = (pro
 
 			onClick={ e => {
 				e.preventDefault();
+				static_PlayUISE("arrow");
 				setPage(page - 1);
 			} }
 		/> }
@@ -125,6 +129,7 @@ const Window_CollectionIllust: FunctionalComponent<WindowCollectionProps> = (pro
 
 			onClick={ e => {
 				e.preventDefault();
+				static_PlayUISE("arrow");
 				setPage(page + 1);
 			} }
 		/> }
@@ -136,7 +141,12 @@ const Window_CollectionIllust: FunctionalComponent<WindowCollectionProps> = (pro
 					onClick={ e => {
 						e.preventDefault();
 
-						if (!isSeen(r)) return;
+						if (!isSeen(r)) {
+							static_PlayUISE("arrow_disabled");
+							return;
+						}
+
+						static_PlayUISE("arrow");
 						setSubwindow(<Window_CollectionIllust_Detail
 							char={ r }
 							onClose={ () => setSubwindow(undefined) }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 
 import config from "@/config";
+import { static_PlayUISE } from "@/static";
 
 import Wait from "@/libs/Wait";
 import { BuildClass } from "@/libs/ClassName";
@@ -52,6 +53,7 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 			onClick={ e => {
 				e.preventDefault();
 
+				static_PlayUISE("stop");
 				setDisplay(false);
 				Wait(500, () => { // window fadeout 0.5s
 					if (props.onClose) props.onClose();
@@ -98,7 +100,10 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 
 			onClick={ e => {
 				e.preventDefault();
-				config.text_Speed.value = 0;
+				if (config.text_Speed.peek() !== 0) {
+					static_PlayUISE("dialog");
+					config.text_Speed.value = 0;
+				}
 			} }
 		/>
 		<SpriteButton
@@ -108,7 +113,10 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 
 			onClick={ e => {
 				e.preventDefault();
-				config.text_Speed.value = 1;
+				if (config.text_Speed.peek() !== 1) {
+					static_PlayUISE("dialog");
+					config.text_Speed.value = 1;
+				}
 			} }
 		/>
 		<SpriteButton
@@ -118,7 +126,10 @@ const Window_Option: FunctionalComponent<WindowOptionProps> = (props) => {
 
 			onClick={ e => {
 				e.preventDefault();
-				config.text_Speed.value = 2;
+				if (config.text_Speed.peek() !== 2) {
+					static_PlayUISE("dialog");
+					config.text_Speed.value = 2;
+				}
 			} }
 		/>
 	</Window_Base>;

@@ -2,10 +2,14 @@ import NodePATH from "node:path";
 
 import { useEffect, useLayoutEffect, useState } from "preact/hooks";
 
+import { static_PlayUISE } from "@/static";
+
 import { __dirname } from "@/libs/Const";
 import Wait from "@/libs/Wait";
 import Preloader from "@/libs/Preloader";
 import { CharTypeNames, FaceTypeNames, Lists as CollectionLists } from "@/libs/Collection";
+import GlobalStorage from "@/libs/GlobalStorage";
+import { BuildClass } from "@/libs/ClassName";
 
 import SpriteImage from "@/components/SpriteImage";
 import SpriteButton from "@/components/SpriteButton";
@@ -13,8 +17,6 @@ import SpriteButton from "@/components/SpriteButton";
 import Window_Base, { WindowBaseProps } from "../Window_Base";
 
 import style from "./style.module.scss";
-import GlobalStorage from "@/libs/GlobalStorage";
-import { BuildClass } from "@/libs/ClassName";
 
 const path: typeof NodePATH = window.nw.require("path");
 
@@ -111,6 +113,7 @@ const Window_CollectionIllust_Detail: FunctionalComponent<WindowCollectionDetail
 			onClick={ e => {
 				e.preventDefault();
 
+				static_PlayUISE("stop");
 				setDisplay(false);
 				Wait(500, () => { // window fadeout 0.5s
 					if (props.onClose) props.onClose();
@@ -126,6 +129,7 @@ const Window_CollectionIllust_Detail: FunctionalComponent<WindowCollectionDetail
 
 			onClick={ e => {
 				e.preventDefault();
+				static_PlayUISE("arrow");
 				setPage(page - 1);
 			} }
 		/> }
@@ -137,6 +141,7 @@ const Window_CollectionIllust_Detail: FunctionalComponent<WindowCollectionDetail
 
 			onClick={ e => {
 				e.preventDefault();
+				static_PlayUISE("arrow");
 				setPage(page + 1);
 			} }
 		/> }
@@ -149,7 +154,12 @@ const Window_CollectionIllust_Detail: FunctionalComponent<WindowCollectionDetail
 					onClick={ e => {
 						e.preventDefault();
 
-						if (!isSeen(props.char + r)) return;
+						if (!isSeen(props.char + r)) {
+							static_PlayUISE("arrow_disabled");
+							return;
+						}
+
+						static_PlayUISE("arrow");
 						setSelected(parseFaceId(r));
 						setSelectedRaw(r);
 					} }
