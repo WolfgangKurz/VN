@@ -20,6 +20,7 @@ import SpriteButton from "@/components/SpriteButton";
 import Window_Base, { WindowBaseProps } from "../Window_Base";
 
 import style from "./style.module.scss";
+import Window_SaveLoadConfirm from "./Window_SaveLoadConfirm";
 
 interface WindowSaveLoadProps extends WindowBaseProps {
 	canSave: boolean;
@@ -33,6 +34,8 @@ interface WindowSaveLoadProps extends WindowBaseProps {
 const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 	const [loaded, setLoaded] = useState(false);
 	const [display, setDisplay] = useState(false);
+
+	const [subwindow, setSubwindow] = useState<preact.VNode | undefined>(undefined);
 
 	useEffect(() => {
 		Promise.all([
@@ -222,24 +225,39 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 						if (props.isSave) {
 							static_PlayUISE("arrow");
 
-							doSave(i + page * 6)
-								.then(() => updateSaves());
+							if (!save)
+								doSave(i + page * 6).then(() => updateSaves());
+							else {
+								setSubwindow(<Window_SaveLoadConfirm
+									isSave
+									onConfirm={ () => {
+										doSave(i + page * 6).then(() => updateSaves());
+									} }
+									onClose={ () => setSubwindow(undefined) }
+								/>);
+							}
 						} else {
 							if (!save) {
 								static_PlayUISE("arrow_disabled");
 								return;
 							}
 
-							static_PlayUISE("arrow");
-							batch(() => {
-								config.volatile_Scene.value = "Scene_GameReady";
-								config.volatile_Script.value = save.script;
-								config.volatile_ScriptCursor.value = save.cursor;
+							setSubwindow(<Window_SaveLoadConfirm
+								isSave={ false }
+								onConfirm={ () => {
+									static_PlayUISE("arrow");
+									batch(() => {
+										config.volatile_Scene.value = "Scene_GameReady";
+										config.volatile_Script.value = save.script;
+										config.volatile_ScriptCursor.value = save.cursor;
 
-								config.session_Data.peek().deserialize(save.session);
-								config.volatile_Chapter.value = save.chapter;
-								config.volatile_Title.value = save.title;
-							});
+										config.session_Data.peek().deserialize(save.session);
+										config.volatile_Chapter.value = save.chapter;
+										config.volatile_Title.value = save.title;
+									});
+								} }
+								onClose={ () => setSubwindow(undefined) }
+							/>);
 						}
 					} }
 				>
@@ -247,7 +265,7 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 						save ? <>
 							<SpriteImage
 								src="SaveLoad/sprite.png"
-								sprite="data_box.png"
+								sprite="entity.png"
 							/>
 
 							<div class={ style.Chapter }>{ save.chapter }</div>
@@ -262,17 +280,19 @@ const Window_SaveLoad: FunctionalComponent<WindowSaveLoadProps> = (props) => {
 							<SpriteImage
 								class={ style.Down }
 								src="SaveLoad/sprite.png"
-								sprite="data_box_b.png"
+								sprite="entity_cover_down.png"
 							/>
 						</>
 							: <SpriteImage
 								src="SaveLoad/sprite.png"
-								sprite="data_empty.png"
+								sprite="entity_empty.png"
 							/>
 					}
 				</div>;
 			}) }
 		</div>
+
+		{ subwindow }
 	</Window_Base>;
 };
 export default Window_SaveLoad;

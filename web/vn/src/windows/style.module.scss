@@ -1,4 +1,6 @@
 .Window {
+	background-color: rgba(0, 0, 0, 0.01);
+
 	pointer-events: none;
 	transition: backdrop-filter var(--transition-duration) ease-in-out;
 	backdrop-filter: blur(0px);

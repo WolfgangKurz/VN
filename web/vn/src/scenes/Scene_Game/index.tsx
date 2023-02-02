@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { batch } from "@preact/signals";
+import debounce from "lodash.debounce";
 
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
@@ -64,6 +65,8 @@ interface HistorySelectionData {
 }
 type HistoryData = HistoryTextData | HistorySelectionData;
 
+const autoSprites = new Array(16).fill(0).map((_, i) => `btn_auto_on${(i + 1).toString().padStart(2, "0")}.png`);
+
 const Scene_Game: FunctionalComponent = () => {
 	const [script, setScript] = useState<Script | null>(null);
 	const [scriptCursor, setScriptCursor] = useState(0);
@@ -78,6 +81,7 @@ const Scene_Game: FunctionalComponent = () => {
 	//////////////////////////////
 
 	const [hideUI, setHideUI] = useState(false);
+	const [doAuto, setDoAuto] = useState(false);
 
 	const [title, setTitle] = useState("");
 	const [titleShow, setTitleShow] = useState(false);
@@ -140,7 +144,6 @@ const Scene_Game: FunctionalComponent = () => {
 			return [];
 		});
 	};
-
 	const tryNext = useCallback(() => {
 		if (!script) return; // 스크립트를 불러오기 전 or 불러오는 중
 		if (hideUI) {
@@ -156,6 +159,11 @@ const Scene_Game: FunctionalComponent = () => {
 		} else
 			unblock();
 	}, [script, textState, hideUI]);
+
+	const doAutoFn = useCallback(debounce(() => {
+		if (doAuto)
+			tryNext();
+	}, 2500), [doAuto, tryNext]);
 
 	//////////////////////////////
 
@@ -179,6 +187,11 @@ const Scene_Game: FunctionalComponent = () => {
 		if (!scriptLoading)
 			config.volatile_Mute.value = false;
 	}, [scriptLoading]);
+
+	useEffect(() => {
+		if (doAuto && textState === TextboxPhase.Done)
+			doAutoFn();
+	}, [textState, doAuto]);
 
 	useEffect(() => { // fx worker
 		let running = true;
@@ -1007,6 +1020,10 @@ const Scene_Game: FunctionalComponent = () => {
 		});
 	}, [history, historyScrollboxRef]);
 
+	useEffect(() => { // auto trigger
+		if (doAuto) doAutoFn();
+	}, [doAuto]);
+
 	const PosStyles = {
 		"<<": style.LeftMin,
 		"<": style.LeftMinOver,
@@ -1047,6 +1064,8 @@ const Scene_Game: FunctionalComponent = () => {
 			class={ BuildClass("Scene_Game", style.Scene_Game, hideUI && style.HideUI) }
 			onClick={ e => {
 				e.preventDefault();
+
+				if (doAuto) setDoAuto(false);
 
 				if (e.target && (e.target instanceof Element) && (e.target.matches(`.${style.Selection}`) || e.target.matches(`.${style.Sel}`)))
 					return; // Selection click
@@ -1129,6 +1148,7 @@ const Scene_Game: FunctionalComponent = () => {
 				text={ displayText }
 				teller={ displayTeller }
 
+				noNext={ doAuto }
 				phase={ textState }
 
 				onShown={ () => setTextState(_ => TextboxPhase.SequencingText) }
@@ -1138,6 +1158,14 @@ const Scene_Game: FunctionalComponent = () => {
 					unblock();
 				} }
 			/>
+
+			{ doAuto && <SpriteButton
+				key="scene-game-auto-display-sprite"
+				class={ style.AutoDisplay }
+				src="UI/sprite.png"
+				idle={ autoSprites }
+				timePerFrame={ 60 }
+			/> }
 
 			<div class={ BuildClass(
 				style.SideButtons,
@@ -1157,13 +1185,14 @@ const Scene_Game: FunctionalComponent = () => {
 				/>
 				<SpriteButton
 					src="UI/sprite.png"
-					idle="btn_auto.png"
+					idle={ doAuto ? "btn_auto_hover.png" : "btn_auto.png" }
 					hover="btn_auto_hover.png"
 					onClick={ e => {
 						e.preventDefault();
 						e.stopPropagation();
 
 						static_PlayUISE("stop");
+						setDoAuto(!doAuto);
 					} }
 				/>
 				<SpriteButton

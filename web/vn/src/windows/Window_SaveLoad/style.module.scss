@@ -96,3 +96,24 @@
 .LoadWindow .Slots .Slot.Empty {
 	cursor: not-allowed;
 }
+
+.ConfirmWindow {
+	$x: (math.div(1280px, 2) - math.div(583px, 2));
+	$y: (math.div(720px, 2) - math.div(355px, 2));
+
+	left: $x;
+	top: $y;
+
+	> .YesButton,
+	> .NoButton {
+		position: absolute;
+		top: 244px;
+	}
+
+	> .YesButton {
+		left: 116px;
+	}
+	> .NoButton {
+		left: 311px;
+	}
+}

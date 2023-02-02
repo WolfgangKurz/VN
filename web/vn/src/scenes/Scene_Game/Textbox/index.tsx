@@ -24,6 +24,7 @@ interface TextboxProps {
 	text: string;
 	teller: string;
 
+	noNext?: boolean;
 	phase: TextboxPhase;
 
 	onShown?: () => void;
@@ -191,7 +192,7 @@ const Textbox: FunctionalComponent<TextboxProps> = (props) => {
 			{ chars }
 		</svg>
 
-		{ texts.length > 0 && cursor >= texts.length && props.phase === 3
+		{ texts.length > 0 && cursor >= texts.length && props.phase === 3 && !props.noNext
 			? <SpriteImage
 				class={ style.NextIndicator }
 				src="UI/sprite.png"

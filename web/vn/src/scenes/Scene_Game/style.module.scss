@@ -6,6 +6,7 @@ $z-bpic: 100;
 $z-char: 200;
 $z-pic: 300;
 $z-text: 400;
+$z-auto: 410;
 $z-fader: 450;
 $z-title: 500;
 $z-sel: 600;
@@ -308,6 +309,16 @@ $z-loading: 10001;
 
 		left: 120px;
 		bottom: 20px;
+	}
+
+	.AutoDisplay {
+		left: (120px + 947px - 121px - 4px);
+		bottom: 15px;
+		z-index: $z-auto;
+
+		> img {
+			position: static;
+		}
 	}
 
 	.SideButtons {
