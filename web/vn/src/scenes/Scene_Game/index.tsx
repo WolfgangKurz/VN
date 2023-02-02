@@ -1059,6 +1059,47 @@ const Scene_Game: FunctionalComponent = () => {
 		/>);
 	}
 
+	// function makeTransitionFilter (v: number): string {
+	// 	const cl = Math.min(Math.max(v, 0), 1);
+
+	// 	const a = cl < 1 ? cl : 1;
+	// 	const b = cl > 1 ? cl - 1 : 0;
+
+	// 	const arr = new Array(2000).fill(0).map((_, i, a) => i < cl * a.length ? 0 : 1).join(" ");
+
+	// 	const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	// 		<defs>
+	// 			<filter id="f">
+	// 				<feComponentTransfer>
+	// 					<feFuncR type="discrete" tableValues="${arr}"/>
+	// 					<feFuncG type="discrete" tableValues="${arr}"/>
+	// 					<feFuncB type="discrete" tableValues="${arr}"/>
+	// 				</feComponentTransfer>
+	// 				<!-- <feColorMatrix type="matrix" values="-1 0 0 0 1  0 -1 0 0 1  0 0 -1 0 1  0 0 0 1 0" /> -->
+	// 				<feColorMatrix type="luminanceToAlpha" />
+	// 				<feGaussianBlur stdDeviation="2" />
+	// 			</filter>
+	// 		</defs>
+	// 	</svg>`;
+	// 	return `url(data:image/svg+xml,${encodeURIComponent(svg)}#f)`;
+	// }
+	// const [transitionT, setTransitionT] = useState(0);
+	// const [transitionP, setTransitionP] = useState(-1);
+	// useEffect(() => {
+	// 	if (scriptLoading) return;
+
+	// 	if (transitionT === 0) {
+	// 		setTransitionT(Date.now() + 500);
+	// 		return;
+	// 	}
+
+	// 	const x = (Date.now() - transitionT) / 2000;
+	// 	if (x <= 1)
+	// 		requestAnimationFrame(() => setTransitionP(x));
+	// 	else if (x !== transitionP)
+	// 		setTransitionP(x);
+	// }, [transitionP, transitionT, scriptLoading]);
+
 	return <>
 		<Scene_Base
 			class={ BuildClass("Scene_Game", style.Scene_Game, hideUI && style.HideUI) }
@@ -1141,6 +1182,15 @@ const Scene_Game: FunctionalComponent = () => {
 						transition: fadeDuration === 0 ? "none" : undefined,
 					} }
 				/>
+
+				{/* <div
+					class={ BuildClass(style.Transitioner) }
+					style={ {
+						backgroundImage: "url(/IMG/TRANSITION/0.png)",
+						backgroundSize: "100% 100%",
+						filter: makeTransitionFilter(transitionP),
+					} }
+				/> */}
 			</div>
 
 			<Textbox

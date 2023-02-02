@@ -446,3 +446,9 @@ $z-loading: 10001;
 
 	z-index: $z-global;
 }
+
+// Dummy
+.Transitioner {
+	@include fullscreen;
+	z-index: $z-fader;
+}
