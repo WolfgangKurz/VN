@@ -122,7 +122,10 @@ const Scene_Game: FunctionalComponent = () => {
 
 	const unblock = (force?: boolean) => {
 		if (!script) return;
-		if (!force && script.current()?.type === "sel") return;
+		if (!force && script.current()?.type === "sel") {
+			console.warn("dismiss unblock, not force, selection now");
+			return;
+		}
 
 		let flushed = false;
 		setBlocks(blocks => {
@@ -169,7 +172,7 @@ const Scene_Game: FunctionalComponent = () => {
 	useEffect(() => { // script load skipper
 		if (!script || !scriptLoading) return;
 
-		if (blocks.length > 0) return unblock();
+		if (blocks.length > 0) return unblock(true);
 	}, [scriptCursor, blocks, displayText]);
 
 	useEffect(() => {
@@ -328,6 +331,7 @@ const Scene_Game: FunctionalComponent = () => {
 								}));
 								return;
 							} else {
+								bgm.fadeSkip();
 								bgm.stop();
 								return unblock();
 							}
@@ -346,8 +350,10 @@ const Scene_Game: FunctionalComponent = () => {
 									else
 										addBlock(Wait(s.fadeDuration * 1000, () => unblock()));
 									return;
-								} else
+								} else {
+									bgm.fadeSkip();
 									return unblock();
+								}
 							});
 						}
 					}
@@ -383,6 +389,7 @@ const Scene_Game: FunctionalComponent = () => {
 								}));
 								return;
 							} else {
+								bgs.fadeSkip();
 								bgs.stop();
 								return unblock();
 							}
@@ -401,8 +408,10 @@ const Scene_Game: FunctionalComponent = () => {
 									else
 										addBlock(Wait(s.fadeDuration * 1000, () => unblock()));
 									return;
-								} else
+								} else {
+									bgs.fadeSkip();
 									return unblock();
+								}
 							});
 						}
 					}
@@ -649,7 +658,7 @@ const Scene_Game: FunctionalComponent = () => {
 				break;
 
 			case "sel":
-				if (scriptLoading) return unblock();
+				if (scriptLoading) return unblock(true);
 
 				setSelection(s.sels);
 				break;
@@ -969,8 +978,10 @@ const Scene_Game: FunctionalComponent = () => {
 
 	useEffect(() => { // Global effect register
 		const fn = (e: KeyboardEvent) => {
-			if (selection.length > 0 || script?.current()?.type === "sel")
+			if (selection.length > 0 || script?.current()?.type === "sel") {
+				console.warn("dismiss key-input, selection now");
 				return; // Selection
+			}
 
 			if (e.key === "Enter" || e.key === " ") {
 				if (!e.repeat) {
