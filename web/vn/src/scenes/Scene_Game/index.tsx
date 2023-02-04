@@ -866,7 +866,7 @@ const Scene_Game: FunctionalComponent = () => {
 
 									return chars;
 								});
-								unblock();
+								return addBlock(Wait(0, () => unblock()));
 							} else {
 								setChars(_chars => [..._chars, {
 									key: Math.floor(Math.random() * 100000).toString(),
