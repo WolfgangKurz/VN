@@ -129,7 +129,7 @@ const Window_CollectionEvent: FunctionalComponent<WindowCollectionProps> = (prop
 		/> }
 
 		<div class={ style.Events }>
-			{ events.slice(page * 6, (page + 1) * 6).map(r => {
+			{ events.slice(page * 6, (page + 1) * 6).map((r, i) => {
 				return <div
 					class={ style.Item }
 					onClick={ e => {
@@ -152,6 +152,7 @@ const Window_CollectionEvent: FunctionalComponent<WindowCollectionProps> = (prop
 
 					{ isSeen(r)
 						? <img
+							key={ `collection-event-${page * 6 + i + 1}` }
 							class={ style.Entity }
 							src={ `/IMG/CUT/${r}` }
 						/>

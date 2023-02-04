@@ -18,10 +18,12 @@ class GlobalStorage {
 		char: string[];
 		pic: string[];
 		bgm: string[];
+		ending: boolean;
 	} = {
 			char: [],
 			pic: [],
 			bgm: [],
+			ending: false,
 		};
 
 	public Save (): void {
@@ -40,6 +42,7 @@ class GlobalStorage {
 				char: [],
 				pic: [],
 				bgm: [],
+				ending: false,
 			};
 			return;
 		}
@@ -55,6 +58,7 @@ class GlobalStorage {
 			bgm: Array.isArray(data.seen.bgm)
 				? data.seen.bgm.filter(r => typeof r === "string")
 				: [],
+			ending: data.seen.ending || false,
 		};
 	}
 }

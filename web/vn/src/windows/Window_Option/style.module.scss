@@ -15,16 +15,19 @@
 }
 
 .VolumeText {
-	right: (1280px - 915px);
+	right: (1280px - 920px);
+	text-align: right;
+	letter-spacing: -1px;
 	font-weight: 800;
 	font-size: 30px;
+	text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
 	color: #222;
 
 	&.VolumeSFX {
-		top: 308px;
+		top: 310px;
 	}
 	&.VolumeBGM {
-		top: 395px;
+		top: 397px;
 	}
 }
 

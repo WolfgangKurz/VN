@@ -109,7 +109,7 @@ const Window_CollectionMusic: FunctionalComponent<WindowCollectionProps> = (prop
 		/>
 
 		{ selected && <div class={ style.PlayingTitle }>
-			{ selected }
+			{ BGMNames[selected] || selected }
 		</div> }
 
 		<SpriteButton

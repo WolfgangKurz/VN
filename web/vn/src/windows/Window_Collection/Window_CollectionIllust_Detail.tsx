@@ -33,13 +33,15 @@ const Window_CollectionIllust_Detail: FunctionalComponent<WindowCollectionDetail
 	}
 	function filterChars () {
 		const c = CollectionLists.chars;
-		return c.filter(r => r.startsWith(props.char))
+		const r = c.filter(r => r.startsWith(`${props.char}_`))
 			.map(r => r.substring(props.char.length))
 			.sort((a, b) => {
 				const ia = parseFaceId(a);
 				const ib = parseFaceId(b);
 				return ia - ib;
 			}); // ~~~_(...)
+
+		return [...new Set(r)];
 	}
 
 	const [loaded, setLoaded] = useState(false);

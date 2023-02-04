@@ -7,6 +7,7 @@ import { static_PlayUISE } from "@/static";
 
 import Wait from "@/libs/Wait";
 import ManagedAudio from "@/libs/ManagedAudio";
+import GlobalStorage from "@/libs/GlobalStorage";
 
 import SpriteButton from "@/components/SpriteButton";
 
@@ -78,7 +79,7 @@ const Scene_Title: FunctionalComponent = () => {
 		});
 
 		const bgm = new ManagedAudio(true);
-		bgm.load("/BGM/Title1.mp3");
+		bgm.load(`/BGM/Title${GlobalStorage.Instance.seen.ending ? 2 : 1}.mp3`);
 		bgm.play();
 		setBGM(bgm);
 
@@ -90,7 +91,7 @@ const Scene_Title: FunctionalComponent = () => {
 	return <Scene_Base id={ style.Scene_Title } data-phase={ phase.value.join(",") }>
 		<div class={ style.BG }>
 			<img src="/BG/BG_Title.png" />
-			<img src="/BG/BG_Title1.png" />
+			<img src={`/BG/BG_Title${GlobalStorage.Instance.seen.ending ? 2 : 1}.png`} />
 		</div>
 
 		<img

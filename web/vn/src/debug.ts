@@ -6,7 +6,8 @@ export function StartupScript () {
 	batch(() => {
 		// config.session_Data.peek().data.vars["1-4_sel"] = "2";
 
-		// config.volatile_Script.value = "3-3";
-		// config.volatile_ScriptCursor.value = 60;
+		config.volatile_Mute.value = true;
+		config.volatile_Script.value = "7-1";
+		config.volatile_ScriptCursor.value = 264;
 	});
 }

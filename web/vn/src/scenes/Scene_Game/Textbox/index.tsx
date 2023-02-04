@@ -27,6 +27,8 @@ interface TextboxProps {
 	noNext?: boolean;
 	phase: TextboxPhase;
 
+	textStyle: "normal" | "bold" | "italic" | "bi";
+
 	onShown?: () => void;
 	onHidden?: () => void;
 	onTextDone?: () => void;
@@ -140,7 +142,7 @@ const Textbox: FunctionalComponent<TextboxProps> = (props) => {
 				x += w;
 			}
 
-			ret.push(...wt.map(c => <text x={ 20 + wx + c.x } y={ 20 + wy }>
+			ret.push(...wt.map(c => <text class={ style[`text-style-${props.textStyle}`] } x={ 20 + wx + c.x } y={ 20 + wy }>
 				{ c.c }
 			</text>));
 

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { createRef } from "preact";
+import { Ref, useCallback, useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { batch } from "@preact/signals";
 import debounce from "lodash.debounce";
 
@@ -14,6 +15,7 @@ import GlobalStorage from "@/libs/GlobalStorage";
 import { TRANSPARENT } from "@/libs/Const";
 import { BuildClass } from "@/libs/ClassName";
 import Wait, { WaitData } from "@/libs/Wait";
+import { input2matrix } from "@/libs/Matrix";
 import ManagedAudio from "@/libs/ManagedAudio";
 import ScriptCommand from "@/libs/ScriptCommand";
 import Script, { ScriptArgument, ScriptSelection } from "@/libs/Script";
@@ -30,8 +32,16 @@ import SpriteButton from "@/components/SpriteButton";
 import Textbox, { TextboxPhase } from "./Textbox";
 
 import style from "./style.module.scss";
+import ColorFilter from "@/libs/ColorFilter";
 
-type ColorFilterData = Tuple<number, 20>;
+interface ColorFilterData {
+	type: "" | "circle";
+	duration: number;
+	begin: number;
+	from: Tuple<number, 20>;
+	to: Tuple<number, 20>;
+	current: Tuple<number, 20>;
+}
 
 interface CharData {
 	key: string;
@@ -39,10 +49,12 @@ interface CharData {
 	src: string;
 	fx: string;
 	duration: number;
+	scale: number;
 	state: number; // 0:init, 1:loading, 2:loaded, 3:unloading
 
-	colorFilter?: ColorFilterData;
-	backColorFilter?: ColorFilterData;
+	colorFilter?: ColorFilter;
+	backColorFilter?: ColorFilter;
+	el: Ref<HTMLImageElement>;
 }
 interface PictureData {
 	key: string;
@@ -50,10 +62,11 @@ interface PictureData {
 	pos: "left-top" | "top" | "right-top" | "left" | "center" | "right" | "left-bottom" | "bottom" | "right-bottom";
 	src: string;
 	fadeDuration: number;
-	state: number; // 0:loading, 1:loaded, 2:unloading
+	state: number; // 0:init, 1:loading, 2:loaded, 3:unloading
 
-	colorFilter?: ColorFilterData;
-	backColorFilter?: ColorFilterData;
+	colorFilter?: ColorFilter;
+	backColorFilter?: ColorFilter;
+	el: Ref<HTMLImageElement>;
 }
 interface HistoryTextData {
 	teller?: string;
@@ -73,7 +86,7 @@ const Scene_Game: FunctionalComponent = () => {
 	const [scriptRun, setScriptRun] = useState(0);
 	const scriptLoading = !script || script.cursor < scriptCursor;
 
-	const next = () => setScriptRun(scriptRun + 1);
+	const next = () => setScriptRun((scriptRun + 1) % 100000);
 	const [assetLoaded, setAssetLoaded] = useState(false);
 
 	const [subwindow, setSubwindow] = useState<preact.VNode | null>(null);
@@ -109,6 +122,7 @@ const Scene_Game: FunctionalComponent = () => {
 	const [displayText, setDisplayText] = useState("");
 	const [displayTeller, setDisplayTeller] = useState("");
 	const [textState, setTextState] = useState<TextboxPhase>(TextboxPhase.None); // 0:none, 1:fade-in, 2:text-show, 3:text-shown, 4:fade-out
+	const [textStyle, setTextStyle] = useState<"normal" | "bold" | "italic" | "bi">("normal");
 
 	const [selection, setSelection] = useState<ScriptSelection[]>([]);
 
@@ -131,6 +145,8 @@ const Scene_Game: FunctionalComponent = () => {
 			return;
 		}
 
+		// console.log(new Error().stack);
+
 		let flushed = false;
 		setBlocks(blocks => {
 			blocks.forEach(b => {
@@ -145,7 +161,7 @@ const Scene_Game: FunctionalComponent = () => {
 		});
 	};
 	const tryNext = useCallback(() => {
-		if (!script) return; // 스크립트를 불러오기 전 or 불러오는 중
+		if (!script) return; // 스크립트를 불러오기 전
 		if (hideUI) {
 			setHideUI(false);
 			return;
@@ -252,7 +268,6 @@ const Scene_Game: FunctionalComponent = () => {
 					{
 						if (scriptLoading) {
 							running = false;
-							unblock();
 							return setFXEnd(true);
 						}
 
@@ -317,8 +332,8 @@ const Scene_Game: FunctionalComponent = () => {
 					setBGImage("");
 				else
 					setBGImage(`/BG/${s.name}.png`);
-				unblock();
-				break;
+
+				return unblock();
 
 			case "bgm":
 				if (!bgm) {
@@ -337,11 +352,13 @@ const Scene_Game: FunctionalComponent = () => {
 								}
 								bgm.fadeOut(s.fadeDuration * 1000);
 
-								if (!s.wait) unblock();
-								addBlock(Wait(s.fadeDuration * 1000, () => {
-									bgm.stop();
-									if (s.wait) unblock();
-								}));
+								if (!s.wait)
+									unblock();
+								else
+									addBlock(Wait(s.fadeDuration * 1000, () => {
+										bgm.stop();
+										if (s.wait) unblock();
+									}));
 								return;
 							} else {
 								bgm.fadeSkip();
@@ -368,6 +385,7 @@ const Scene_Game: FunctionalComponent = () => {
 									return unblock();
 								}
 							});
+							return;
 						}
 					}
 
@@ -394,12 +412,13 @@ const Scene_Game: FunctionalComponent = () => {
 								}
 								bgs.fadeOut(s.fadeDuration * 1000);
 
-								if (!s.wait) unblock();
-
-								addBlock(Wait(s.fadeDuration * 1000, () => {
-									bgs.stop();
-									if (s.wait) unblock();
-								}));
+								if (!s.wait)
+									unblock();
+								else
+									addBlock(Wait(s.fadeDuration * 1000, () => {
+										bgs.stop();
+										if (s.wait) unblock();
+									}));
 								return;
 							} else {
 								bgs.fadeSkip();
@@ -426,6 +445,7 @@ const Scene_Game: FunctionalComponent = () => {
 									return unblock();
 								}
 							});
+							return;
 						}
 					}
 
@@ -569,7 +589,7 @@ const Scene_Game: FunctionalComponent = () => {
 								break;
 							}
 							if (!["jump", "jump-short", "shake", "shake-weak"].includes(s.args[2].toString())) {
-								console.warn("charfx 3rd parameter should be 'jump' or 'jump-short' or 'shake'");
+								console.warn("charfx 3rd parameter should be 'jump' or 'jump-short' or 'shake' or 'shake-weak'");
 								break;
 							}
 
@@ -586,6 +606,101 @@ const Scene_Game: FunctionalComponent = () => {
 								unblock();
 							}));
 							return;
+
+						case "filter-circle":
+						case "bfilter-circle":
+							if (typeof s.args[0] !== "string" || !["char", "pic"].includes(s.args[0])) {
+								console.warn(`${s.fx} 1st parameter should be 'char' or 'pic'`);
+								break;
+							}
+							if (typeof s.args[2] !== "number") {
+								console.warn(`${s.fx} 3rd parameter should be Number`);
+								break;
+							}
+							if (![1, 4, 20].includes(s.args.length - 3)) {
+								console.warn(`${s.fx} value count should be 1 or 4 or 20`);
+								break;
+							}
+
+							{
+								const t = s.fx === "filter-circle" ? "colorFilter" : "backColorFilter";
+								const cssType = s.fx === "filter-circle" ? "filter" : "backdropFilter";
+
+								if (s.args[0] === "char") {
+									const target = chars.find(c => c.state === 2 && c.pos === s.args[1]);
+									if (!target) return unblock();
+
+									const input = s.args[3] === "-"
+										? Matrix4x5Identity
+										: input2matrix(s.args.slice(3) as number[]);
+
+									const key = target.key;
+									setChars(chars => {
+										return chars.map(c => {
+											if (c.key !== key) return c;
+
+											const ret = { ...c };
+											if (ret[t])
+												ret[t]!.onFrame(null).onEnd(null).stop();
+
+											let step = 0;
+											const filter = new ColorFilter(c[t])
+												.to(input)
+												.onFrame(v => ret.el.current && (ret.el.current.style[cssType] = ColorMatrixToSVGUrl(v)))
+												.onEnd(() => {
+													if (s.args[3] === "-") return; // 종료인 경우
+
+													step = (step + 1) % 2;
+													if (step === 1)
+														filter.from(input).to(Matrix4x5Identity).start(s.args[2] as number * 1000);
+													else
+														filter.from(Matrix4x5Identity).to(input).start(s.args[2] as number * 1000);
+												})
+												.start(s.args[2] as number * 1000);
+
+											ret[t] = filter;
+											return ret;
+										});
+									});
+									unblock();
+								} else {
+									const target = pics[s.args[1] as number];
+									if (!target) return unblock();
+
+									setPics(_pics => {
+										const pics = [..._pics];
+										const c = pics[s.args[1] as number];
+
+										const input = s.args[3] === "-"
+											? Matrix4x5Identity
+											: input2matrix(s.args.slice(3) as number[]);
+
+										const ret = { ...c };
+										if (ret[t])
+											ret[t]!.onFrame(null).onEnd(null).stop();
+
+										let step = 0;
+										const filter = new ColorFilter(c[t])
+											.to(input)
+											.onFrame(v => ret.el.current && (ret.el.current.style[cssType] = ColorMatrixToSVGUrl(v)))
+											.onEnd(() => {
+												if (s.args[3] === "-") return; // 종료인 경우
+
+												step = (step + 1) % 2;
+												if (step === 1)
+													filter.from(input).to(Matrix4x5Identity).start(s.args[2] as number * 1000);
+												else
+													filter.from(Matrix4x5Identity).to(input).start(s.args[2] as number * 1000);
+											})
+											.start(s.args[2] as number * 1000);
+
+										ret[t] = filter;
+										return pics;
+									});
+									unblock();
+								}
+							}
+							break;
 
 						default:
 							setFXEnd(true);
@@ -641,6 +756,8 @@ const Scene_Game: FunctionalComponent = () => {
 				break;
 
 			case "wait":
+				console.log("wait");
+
 				if (typeof s.wait === "number")
 					addBlock(Wait(s.wait * 1000, () => unblock()));
 				else
@@ -678,7 +795,7 @@ const Scene_Game: FunctionalComponent = () => {
 
 			case "char":
 				{
-					const removeAt = (position: CharData["pos"], duration: number) => {
+					const removeAt = (position: CharData["pos"], duration: number, unblockAfter: boolean = false) => {
 						setChars(_chars => {
 							const chars = [..._chars];
 							let keys: string[] = [];
@@ -695,9 +812,9 @@ const Scene_Game: FunctionalComponent = () => {
 							if (keys.length > 0) {
 								addBlock(Wait(duration * 1000, () => {
 									setChars(p => p.filter(r => r && !keys.includes(r.key)));
-									unblock();
+									if (unblockAfter) unblock();
 								}));
-							} else
+							} else if (unblockAfter)
 								unblock();
 
 							return chars;
@@ -705,13 +822,27 @@ const Scene_Game: FunctionalComponent = () => {
 					};
 
 					if (s.name === "-")
-						removeAt(s.position, s.fxDuration);
+						removeAt(s.position, s.fxDuration, true);
 					else {
 						sessionSeen("char", s.name);
 
 						const src = `/IMG/SCG/${s.name}.png`;
-						if (chars.some(c => c.pos === s.position && c.state <= 2 && c.src === src)) // 표시될/표시중인 동일한 캐릭터가 존재
-							return unblock();
+						if (chars.some(c => c.pos === s.position && c.state <= 2 && c.src === src)) { // 표시될/표시중인 동일한 캐릭터가 존재
+							if (chars.every(c => !(c.pos === s.position && c.state <= 2 && c.src === src) || c.scale === s.scale))
+								return unblock();
+
+							setChars(_chars => [..._chars].map(c => { // scale update
+								if (c.pos === s.position && c.state <= 2 && c.src === src) {
+									return {
+										...c,
+										duration: s.fxDuration,
+										scale: s.scale,
+									};
+								}
+								return c;
+							}));
+							return addBlock(Wait(s.fxDuration * 1000, () => unblock()));
+						}
 
 						const img = new window.Image();
 						img.addEventListener("load", (e) => {
@@ -728,12 +859,14 @@ const Scene_Game: FunctionalComponent = () => {
 										src,
 										fx: s.fx,
 										duration: s.fxDuration,
+										scale: s.scale,
 										state: 2,
+										el: createRef(),
 									} satisfies CharData];
-									unblock();
 
 									return chars;
 								});
+								unblock();
 							} else {
 								setChars(_chars => [..._chars, {
 									key: Math.floor(Math.random() * 100000).toString(),
@@ -741,8 +874,11 @@ const Scene_Game: FunctionalComponent = () => {
 									src,
 									fx: s.fx,
 									duration: s.fxDuration,
+									scale: s.scale,
 									state: 0,
+									el: createRef(),
 								} satisfies CharData]);
+								return addBlock(Wait(s.fxDuration * 1000, () => unblock()));
 							}
 						});
 						img.src = `/IMG/SCG/${s.name}.png`;
@@ -786,10 +922,12 @@ const Scene_Game: FunctionalComponent = () => {
 							src: `/IMG/CUT/${s.name}.png`,
 							fadeDuration: s.fadeDuration,
 							state: 0,
+							el: createRef(),
 						};
 
 						// for skip
 						addBlock(Wait(s.fadeDuration * 1000, () => {
+							console.log("pic end");
 							unblock();
 							setPics(_pics => {
 								const pics = [..._pics];
@@ -810,85 +948,65 @@ const Scene_Game: FunctionalComponent = () => {
 					const target = chars.find(c => c.state === 2 && c.pos === s.position);
 					if (!target) return unblock();
 
-					const base = target.colorFilter || Matrix4x5Identity; // identity
 					const key = target.key;
-					const update = (v: number) => {
-						const values = base.map((b, i) => b + (s.values[i] - b) * v) as Tuple<number, 20>;
-						setChars(chars => {
-							return chars.map(c => {
-								if (c.key !== key) return c;
+					setChars(chars => {
+						return chars.map(c => {
+							if (c.key !== key) return c;
 
-								const ret = { ...c };
-								if (s.type === "filter")
-									ret.colorFilter = values;
-								else
-									ret.backColorFilter = values;
-								return ret;
-							});
+							const t = s.type === "filter" ? "colorFilter" : "backColorFilter";
+							const cssType = s.type === "filter" ? "filter" : "backdropFilter";
+
+							const ret = { ...c };
+							if (ret[t])
+								ret[t]!.onFrame(null).onEnd(null).stop();
+
+							const filter = new ColorFilter(c[t])
+								.to(s.values)
+								.onFrame(v => ret.el.current && (ret.el.current.style[cssType] = ColorMatrixToSVGUrl(v)))
+								.start(s.duration * 1000);
+
+							ret[t] = filter;
+							return ret;
 						});
-					};
+					});
 
-					let running = true;
-					const begin = Date.now();
-					const fn = () => {
-						const e = Date.now() - begin;
-						const p = Math.min(1, e / (s.duration * 1000));
-						if (!running || p >= 1) return;
-
-						update(p);
-						requestAnimationFrame(fn);
-					};
-					requestAnimationFrame(fn);
-
-					addBlock(Wait(s.duration * 1000, () => {
-						update(1);
-
-						running = false;
-						unblock();
-					}));
+					addBlock(Wait(s.duration * 1000, () => unblock()));
 				} else {
 					const target = pics[s.id];
 					if (!target) return unblock();
 
-					const base = target.colorFilter || Matrix4x5Identity; // identity
-					const update = (v: number) => {
-						const values = base.map((b, i) => b + (s.values[i] - b) * v) as Tuple<number, 20>;
-						setPics(_pics => {
-							const pics = [..._pics];
+					setPics(_pics => {
+						const pics = [..._pics];
 
-							if (s.type === "filter")
-								pics[s.id].colorFilter = values;
-							else
-								pics[s.id].backColorFilter = values;
+						const t = s.type === "filter" ? "colorFilter" : "backColorFilter";
+						const cssType = s.type === "filter" ? "filter" : "backdropFilter";
 
-							return pics;
-						});
-					};
+						const c = pics[s.id];
+						const ret = { ...c };
+						if (ret[t])
+							ret[t]!.onFrame(null).onEnd(null).stop();
 
-					let running = true;
-					const begin = Date.now();
-					const fn = () => {
-						const e = Date.now() - begin;
-						const p = Math.min(1, e / (s.duration * 1000));
-						if (!running || p >= 1) return;
+						const filter = new ColorFilter(c[t])
+							.to(s.values)
+							.onFrame(v => ret.el.current && (ret.el.current.style[cssType] = ColorMatrixToSVGUrl(v)))
+							.start(s.duration * 1000);
 
-						update(p);
-						requestAnimationFrame(fn);
-					};
-					requestAnimationFrame(fn);
+						ret[t] = filter;
 
-					addBlock(Wait(s.duration * 1000, () => {
-						update(1);
+						return pics;
+					});
 
-						running = false;
-						unblock();
-					}));
+					addBlock(Wait(s.duration * 1000, () => unblock()));
 				}
 				break;
 
 			case "command":
 				ScriptCommand.run(s.command, s.args);
-				break;
+				return unblock();
+
+			case "style":
+				setTextStyle(s.style);
+				return unblock();
 		}
 	}, [script, scriptRun]);
 
@@ -965,8 +1083,8 @@ const Scene_Game: FunctionalComponent = () => {
 
 				if (scriptLoading)
 					unblock();
-				else
-					Wait(dur * 1000, () => unblock());
+				// else
+				// 	Wait(dur * 1000, () => unblock());
 
 				return _chars.map(r => r.state === 0 ? ({ ...r, state: 1 }) : r);
 			});
@@ -981,8 +1099,8 @@ const Scene_Game: FunctionalComponent = () => {
 
 				if (scriptLoading)
 					unblock();
-				else
-					Wait(dur * 1000, () => unblock());
+				// else
+				// 	Wait(dur * 1000, () => unblock());
 
 				return _pics.map(r => r && r.state === 0 ? ({ ...r, state: 1 }) : r);
 			});
@@ -1106,6 +1224,8 @@ const Scene_Game: FunctionalComponent = () => {
 			onClick={ e => {
 				e.preventDefault();
 
+				if (scriptLoading) return;
+
 				if (doAuto) setDoAuto(false);
 
 				if (e.target && (e.target instanceof Element) && (e.target.matches(`.${style.Selection}`) || e.target.matches(`.${style.Sel}`)))
@@ -1123,7 +1243,7 @@ const Scene_Game: FunctionalComponent = () => {
 					? <Image
 						class={ style.BG }
 						src={ bgImage }
-						exts={ [".jpg", ".png"] }
+						exts={ [".jpg", ".png", ".apng"] }
 						onError={ e => {
 							e.preventDefault();
 							console.warn(`<BG> Failed to load image ${bgImage}`);
@@ -1146,9 +1266,12 @@ const Scene_Game: FunctionalComponent = () => {
 						src={ c.src }
 						style={ {
 							"--fx-duration": `${c.duration}s`,
-							filter: c.colorFilter ? ColorMatrixToSVGUrl(c.colorFilter) : undefined,
-							backdropFilter: c.backColorFilter ? ColorMatrixToSVGUrl(c.backColorFilter) : undefined,
+							"--fx-scale": c.scale,
+							// filter: c.colorFilter ? ColorMatrixToSVGUrl(c.colorFilter.current) : undefined,
+							// backdropFilter: c.backColorFilter ? ColorMatrixToSVGUrl(c.backColorFilter.current) : undefined,
 						} }
+						data-key={ c.key }
+						ref={ c.el }
 					/>
 					: <></>
 				) }
@@ -1165,12 +1288,13 @@ const Scene_Game: FunctionalComponent = () => {
 							p.state === 3 && style.Unloading,
 						) }
 						src={ p.src }
-						exts={ [".png", ".jpg"] }
+						exts={ [".png", ".jpg", ".apng"] }
 						style={ {
 							"--fx-duration": `${p.fadeDuration}s`,
-							filter: p.colorFilter ? ColorMatrixToSVGUrl(p.colorFilter) : undefined,
-							backdropFilter: p.backColorFilter ? ColorMatrixToSVGUrl(p.backColorFilter) : undefined,
+							// filter: p.colorFilter ? ColorMatrixToSVGUrl(p.colorFilter.current) : undefined,
+							// backdropFilter: p.backColorFilter ? ColorMatrixToSVGUrl(p.backColorFilter.current) : undefined,
 						} }
+						ref={ p.el }
 					/>
 					: <></>
 				) }
@@ -1201,11 +1325,14 @@ const Scene_Game: FunctionalComponent = () => {
 				noNext={ doAuto }
 				phase={ textState }
 
+				textStyle={ textStyle }
+
 				onShown={ () => setTextState(_ => TextboxPhase.SequencingText) }
 				onTextDone={ () => setTextState(_ => TextboxPhase.Done) }
 				onHidden={ () => {
 					setTextState(_ => TextboxPhase.None);
-					unblock();
+
+					if (!scriptLoading) unblock();
 				} }
 			/>
 

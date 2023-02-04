@@ -56,7 +56,11 @@ export const Lists = lists;
 export const CharTypeNames = {
 	STD_01: "일상복",
 	STD_02V1: "동복(모자)",
+	"STD_02V1-2": "동복(모자+짐)",
+	"STD_02V1-3": "동복(모자+짐+음식)",
 	STD_02V2: "동복",
+	"STD_02V2-2": "동복(짐)",
+	"STD_02V2-3": "동복(짐+음식)",
 	"STD_03@": "샤워",
 	STD_03: "내복",
 	STD_04: "작업복(가방)",

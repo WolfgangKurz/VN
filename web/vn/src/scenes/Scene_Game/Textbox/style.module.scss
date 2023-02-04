@@ -120,6 +120,7 @@
 			stroke-width: 5px;
 			fill: #fff;
 			paint-order: stroke fill;
+
 			dominant-baseline: hanging;
 			dominant-baseline: text-before-edge;
 
@@ -128,6 +129,22 @@
 			animation-delay: 0s;
 			animation-iteration-count: 1;
 			animation-timing-function: ease-out;
+
+			font-synthesis: style;
+
+			&.text-style-normal {
+				font-style: normal;
+			}
+			&.text-style-bold {
+				font-weight: bold;
+			}
+			&.text-style-italic {
+				font-style: italic;
+			}
+			&.text-style-bi {
+				font-weight: bold;
+				font-style: italic;
+			}
 		}
 	}
 }

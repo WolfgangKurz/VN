@@ -33,6 +33,7 @@ interface ScriptLine_Char extends ScriptLine_Base {
 	position: "<<" | "<" | "left" | "center" | "right" | ">" | ">>";
 	fx: "" | "left" | "right" | "top" | "bottom";
 	fxDuration: number;
+	scale: number;
 }
 interface ScriptLine_BGM extends ScriptLine_Base {
 	type: "bgm";
@@ -117,11 +118,16 @@ interface ScriptLine_Command extends ScriptLine_Base {
 	command: string;
 	args: ScriptArgument[];
 }
+interface ScriptLine_Style extends ScriptLine_Base {
+	type: "style";
+	style: "normal" | "bold" | "italic" | "bi";
+}
 
 export type ScriptLine = ScriptLine_Text | ScriptLine_Talk | ScriptLine_Clear | ScriptLine_Wait |
 	ScriptLine_Char | ScriptLine_BGM | ScriptLine_BGS | ScriptLine_SE | ScriptLine_BG | ScriptLine_Picture |
 	ScriptLine_Fade | ScriptLine_FX | ScriptLine_Selection | ScriptLine_Script | ScriptLine_Filter |
-	ScriptLine_Set | ScriptLine_If | ScriptLine_Title | ScriptLine_Chapter | ScriptLine_Command;
+	ScriptLine_Set | ScriptLine_If | ScriptLine_Title | ScriptLine_Chapter | ScriptLine_Command |
+	ScriptLine_Style;
 
 export default class Script {
 	private _script: ScriptLine[] = [];
@@ -277,7 +283,7 @@ export default class Script {
 							};
 
 						case "char":
-							if (args.length < 1 || args.length > 4)
+							if (args.length < 1 || args.length > 5)
 								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
 							if (args.length >= 2) {
 								if (typeof args[1] !== "string")
@@ -293,7 +299,11 @@ export default class Script {
 							}
 							if (args.length >= 4) {
 								if (typeof args[3] !== "number")
-									throw new Error(`Failed to parse script line, invalid paramter type, Number expected but was "${typeof args[2]}" for "${cmd}"`);
+									throw new Error(`Failed to parse script line, invalid paramter type, Number expected but was "${typeof args[3]}" for "${cmd}"`);
+							}
+							if (args.length >= 5) {
+								if (typeof args[4] !== "number")
+									throw new Error(`Failed to parse script line, invalid paramter type, Number expected but was "${typeof args[4]}" for "${cmd}"`);
 							}
 
 							return {
@@ -308,6 +318,9 @@ export default class Script {
 								fxDuration: args.length >= 4
 									? (args[3] as number)
 									: 0.5,
+								scale: args.length >= 5
+									? (args[4] as number)
+									: 1,
 							};
 
 						case "pic":
@@ -462,6 +475,21 @@ export default class Script {
 								type: "command",
 								command: args[0].toString(),
 								args: args.slice(1),
+							};
+
+						case "style":
+							if (args.length !== 1)
+								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
+
+							if (typeof args[0] !== "string")
+								throw new Error(`Failed to parse script line, invalid parameter type, String expected but was "${typeof args[0]}"`);
+
+							if (!["normal", "bold", "italic", "bi"].includes(args[0].toLowerCase()))
+								throw new Error(`Failed to parse script line, invalid paramter value, "normal" or "bold" or "italic" or "bi" expected but was "${args[0]}" for "${cmd}"`);
+
+							return {
+								type: "style",
+								style: args[0] as ScriptLine_Style["style"],
 							};
 
 						default:

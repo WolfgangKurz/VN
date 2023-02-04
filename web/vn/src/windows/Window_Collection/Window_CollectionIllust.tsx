@@ -45,7 +45,7 @@ const Window_CollectionIllust: FunctionalComponent<WindowCollectionProps> = (pro
 	}, [loaded]);
 
 	const [charGroup] = useState(() => {
-		const reg = /^(STD_[^_-]+)_.+/;
+		const reg = /^(STD_[^_]+)_.+/;
 		const ret = new Set<string>();
 		chars.forEach(c => {
 			if (!reg.test(c)) return;
@@ -56,7 +56,7 @@ const Window_CollectionIllust: FunctionalComponent<WindowCollectionProps> = (pro
 			ret.add(m[1]);
 		});
 
-		return [...ret];
+		return [...ret].sort();
 	});
 
 

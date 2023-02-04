@@ -94,10 +94,15 @@ $z-loading: 10001;
 	}
 
 	.Char {
+		$transition-base: transform var(--fx-duration) cubic-bezier(0.65, 0, 0.35, 1); // ease-in-out-cubic
+
 		--fx-duration: 0s;
+		--fx-scale: 1;
+		animation-fill-mode: both;
 
 		bottom: -20px;
-		transform: translate(-50%, 0);
+		transition: $transition-base;
+		transform: translate(-50%, 0) scale(var(--fx-scale));
 		z-index: $z-char;
 
 		&.LeftMinOver {
@@ -105,7 +110,7 @@ $z-loading: 10001;
 		}
 		&.LeftMin {
 			left: 0%;
-			transform: translate3d(-10px, 0);
+			transform: translate3d(-10px, 0) scale(var(--fx-scale));
 		}
 		&.Left {
 			left: 25%;
@@ -118,14 +123,14 @@ $z-loading: 10001;
 		}
 		&.RightMin {
 			left: 100%;
-			transform: translate(calc(-100% + 10px), 0);
+			transform: translate(calc(-100% + 10px), 0) scale(var(--fx-scale));
 		}
 		&.RightMinOver {
 			left: 100%;
 		}
 
 		&.fx- {
-			transition: opacity var(--fx-duration) linear;
+			transition: $transition-base, opacity var(--fx-duration) linear;
 			opacity: 0;
 
 			&.Loading,
@@ -137,7 +142,7 @@ $z-loading: 10001;
 		&.fx-left,
 		&.fx-right {
 			// slide from left/to left
-			transition: left var(--fx-duration) cubic-bezier(0.65, 0, 0.35, 1); // ease-in-out-cubic
+			transition: $transition-base, left var(--fx-duration) cubic-bezier(0.65, 0, 0.35, 1); // ease-in-out-cubic
 
 			&:not(.Loading):not(.Loaded) {
 				&.fx-left {
@@ -151,7 +156,7 @@ $z-loading: 10001;
 		&.fx-top,
 		&.fx-bottom {
 			// slide from left/to left
-			transition: top var(--fx-duration) cubic-bezier(0.65, 0, 0.35, 1); // ease-in-out-cubic
+			transition: $transition-base, bottom var(--fx-duration) cubic-bezier(0.65, 0, 0.35, 1); // ease-in-out-cubic
 
 			&:not(.Loading):not(.Loaded) {
 				&.fx-top {
