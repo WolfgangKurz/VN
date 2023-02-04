@@ -1,5 +1,5 @@
 @chapter "Chapter 4"
-@title "???"
+@title 기지국
 
 @fadeout 0
 @bg 13_yumi_room
@@ -84,11 +84,12 @@
 @clear
 
 @bgm Talk_04
-@se 4-2_Siren
+@bgs 4-2_Siren
 
-@pic 1 SOLID/red
-@wait 0.1
+@pic 1 SOLID/transparent 0
+@fx bfilter-circle pic 1 1.2 0.95 0.3 0.3 1
 # 화면 깜빡임(빨강)
+@wait 0.1
 
 @char STD_03_8
 유미 -> 이런, 통신기가 망가졌나…!
@@ -124,5 +125,14 @@
 무어라 말릴 새도 없이 단호한 기세에 밀려버렸다.
 또 방안에 홀로 남아버린 나는 한심한 자신을 비관하며 막연히 기다릴 수밖에 없었다.
 @clear
+
+# scene end
+@bgm - 2 0
+@bgs - 2 0
+@fadeout 2
+@char - center "" 0
+@bg -
+@fx bfilter-circle pic 1 0 -
+@fadein 0
 
 @script 4-2

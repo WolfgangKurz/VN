@@ -374,4 +374,11 @@
 … 네 맘대로 되는 일이 아니잖아.
 @clear
 
+# scene end
+@bgm - 2 0
+@fadeout 2
+@char - center "" 0
+@bg -
+@fadein 0
+
 @script 4-1

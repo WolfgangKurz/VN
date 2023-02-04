@@ -54,7 +54,8 @@
 # fx는 진입/제거 효과, "" left top right bottom 중 선택, ""는 페이드 인/아웃
 #   방향 지정 시 해당 방향에서 진입 또는 해당 방향으로 제거됨
 # duration 시간만큼 fx로 표현됨 (초 단위)
-@char image [position=center] [fx=""] [duration=0.5]
+# scale 만큼 확대됨 (배율)
+@char image [position=center] [fx=""] [duration=0.5] [scale=1]
 
 # 이미지 표시
 # id는 숫자 형식이어야 함
@@ -85,6 +86,7 @@
 # BGM 또는 BGS를 변경, - 입력시 재생 중단
 # duration 시간을 들여서 볼륨 fade (재생 중단도 동일)
 # wait이 1이라면 fade하는 동안 대기하며, 0 1 중 선택
+# BGS는 효과음 볼륨을 따라감
 @bgm bgm [duration=0] [wait=1]
 @bgs bgs [duration=0] [wait=1]
 
@@ -99,6 +101,11 @@
 # @set 으로 저장된 값에 따라 분기
 # 모든 조건을 만족하지 못했다면 다음 명령을 실행
 @if name value1 to1 [value2 to2 ...]
+
+# 대사창 텍스트 스타일 지정
+# style은 normal, bold, italic, bi 사용 가능
+# bi = bold+italic
+@style style
 
 
 ##########################################
@@ -121,6 +128,17 @@
 # position 위치에 표시중인 캐릭터에 효과를 적용, position은 left center right 중 선택
 # type 효과로 적용, jump jump-short shake shake-weak 사용 가능
 @fx charfx position duration type
+
+# filter 또는 bfilter 효과를 identity에서 목표치까지 circle 루프함, ease-in-out-sine
+# duration 시간에 걸쳐서 반 사이클을 수행함 (identity -> input -> identity 는 duration*2 만큼 소요)
+# 종료될 때는 duration 시간에 걸쳐서 identity로 돌아감
+@fx filter-circle type id_or_position duration -
+@fx filter-circle type id_or_position duration m1 m2 m3 m4 m5 m6 m7 m8 m9 m10 m11 m12 m13 m14 m15 m16 m17 m18 m19 m20
+@fx filter-circle type id_or_position duration R G B A
+
+@fx bfilter-circle type id_or_position duration -
+@fx bfilter-circle type id_or_position duration m1 m2 m3 m4 m5 m6 m7 m8 m9 m10 m11 m12 m13 m14 m15 m16 m17 m18 m19 m20
+@fx bfilter-circle type id_or_position duration R G B A
 
 ##########################################
 
