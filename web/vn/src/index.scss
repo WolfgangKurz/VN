@@ -1,8 +1,9 @@
-@import url("fonts/NanumSquare.css");
-@import url("fonts/NanumMyeongjo.css");
+// @import url("fonts/NanumSquare/NanumSquare.css");
+@import url("fonts/NanumSquareNeo/NanumSquareNeo.css");
+@import url("fonts/NanumMyeongjo/NanumMyeongjo.css");
 
 :root {
-	font-family: "NanumSquare", Arial, sans-serif;
+	font-family: "NanumSquareNeo", "NanumSquare", Arial, sans-serif;
 	font-size: 16px;
 	line-height: 24px;
 	font-weight: 400;
