@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "spritesmith": "^3.4.0"
+    "canvas": "^2.11.0",
+    "rimraf": "^4.1.0"
   }
 }

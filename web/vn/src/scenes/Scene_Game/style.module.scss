@@ -1,0 +1,459 @@
+@import "./charfx";
+
+// z-order list
+$z-bg: 1;
+$z-bpic: 100;
+$z-char: 200;
+$z-pic: 300;
+$z-text: 400;
+$z-auto: 410;
+$z-fader: 450;
+$z-title: 500;
+$z-sel: 600;
+$z-history: 900;
+$z-global: 8000;
+$z-subwindow: 9000;
+$z-loading: 10001;
+
+@mixin fullscreen {
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.Scene_Game {
+	@include fullscreen;
+
+	&,
+	* {
+		position: absolute;
+	}
+
+	&.HideUI {
+		> *:not(.Screen):not(.ScriptLoading) {
+			transform: translateY(99999px);
+			// display: none;
+		}
+	}
+
+	.Screen {
+		@include fullscreen;
+		background-color: #000;
+
+		transition: transform 1s linear;
+	}
+
+	> .Selection {
+		@include fullscreen;
+		background-color: rgba(0, 0, 0, 0.7); // #b0000000
+		z-index: $z-sel;
+		pointer-events: all !important;
+
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+
+		> .Sel {
+			position: relative !important;
+			padding: 20px;
+			width: 462px;
+			height: 56px;
+			overflow: hidden;
+			word-break: keep-all;
+			text-shadow: 0 0 4px #000, 0 0 4px #000, 0 0 4px #000, 0 0 4px #000, 0 0 4px #000;
+			font-size: 24px;
+			color: #fff;
+			cursor: pointer;
+
+			display: flex;
+			justify-content: start;
+			align-items: center;
+
+			> img {
+				@include fullscreen;
+				&.Active {
+					display: none;
+				}
+			}
+
+			&:active {
+				> img.Normal {
+					display: none;
+				}
+				> img.Active {
+					display: block;
+				}
+			}
+
+			+ .Sel {
+				margin-top: 24px; // 80 - 56
+			}
+		}
+	}
+
+	.Char {
+		$transition-base: transform var(--fx-duration) cubic-bezier(0.65, 0, 0.35, 1); // ease-in-out-cubic
+
+		--fx-duration: 0s;
+		--fx-scale: 1;
+		animation-fill-mode: both;
+
+		bottom: -20px;
+		transition: $transition-base;
+		transform: translate(-50%, 0) scale(var(--fx-scale));
+		z-index: $z-char;
+
+		&.LeftMinOver {
+			left: 0%;
+		}
+		&.LeftMin {
+			left: 0%;
+			transform: translate3d(-10px, 0) scale(var(--fx-scale));
+		}
+		&.Left {
+			left: 25%;
+		}
+		&.Center {
+			left: 50%;
+		}
+		&.Right {
+			left: 75%;
+		}
+		&.RightMin {
+			left: 100%;
+			transform: translate(calc(-100% + 10px), 0) scale(var(--fx-scale));
+		}
+		&.RightMinOver {
+			left: 100%;
+		}
+
+		&.fx- {
+			transition: $transition-base, opacity var(--fx-duration) linear;
+			opacity: 0;
+
+			&.Loading,
+			&.Loaded {
+				opacity: 1;
+			}
+		}
+
+		&.fx-left,
+		&.fx-right {
+			// slide from left/to left
+			transition: $transition-base, left var(--fx-duration) cubic-bezier(0.65, 0, 0.35, 1); // ease-in-out-cubic
+
+			&:not(.Loading):not(.Loaded) {
+				&.fx-left {
+					left: -25%;
+				}
+				&.fx-right {
+					left: 125%;
+				}
+			}
+		}
+		&.fx-top,
+		&.fx-bottom {
+			// slide from left/to left
+			transition: $transition-base, bottom var(--fx-duration) cubic-bezier(0.65, 0, 0.35, 1); // ease-in-out-cubic
+
+			&:not(.Loading):not(.Loaded) {
+				&.fx-top {
+					bottom: 100%;
+				}
+				&.fx-bottom {
+					bottom: -100%;
+				}
+			}
+		}
+
+		&.charfx-jump {
+			animation-name: charfx-jump;
+			animation-duration: var(--charfx-duration);
+		}
+		&.charfx-jump-short {
+			animation-name: charfx-jump-short;
+			animation-duration: var(--charfx-duration);
+		}
+		&.charfx-shake {
+			animation-name: charfx-shake;
+			animation-duration: var(--charfx-duration);
+		}
+		&.charfx-shake-weak {
+			animation-name: charfx-shake-weak;
+			animation-duration: var(--charfx-duration);
+		}
+	}
+
+	.Picture {
+		opacity: 0;
+
+		&.FrontLayer {
+			z-index: $z-pic;
+		}
+		&.BackLayer {
+			z-index: $z-bpic;
+		}
+
+		&.Loading,
+		&.Unloading {
+			transition: opacity var(--fx-duration) linear;
+		}
+		&.Loading,
+		&.Loaded {
+			opacity: 1;
+		}
+
+		&.LeftTop {
+			left: 0;
+			top: 0;
+		}
+		&.Top {
+			left: 50%;
+			top: 0;
+			transform: translate(-50%, 0);
+		}
+		&.RightTop {
+			right: 0;
+			top: 0;
+		}
+		&.Left {
+			left: 0;
+			top: 50%;
+			transform: translate(0, -50%);
+		}
+		&.Center {
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+		}
+		&.Right {
+			right: 0;
+			top: 50%;
+			transform: translate(0, -50%);
+		}
+		&.LeftBottom {
+			left: 0;
+			bottom: 0;
+		}
+		&.Bottom {
+			left: 50%;
+			bottom: 0;
+			transform: translate(-50%, 0);
+		}
+		&.RightBottom {
+			right: 0%;
+			bottom: 0%;
+		}
+	}
+
+	.Title {
+		left: 20px;
+		top: 20px;
+		z-index: $z-title;
+		text-shadow: 0 0 10px #000;
+		font-size: 30px;
+		color: #fff;
+
+		transition: opacity 1s linear;
+		opacity: 0;
+
+		position: relative !important;
+		-webkit-text-stroke-color: rgba(0, 0, 0, 0.575);
+		-webkit-text-stroke-width: (2.5px * 2);
+		> span {
+			position: absolute;
+			-webkit-text-stroke-width: 0;
+			color: #fff;
+		}
+
+		&.Display {
+			opacity: 1;
+		}
+	}
+
+	.Fader {
+		@include fullscreen;
+		background-color: #000;
+		z-index: $z-fader;
+
+		transition: opacity var(--fade-duration) linear;
+		opacity: 0;
+
+		&.Faded {
+			transition: opacity var(--fade-duration) linear;
+			opacity: 1;
+		}
+	}
+
+	.ScriptLoading {
+		@include fullscreen;
+		background-color: #000;
+		font-size: 5vh;
+		transition: color 0.1s linear, opacity 1s linear;
+		color: rgba(255, 255, 255, 0);
+		opacity: 0;
+		pointer-events: none !important;
+		z-index: $z-loading;
+
+		display: flex;
+		justify-content: center;
+		align-items: center;
+
+		&.Display {
+			transition: color 0.1s linear 2s, opacity 1s linear 2s;
+			color: rgba(255, 255, 255, 0.85);
+			opacity: 1;
+			pointer-events: all !important;
+		}
+	}
+
+	.Textbox {
+		z-index: $z-text;
+
+		left: 120px;
+		bottom: 20px;
+	}
+
+	.AutoDisplay {
+		left: (120px + 947px - 121px - 4px);
+		bottom: 15px;
+		z-index: $z-auto;
+
+		> img {
+			position: static;
+		}
+	}
+
+	.SideButtons {
+		z-index: $z-sel;
+
+		left: (120px + 947px + 5px);
+		top: 458px;
+		transition: opacity 0.5s linear;
+		pointer-events: none;
+		opacity: 0;
+
+		@for $i from 1 through 5 {
+			> *:nth-child(#{$i}) {
+				top: (($i - 1) * 49.8px);
+			}
+		}
+
+		&.Display {
+			pointer-events: auto;
+			opacity: 1;
+		}
+	}
+
+	.BG {
+		@include fullscreen;
+		object-fit: cover;
+		z-index: $z-bg;
+	}
+}
+
+.History {
+	@include fullscreen;
+
+	background-color: rgba(0, 0, 0, 0.001);
+	transition: opacity 0.4s ease-in-out;
+	opacity: 0;
+	pointer-events: none;
+	z-index: $z-history;
+
+	&.Display {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.HistoryBox {
+		position: absolute;
+		left: 20px;
+		top: 20px;
+		width: 747px;
+		height: 666px;
+
+		.Background,
+		.HistoryContent {
+			position: absolute;
+			@include fullscreen;
+		}
+
+		.HistoryContent {
+			padding: 10px;
+			width: 747px;
+			height: 666px;
+			overflow: auto;
+
+			:global(.simplebar-track) {
+				z-index: ($z-history + 1);
+			}
+			:global(.simplebar-scrollbar)::before {
+				background-color: #fff;
+			}
+
+			.TextHistory,
+			.SelectionHistory {
+				> * {
+					position: static;
+				}
+
+				line-height: 1.5;
+				font-size: 20px;
+				color: #fff;
+
+				& + .TextHistory,
+				& + .SelectionHistory {
+					margin-top: 12px;
+				}
+			}
+
+			.TellerHistory {
+				display: inline-block;
+				margin-right: 20px;
+				color: #f4cf25;
+			}
+
+			.SelectionHistory {
+				background-color: rgba(0, 0, 0, 0.55);
+				color: #8d8d8d;
+
+				> .Selection {
+					text-align: center;
+
+					&.Selected {
+						color: #f4cf25;
+					}
+				}
+			}
+		}
+	}
+}
+
+.Subwindow {
+	position: absolute;
+	z-index: $z-subwindow;
+}
+
+.MenuButton {
+	position: absolute;
+	top: 15px;
+	right: 20px;
+
+	z-index: $z-global;
+}
+.OptionButton {
+	position: absolute;
+	top: 65px;
+	right: 20px;
+
+	z-index: $z-global;
+}
+
+// Dummy
+.Transitioner {
+	@include fullscreen;
+	z-index: $z-fader;
+}

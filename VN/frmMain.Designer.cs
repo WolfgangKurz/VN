@@ -35,11 +35,11 @@
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "VN";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmMain_FormClosing);
-			this.Shown += new System.EventHandler(this.frmMain_Shown);
-			this.Click += new System.EventHandler(this.frmMain_Click);
 			this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseClick);
 			this.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseDoubleClick);
-			this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseMove);
+			this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.frmMain_Mouse);
+			this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.frmMain_Mouse);
+			this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_Mouse);
 			this.ResumeLayout(false);
 
 		}

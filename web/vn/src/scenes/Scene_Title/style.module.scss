@@ -1,0 +1,81 @@
+@keyframes star-fx {
+	from {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.35;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+#Scene_Title {
+	.StarFX {
+		animation-name: star-fx;
+		animation-duration: 3s;
+		animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+		animation-iteration-count: infinite;
+		animation-fill-mode: both;
+		mix-blend-mode: overlay;
+	}
+
+	.Logo,
+	.ButtonLayer {
+		opacity: 0;
+	}
+
+	.BG > * {
+		position: absolute;
+	}
+
+	.Logo {
+		top: 40px;
+		left: (1200px - 807px); // 1200px, anchor x = 1
+	}
+	.ButtonLayer {
+		left: 50px;
+		top: 240px;
+
+		@for $i from 0 to 4 {
+			> .Button:nth-child(#{$i + 1}) {
+				top: (120px * $i);
+			}
+		}
+	}
+
+	.BlackScreen {
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+
+		background-color: #000;
+		opacity: 1;
+		pointer-events: none;
+		z-index: 90000;
+	}
+
+	&[data-phase*="title"] {
+		.BlackScreen {
+			transition: opacity 2s linear;
+			opacity: 0;
+		}
+	}
+	&[data-phase*="logo"] {
+		.Logo {
+			transition: opacity 2s linear;
+			opacity: 1;
+		}
+		.ButtonLayer {
+			transition: opacity 2s linear;
+			opacity: 1;
+		}
+	}
+	&[data-phase*="exit"] {
+		.BlackScreen {
+			transition: opacity 3s linear;
+			opacity: 1;
+		}
+	}
+}

@@ -1,0 +1,119 @@
+.BackButton {
+	left: (1280px - 114px);
+	top: 12px;
+}
+
+.ModeButton {
+	left: 1058px;
+
+	&.Save {
+		top: 210px;
+	}
+	&.Load {
+		top: 288px;
+	}
+
+	&.Disabled {
+		cursor: default;
+	}
+}
+
+.PageButtons {
+	left: 585px;
+	top: 173px;
+
+	.PageButton {
+		position: absolute;
+
+		&.Current {
+			cursor: default;
+		}
+	}
+
+	@for $i from 0 to 10 {
+		.PageButton:nth-child(#{$i + 1}) {
+			left: ($i * 44px);
+		}
+	}
+}
+
+.Slots .Slot {
+	position: absolute;
+	width: 464px;
+	height: 138px;
+	cursor: pointer;
+
+	@for $i from 0 to 6 {
+		&:nth-child(#{$i + 1}) {
+			left: (53px + 478px * ($i % 2));
+			top: (231px + 150px * math.floor(math.div($i, 2)));
+		}
+	}
+
+	> * {
+		position: absolute;
+	}
+
+	img.Down {
+		display: none;
+	}
+
+	&:active {
+		img.Down {
+			display: block;
+		}
+	}
+
+	.Chapter {
+		left: 218px;
+		top: 20px;
+		font-weight: bold;
+		font-size: 30px;
+		color: #afa9a9;
+	}
+	.Title {
+		left: 218px;
+		top: 54px;
+		font-weight: bold;
+		font-size: 20px;
+		color: #756f6f;
+	}
+	.Date {
+		left: 218px;
+		top: 95px;
+		font-weight: bold;
+		font-size: 18px;
+		color: #615757;
+	}
+	.Thumbnail {
+		left: 16px;
+		top: 16px;
+		width: 185px;
+		height: 104px;
+	}
+}
+
+.LoadWindow .Slots .Slot.Empty {
+	cursor: not-allowed;
+}
+
+.ConfirmWindow {
+	$x: (math.div(1280px, 2) - math.div(583px, 2));
+	$y: (math.div(720px, 2) - math.div(355px, 2));
+
+	left: $x;
+	top: $y;
+
+	> .YesButton,
+	> .NoButton {
+		position: absolute;
+		top: 244px;
+	}
+
+	> .YesButton {
+		left: 116px;
+	}
+	> .NoButton {
+		left: 311px;
+	}
+}

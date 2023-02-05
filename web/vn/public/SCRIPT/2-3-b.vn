@@ -1,0 +1,6 @@
+# for load state
+@bgm Talk_06
+@bg "13_yumi_room"
+@char STD_03_2 center "" 0
+
+@sel "아무래도 오늘은 유미에게 맞춰줘야 할 것 같다…." 2-3-b-a "역시 술은 몸에 안 맞아." 2-3-b-b

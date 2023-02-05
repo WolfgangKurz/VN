@@ -1,0 +1,41 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "node",
+
+		"outDir": "../src/js",
+
+		"strict": true,
+		"importHelpers": false,
+
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+		"experimentalDecorators": true,
+
+		"removeComments": false,
+		"preserveConstEnums": true,
+		"allowSyntheticDefaultImports": true,
+		"downlevelIteration": true,
+		"sourceMap": false,
+		"skipLibCheck": true,
+
+		"baseUrl": "./src",
+		"types": ["node", "nw.js"],
+		"lib": [
+			"esnext",
+			"dom",
+			"dom.iterable"
+		],
+		"paths": {
+			"@/*": ["./*"]
+		}
+	},
+	"include": [
+		"src/**/*.js",
+		"src/**/*.ts"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}

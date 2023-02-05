@@ -1,0 +1,50 @@
+.BackButton {
+	left: (1280px - 255px);
+	top: 95px;
+}
+
+.Slider {
+	left: 300px;
+
+	&.SliderSFX {
+		top: 300px;
+	}
+	&.SliderBGM {
+		top: 385px;
+	}
+}
+
+.VolumeText {
+	right: (1280px - 920px);
+	text-align: right;
+	letter-spacing: -1px;
+	font-weight: 800;
+	font-size: 30px;
+	text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+	color: #222;
+
+	&.VolumeSFX {
+		top: 310px;
+	}
+	&.VolumeBGM {
+		top: 397px;
+	}
+}
+
+.SpeedButton {
+	top: 467px;
+
+	&.Slow {
+		left: 300px;
+	}
+	&.Regular {
+		left: 495px;
+	}
+	&.Fast {
+		left: 690px;
+	}
+}
+img.SpeedButton {
+	margin-left: -5px;
+	margin-top: -5px;
+}

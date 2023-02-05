@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -11,161 +12,82 @@ using System.Windows.Forms;
 
 namespace VN {
 	public partial class frmMain : Form {
-		private Thread RenderThread { get; }
-		private bool Running { get; set; } = false;
+		private string CurrentTitle = "";
 
-		private object LockObj { get; } = new object();
-		private Bitmap[] backBuffer { get; set; } = new Bitmap[2];
-		private int bufferCursor { get; set; } = -1;
 
 		public frmMain() {
 			InitializeComponent();
 
 			var gameHandler = new Game.Game.Handler();
-			gameHandler.OnTitleRequest += (v) => this.AutoInvoke(() => {
+			gameHandler.OnCenter += () => this.CenterToScreen();
+			gameHandler.OnTitle += (v, mem) => {
+				if (mem) this.CurrentTitle = v;
 				this.Text = v;
-			});
-			gameHandler.OnResizableRequest += (v) => this.AutoInvoke(() => {
+			};
+			gameHandler.OnResizable += (v) =>
 				this.FormBorderStyle = v
 					? FormBorderStyle.Sizable
 					: FormBorderStyle.FixedSingle;
-			}); ;
-			gameHandler.OnResizeRequest += (w, h) => this.AutoInvoke(() => {
-				this.ClientSize = new Size((int)w, (int)h);
-
-				lock (this.LockObj) {
-					// 기존 백버퍼 삭제
-					for (var i = 0; i < this.backBuffer.Length; i++) {
-						if (this.backBuffer[i] != null) {
-							this.backBuffer[i].Dispose();
-							this.backBuffer[i] = null;
-						}
-						this.backBuffer[i] = new Bitmap((int)w, (int)h, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-					}
-					this.bufferCursor = -1;
-				}
-			});
+			gameHandler.OnResize += (w, h) => this.ClientSize = new Size(w, h);
+			gameHandler.OnMessage += (msg) => MessageBox.Show(msg, this.CurrentTitle);
+			gameHandler.OnUpdate += () => Application.DoEvents();
+			gameHandler.OnQuit += () => this.Close();
 
 			Game.Game.Instance.Initialize(gameHandler);
+		}
 
-			this.RenderThread = new Thread(() => {
-				var lastTime = 0L;
-
-				while (this.Running) {
-					Bitmap buffer;
-
-					var game = Game.Game.Instance;
-					var cursor = (this.bufferCursor + 1) % this.backBuffer.Length;
-
-					lock (this.LockObj)
-						buffer = this.backBuffer[cursor];
-
-					using (var g = Graphics.FromImage(buffer)) {
-						g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-						g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
-
-						g.Clear(Color.Black);
-						game.Render(g);
-					}
-
-					lock (this.LockObj)
-						this.bufferCursor = cursor;
-
-					this.AutoInvoke(() => this.Invalidate());
-
-					var now = DateTime.UtcNow.Ticks;
-					var delay = (int)Math.Min(now - lastTime, 1000 / 60); // 최대 60프레임
-					lastTime = now;
-					Thread.Sleep(delay);
-				}
-
-				this.AutoInvoke(() => this.Close());
-			});
+		protected override void OnShown(EventArgs e) {
+			base.OnShown(e);
+			Game.Game.Instance.Run(this.Handle);
 		}
 
 		protected override void OnPaint(PaintEventArgs e) {
 			// base.OnPaint(e);
-			if (this.bufferCursor < 0) return;
-
-			lock (this.LockObj)
-				e.Graphics.DrawImage(this.backBuffer[this.bufferCursor], 0, 0);
 		}
 
 		protected override void OnPaintBackground(PaintEventArgs e) {
-			// 배경을 그리면서 화면이 깜빡이기 때문에 방지하기 위해서
-			// 렌더러가 작동중이라면 배경 칠하기를 무시
-			if (!this.Running)
+			if (Game.Game.Instance.gl == null)
 				base.OnPaintBackground(e);
 		}
 
-		/// <summary>
-		/// 외부 스레드에서 UI스레드를 접근하려고 하면 Invoke하고 아니라면 직접 실행
-		/// </summary>
-		/// <param name="act">실행할 함수</param>
-		private void AutoInvoke(Action act) {
-			if (this.InvokeRequired)
-				this.Invoke(act);
-			else
-				act();
+		protected override void OnResize(EventArgs e) {
+			base.OnResize(e);
+
+			var size = this.ClientSize;
+			Game.Game.Instance.ResizeWindow(size.Width, size.Height);
 		}
 
 		private void frmMain_FormClosing(object sender, FormClosingEventArgs e) {
-			if (this.Running) {
-				Game.Game.Instance.Destroy();
-				this.Running = false;
+			if (Game.Game.Instance.Running) {
 				e.Cancel = true;
+				this.Hide();
+				new Thread(() => {
+					Game.Game.Instance.Stop();
+
+					try { 
+						this.Invoke(new Action(() => this.Close()));
+					}
+					catch { }
+				}).Start();
 			}
 		}
 
-		private void frmMain_Click(object sender, EventArgs e) {
-			// 마우스 오른쪽 버튼, 왼쪽 버튼의 구분이 필요해 
-			// 밑의 frmMain_MouseClick 함수로 옮겼음
-
-			//Game.Game.Instance.Clickcheck = true;
-			//Game.Game.Instance.Unblock();
-		}
-
-		private void frmMain_MouseClick(object sender, MouseEventArgs e) {
-			var instance = Game.Game.Instance;
-
-			if (e.Button == MouseButtons.Left) {
-				instance.MouseClick(e.X, e.Y, 1);
-
-				if ((instance.UIState & Game.UIState.Interactive) == Game.UIState.None) // UI를 감춘 상태라면
-					instance.UIState |= Game.UIState.Interactive; // UI 감추기만 해제
-
-				else if (instance.UnblockReady) // 다음 대사/명령으로 넘어갈 준비가 되었다면
-					instance.Unblock(); // 대기를 해제
-
-				else // 모두 아니라면
-					instance.InstantText(); // 현재 대사를 즉시 전부 표시
-			}
-			else if (e.Button == MouseButtons.Right) {
-				instance.MouseClick(e.X, e.Y, 2);
-
-				instance.UIState ^= Game.UIState.Interactive; // 우클릭 시 UI 감추기 토글
-			}
-		}
-
-		private void frmMain_MouseDoubleClick(object sender, MouseEventArgs e) {
-			// 더블 클릭 이벤트 무시
-			this.frmMain_MouseClick(sender, e);
-		}
-
-		private void frmMain_Shown(object sender, EventArgs e) {
-			Game.Game.Instance.Run();
-
-			this.Running = true;
-			this.RenderThread.Start();
-		}
-
-		private void frmMain_MouseMove(object sender, MouseEventArgs e) {
+		private void frmMain_Mouse(object sender, MouseEventArgs e) {
 			var game = Game.Game.Instance;
 
 			var buttons = 0;
 			if (e.Button.HasFlag(MouseButtons.Left)) buttons |= 1;
 			if (e.Button.HasFlag(MouseButtons.Right)) buttons |= 2;
-			game.Mouse(e.X, e.Y, buttons);
+			game.MouseInput(e.X, e.Y, buttons);
+		}
+
+		private void frmMain_MouseClick(object sender, MouseEventArgs e) {
+			Game.Game.Instance.MouseClick(e.X, e.Y);
+		}
+
+		private void frmMain_MouseDoubleClick(object sender, MouseEventArgs e) {
+			// 더블 클릭 이벤트 무시
+			this.frmMain_MouseClick(sender, e);
 		}
 	}
 }
