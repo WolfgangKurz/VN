@@ -17,6 +17,10 @@ export default class Session<T extends {}> {
 		this._vars = JSON.parse(data) || {};
 	}
 
+	public clear() {
+		this._vars = {} as T;
+	}
+
 	public toString () {
 		return this.serialize();
 	}

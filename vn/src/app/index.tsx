@@ -47,8 +47,8 @@ const App: FunctionalComponent = () => {
 					PrepareCollections(),
 				]);
 
-				config.volatile_Scene.value = "Scene_Title";
-				// config.volatile_Scene.value = "Scene_Game";
+				config.volatile_Scene.value = "Scene_Logo";
+				// config.volatile_Scene.value = "Scene_Title";
 			});
 
 		const unsub = config.volatile_Scene.subscribe(() => {

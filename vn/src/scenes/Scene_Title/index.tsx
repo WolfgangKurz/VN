@@ -91,7 +91,7 @@ const Scene_Title: FunctionalComponent = () => {
 	return <Scene_Base id={ style.Scene_Title } data-phase={ phase.value.join(",") }>
 		<div class={ style.BG }>
 			<img src="/BG/BG_Title.png" />
-			<img src={`/BG/BG_Title${GlobalStorage.Instance.seen.ending ? 2 : 1}.png`} />
+			<img src={ `/BG/BG_Title${GlobalStorage.Instance.seen.ending ? 2 : 1}.png` } />
 		</div>
 
 		<img
@@ -150,10 +150,13 @@ const Scene_Title: FunctionalComponent = () => {
 
 								Wait(4000, () => { // 3s fade, 1s waiting
 									batch(() => {
+										config.volatile_Scene.value = "Scene_GameReady";
 										config.volatile_Script.value = "0";
 										config.volatile_ScriptCursor.value = 0;
 
-										config.volatile_Scene.value = "Scene_Game";
+										config.session_Data.peek().clear();
+										config.volatile_Chapter.value = "";
+										config.volatile_Title.value = "";
 									});
 								});
 								break;

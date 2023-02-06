@@ -1,0 +1,146 @@
+$max: 5;
+$stroke-step: 7%;
+
+$from-scale: 5;
+$to-scale: 1;
+
+@keyframes logo-stroke-1 {
+	from {
+		stroke-dashoffset: $stroke-step * $max;
+		stroke-dasharray: 0 $stroke-step * $max * 2.5;
+
+		transform: scale($from-scale);
+	}
+	to {
+		transform: scale($to-scale);
+	}
+}
+@keyframes logo-stroke-2 {
+	from {
+		stroke-width: 1.1;
+		fill: transparent;
+	}
+	to {
+		stroke-width: 1.1;
+		fill: #fff;
+	}
+}
+
+@keyframes bg-dots {
+	from {
+		background-position-x: 0px;
+		background-position-y: 0px;
+	}
+	to {
+		background-position-x: -9px;
+		background-position-y: -27px;
+	}
+}
+
+.Scene_Logo {
+	&::before,
+	&::after {
+		position: absolute;
+		content: "";
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		opacity: 0;
+	}
+
+	&::before {
+		background-image: url(/IMG/logo_back.png);
+		background-position: center;
+		background-size: 100%;
+	}
+	&::after {
+		background-image: url(/IMG/logo_back_dot.png);
+		background-position: center;
+		-webkit-mask-box-image: linear-gradient(
+			to bottom,
+			#000,
+			rgba(0, 0, 0, 0.2) 35%,
+			rgba(0, 0, 0, 0.1),
+			rgba(0, 0, 0, 0.2) 65%,
+			#000
+		);
+
+		animation-name: bg-dots;
+		animation-duration: 2.6s;
+		animation-timing-function: linear;
+		animation-iteration-count: infinite;
+	}
+
+	&.step-1::before,
+	&.step-1::after {
+		transition: opacity 2s cubic-bezier(0.76, 0, 0.24, 1);
+		opacity: 1;
+	}
+	&.step-2,
+	&.step-3 {
+		&::before,
+		&::after {
+			opacity: 1;
+		}
+	}
+
+	opacity: 1;
+	&.step-3 {
+		transition: opacity 2s linear;
+		opacity: 0;
+	}
+
+	> svg {
+		position: absolute;
+		left: 0;
+		top: 0;
+		z-index: 3;
+	}
+}
+
+.layer {
+	animation-fill-mode: both;
+	animation-iteration-count: 1;
+
+	alignment-baseline: middle;
+	text-anchor: middle;
+
+	transform-origin: 50% 50%;
+	font-weight: 800;
+	font-size: 80px;
+
+	stroke-width: 1.1;
+	stroke-dasharray: $stroke-step $stroke-step * ($max - 1);
+
+	@for $i from 1 through $max {
+		&:nth-child(#{$i}) {
+			stroke-dashoffset: $stroke-step * $i;
+		}
+	}
+
+	stroke: transparent;
+	fill: transparent;
+
+	&.layer-a-1 {
+		animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+		animation-name: logo-stroke-1;
+		animation-duration: 2s;
+
+		stroke: #fff;
+	}
+	&.layer-a-2 {
+		animation-timing-function: linear;
+		animation-name: logo-stroke-2;
+		animation-duration: 1s;
+
+		stroke: #fff;
+		transform: scale($to-scale);
+	}
+	&.layer-a-3 {
+		fill: #fff;
+		stroke: #fff;
+		stroke-width: 1.1;
+		transform: scale($to-scale);
+	}
+}
