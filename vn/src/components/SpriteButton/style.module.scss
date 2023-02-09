@@ -1,3 +1,6 @@
 .SpriteButton {
 	cursor: pointer;
 }
+.Sprite:not(.Active) {
+	display: none;
+}

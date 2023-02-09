@@ -131,7 +131,7 @@ const Window_CollectionEvent: FunctionalComponent<WindowCollectionProps> = (prop
 		<div class={ style.Events }>
 			{ events.slice(page * 6, (page + 1) * 6).map((r, i) => {
 				return <div
-					class={ style.Item }
+					class={ BuildClass(style.Item, !isSeen(r) && style.NotSeen) }
 					onClick={ e => {
 						e.preventDefault();
 

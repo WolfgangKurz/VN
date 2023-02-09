@@ -86,6 +86,10 @@
 					display: block;
 				}
 			}
+
+			&.NotSeen {
+				cursor: not-allowed;
+			}
 		}
 	}
 	.EventSelected {

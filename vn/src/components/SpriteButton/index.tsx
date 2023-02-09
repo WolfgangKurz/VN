@@ -25,6 +25,7 @@ const SpriteButton: FunctionalComponent<JSX.HTMLAttributes<HTMLDivElement> & Spr
 
 	const buttonRef = useRef<HTMLDivElement>(null);
 
+	const sprites = [...new Set([idle, hover || [], active || []].flat())];
 	const sprite = (() => {
 		const _idle = Array.isArray(idle) ? idle[frame] : idle;
 
@@ -99,11 +100,12 @@ const SpriteButton: FunctionalComponent<JSX.HTMLAttributes<HTMLDivElement> & Spr
 		}) }
 		ref={ buttonRef }
 	>
-		{ src && sprite
-			? <SpriteImage
+		{ src
+			? sprites.map(s => <SpriteImage
+				class={ BuildClass(style.Sprite, sprite === s && style.Active) }
 				src={ src }
-				sprite={ sprite }
-			/>
+				sprite={ s }
+			/>)
 			: <></>
 		}
 	</div>;
