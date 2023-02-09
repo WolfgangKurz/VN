@@ -45,6 +45,14 @@ export default defineConfig({
 			"this-is-undefined-in-esm": "silent",
 		},
 	},
+	server: {
+		watch: {
+			ignored: [
+				path.join(__dirname, "packaging", "**"),
+				path.join(__dirname, "package", "**"),
+			],
+		},
+	},
 	plugins: [preact()],
 	css: {
 		preprocessorOptions: {

@@ -24,6 +24,6 @@ const Loader: FunctionalComponent<LoaderProps> = ({ component, loading, ...props
 	}, [component]);
 
 	if (content) return <>{ content }</>;
-	return <>loading</>;
+	return <>{ loading || "Loading" }</>;
 };
 export default Loader;
