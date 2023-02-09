@@ -18,7 +18,7 @@ const sassPrependData = [
 		path.join(__dirname, "public", "IMG", "CUT", "list.json"),
 		JSON.stringify(
 			fs.readdirSync(path.join(__dirname, "public", "IMG", "CUT"), "utf-8")
-				.filter(r => /^cut_[0-9].+\.(jpg|png)$/.test(r)),
+				.filter(r => /^(cut_[0-9].+|Title_[0-9]+)\.(jpg|png)$/.test(r)),
 		),
 		"utf-8",
 	);

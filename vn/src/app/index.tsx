@@ -49,6 +49,7 @@ const App: FunctionalComponent = () => {
 
 				config.volatile_Scene.value = "Scene_Logo";
 				// config.volatile_Scene.value = "Scene_Title";
+				// config.volatile_Scene.value = "Scene_Game";
 			});
 
 		const unsub = config.volatile_Scene.subscribe(() => {

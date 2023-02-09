@@ -169,7 +169,7 @@ const Window_CollectionIllust: FunctionalComponent<WindowCollectionProps> = (pro
 					/>
 
 					<div class={ style.CharName }>
-						{ CharTypeNames[r] || r }
+						{ !isSeen(r) ? "???" : CharTypeNames[r] || r }
 					</div>
 
 					<img

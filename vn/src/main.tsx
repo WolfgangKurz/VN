@@ -4,7 +4,7 @@ import "./config";
 import GlobalStorage from "./libs/GlobalStorage";
 
 import App from "./app";
-import { StartupScript } from "./debug";
+import { StartupScript } from "./startup";
 
 import "./index.scss";
 
