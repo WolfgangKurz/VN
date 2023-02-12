@@ -63,8 +63,8 @@ export const CharTypeNames = {
 	"STD_02V2-3": "동복(짐+음식)",
 	"STD_03@": "샤워",
 	STD_03: "내복",
-	STD_04: "작업복(가방)",
-	STD_04V2: "작업복",
+	STD_04: "작업복",
+	STD_04V2: "작업복(가방)",
 };
 Object.freeze(CharTypeNames);
 

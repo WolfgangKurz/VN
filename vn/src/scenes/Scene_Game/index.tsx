@@ -356,6 +356,7 @@ const Scene_Game: FunctionalComponent = () => {
 									unblock();
 								else
 									addBlock(Wait(s.fadeDuration * 1000, () => {
+										bgm.fadeSkip();
 										bgm.stop();
 										if (s.wait) unblock();
 									}));
@@ -416,6 +417,7 @@ const Scene_Game: FunctionalComponent = () => {
 									unblock();
 								else
 									addBlock(Wait(s.fadeDuration * 1000, () => {
+										bgs.fadeSkip();
 										bgs.stop();
 										if (s.wait) unblock();
 									}));
@@ -719,12 +721,12 @@ const Scene_Game: FunctionalComponent = () => {
 
 			case "title": // scene title
 				config.volatile_Title.value = s.title;
-				unblock();
+				unblock(true);
 				break;
 
 			case "chapter": // chapter text
 				config.volatile_Chapter.value = s.chapter;
-				unblock();
+				unblock(true);
 				break;
 
 			case "set":
@@ -733,7 +735,7 @@ const Scene_Game: FunctionalComponent = () => {
 					_session.data[s.name] = s.value;
 
 					console.log("Session var set, " + s.name + " -> " + s.value);
-					unblock();
+					unblock(true);
 				}
 				break;
 
@@ -751,7 +753,7 @@ const Scene_Game: FunctionalComponent = () => {
 						}
 						return false;
 					}))
-						unblock();
+						unblock(true);
 				}
 				break;
 
@@ -1002,11 +1004,11 @@ const Scene_Game: FunctionalComponent = () => {
 
 			case "command":
 				ScriptCommand.run(s.command, s.args);
-				return unblock();
+				return unblock(true);
 
 			case "style":
 				setTextStyle(s.style);
-				return unblock();
+				return unblock(true);
 		}
 	}, [script, scriptRun]);
 

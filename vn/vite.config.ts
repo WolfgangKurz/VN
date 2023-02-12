@@ -4,13 +4,6 @@ import path from "node:path";
 import { defineConfig } from "vite";
 import preact from "@preact/preset-vite";
 
-const sassPrependData = [
-	'@charset "UTF-8";',
-	'@use "sass:math";',
-	'@use "sass:list";',
-	'@use "sass:map";',
-].join("\n");
-
 // build collection list
 (() => {
 	// events
@@ -36,42 +29,57 @@ const sassPrependData = [
 })();
 
 // https://vitejs.dev/config/
-export default defineConfig({
-	esbuild: {
-		jsxFactory: "h",
-		jsxFragment: "Fragment",
-		// jsxInject: `import { h, Fragment } from "preact";`,
-		logOverride: {
-			"this-is-undefined-in-esm": "silent",
+export default (r) => {
+	const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf-8"));
+
+	const sassPrependData = [
+		'@charset "UTF-8";',
+		'@use "sass:math";',
+		'@use "sass:list";',
+		'@use "sass:map";',
+	].join("\n");
+
+	return defineConfig({
+		define: {
+			"import.meta.env.VERSION": JSON.stringify(packageJson.version),
 		},
-	},
-	server: {
-		watch: {
-			ignored: [
-				path.join(__dirname, "packaging", "**"),
-				path.join(__dirname, "package", "**"),
-			],
-		},
-	},
-	plugins: [preact()],
-	css: {
-		preprocessorOptions: {
-			css: { charset: false },
-			sass: {
-				charset: false,
-				additionalData: sassPrependData,
-			},
-			scss: {
-				charset: false,
-				additionalData: sassPrependData,
+
+		esbuild: {
+			jsxFactory: "h",
+			jsxFragment: "Fragment",
+			// jsxInject: `import { h, Fragment } from "preact";`,
+			logOverride: {
+				"this-is-undefined-in-esm": "silent",
 			},
 		},
-	},
-	resolve: {
-		alias: {
-			"@/": `${path.resolve(__dirname, "src")}/`,
-			react: "preact/compat",
-			"react-dom": "preact/compat",
+		server: {
+			watch: {
+				ignored: [
+					path.join(__dirname, "packaging", "**"),
+					path.join(__dirname, "package", "**"),
+				],
+			},
 		},
-	},
-});
+		plugins: [preact()],
+		css: {
+			preprocessorOptions: {
+				css: { charset: false },
+				sass: {
+					charset: false,
+					additionalData: sassPrependData,
+				},
+				scss: {
+					charset: false,
+					additionalData: sassPrependData,
+				},
+			},
+		},
+		resolve: {
+			alias: {
+				"@/": `${path.resolve(__dirname, "src")}/`,
+				react: "preact/compat",
+				"react-dom": "preact/compat",
+			},
+		},
+	});
+};

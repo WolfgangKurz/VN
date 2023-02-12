@@ -78,13 +78,15 @@ const Scene_Title: FunctionalComponent = () => {
 			addPhase("logo"); // Logo fade-in
 		});
 
-		const bgm = new ManagedAudio(true);
-		bgm.load(`/BGM/Title${GlobalStorage.Instance.seen.ending ? 2 : 1}.mp3`);
-		bgm.play();
-		setBGM(bgm);
+		if (!bgm) {
+			const bgm = new ManagedAudio(true);
+			bgm.load(`/BGM/Title${GlobalStorage.Instance.seen.ending ? 2 : 1}.mp3`);
+			bgm.play();
+			setBGM(bgm);
+		}
 
 		return () => {
-			bgm.destroy();
+			bgm?.destroy();
 		};
 	}, []);
 
@@ -183,6 +185,11 @@ const Scene_Title: FunctionalComponent = () => {
 				/>
 			) }
 		</div>
+
+		<div class={ style.Version }>
+			{ import.meta.env.VERSION }
+		</div>
+
 		<div class={ style.BlackScreen } />
 
 		{ subwindow }

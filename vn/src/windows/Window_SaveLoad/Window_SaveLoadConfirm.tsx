@@ -63,6 +63,13 @@ const Window_SaveLoadConfirm: FunctionalComponent<WindowSaveLoadConfirmProps> = 
 
 					static_PlayUISE("stop");
 					if (props.onConfirm) props.onConfirm();
+
+					if (props.isSave) {
+						setDisplay(false);
+						Wait(500, () => { // window fadeout 0.5s
+							if (props.onClose) props.onClose();
+						});
+					}
 				} }
 			/>
 			<SpriteButton
