@@ -82,7 +82,6 @@ export default class SaveData {
 
 		{
 			const subBuffer = Buffer.from(this.session, "utf-8");
-			console.log(subBuffer.length, subBuffer.byteLength);
 			write(subBuffer.byteLength.toString(), 10);
 			buffer = Buffer.concat([buffer, subBuffer], buffer.length + subBuffer.length + 60);
 			cursor = buffer.length - 60;

@@ -86,7 +86,7 @@ const Scene_Game: FunctionalComponent = () => {
 	const [scriptRun, setScriptRun] = useState(0);
 	const scriptLoading = !script || script.cursor < scriptCursor;
 
-	const next = () => setScriptRun((scriptRun + 1) % 100000);
+	const next = () => setScriptRun(v => (v + 1) % 100000);
 	const [assetLoaded, setAssetLoaded] = useState(false);
 
 	const [subwindow, setSubwindow] = useState<preact.VNode | null>(null);
@@ -1044,6 +1044,9 @@ const Scene_Game: FunctionalComponent = () => {
 
 						console.log(config.volatile_ScriptCursor.peek());
 					});
+			} else {
+				console.error("Script not requested");
+				config.volatile_Scene.value = "Scene_Title";
 			}
 		});
 

@@ -78,8 +78,9 @@ const Scene_Title: FunctionalComponent = () => {
 			addPhase("logo"); // Logo fade-in
 		});
 
+		let bgm: ManagedAudio | undefined = undefined;
 		if (!bgm) {
-			const bgm = new ManagedAudio(true);
+			bgm = new ManagedAudio(true);
 			bgm.load(`/BGM/Title${GlobalStorage.Instance.seen.ending ? 2 : 1}.mp3`);
 			bgm.play();
 			setBGM(bgm);
