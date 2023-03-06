@@ -392,6 +392,7 @@ const Scene_Game: FunctionalComponent = () => {
 
 					if (s.name !== "-") {
 						sessionSeen("bgm", s.name);
+						bgm.fadeSkip();
 						bgm.play().then(() => unblock());
 					}
 					return;
@@ -451,8 +452,10 @@ const Scene_Game: FunctionalComponent = () => {
 						}
 					}
 
-					if (s.name !== "-")
+					if (s.name !== "-") {
+						bgs.fadeSkip();
 						bgs.play().then(() => unblock());
+					}
 					return;
 				}
 			case "se":

@@ -52,6 +52,38 @@ export default (r) => {
 				"this-is-undefined-in-esm": "silent",
 			},
 		},
+		build: {
+			rollupOptions: {
+				output: {
+					inlineDynamicImports: false,
+					manualChunks (id) {
+						// entry
+						if (id.includes("/src/app/")) return undefined;
+
+						// types & libs & loader -> base
+						if (id.includes("/src/types/")) return "base";
+						if (id.includes("/src/libs/")) return "base";
+						if (id.includes("/src/loader")) return "base";
+
+						// types & libs & loader -> base
+						if (id.includes("/src/fonts/")) return "fonts";
+
+						// components
+						if (id.includes("/src/components/")) return "components";
+
+						// scenes & windows
+						if (id.includes("/src/scenes/")) {
+							const y = id.replace(/^.*\/src\/scenes\/([^/.]+)\/?.*(?:\.?.*)$/g, "$1");
+							return `Scene.${y}`;
+						}
+						if (id.includes("/src/windows/")) {
+							const y = id.replace(/^.*\/src\/windows\/([^/.]+)\/?.*(?:\.?.*)$/g, "$1");
+							return `Window.${y}`;
+						}
+					},
+				},
+			},
+		},
 		server: {
 			watch: {
 				ignored: [
