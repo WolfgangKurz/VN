@@ -55,8 +55,7 @@ export default class ManagedAudio {
 	public load (src: string) {
 		this._audio.src = this._src = src;
 
-		const _vol = (this._isBGM ? config.volume_BGM.peek() : config.volume_SFX.peek()) / 100;
-		this._audio.volume = _vol;
+		this.resetVolume();
 	}
 
 	public play (): Promise<void> {
@@ -90,6 +89,11 @@ export default class ManagedAudio {
 
 	public loop (loop: boolean) {
 		this._audio.loop = loop;
+	}
+
+	public resetVolume () {
+		const _vol = (this._isBGM ? config.volume_BGM.peek() : config.volume_SFX.peek()) / 100;
+		this._audio.volume = _vol;
 	}
 
 	/** default `1000` msec */

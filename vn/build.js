@@ -2,6 +2,7 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import * as cp from "node:child_process";
 import rimraf from "rimraf";
+import archiver from "archiver";
 
 const __dirname = path.resolve();
 
@@ -62,6 +63,7 @@ function copyDir (from, to) { // cp from to/
 	});
 }
 
+console.log("Copying assets...");
 if (fs.existsSync(path.join(__dirname, "packaging"))) rimraf.sync(path.join(__dirname, "packaging"));
 if (fs.existsSync(path.join(__dirname, "package"))) rimraf.sync(path.join(__dirname, "package"));
 
@@ -82,22 +84,39 @@ const nwjsJson = JSON.stringify({
 		icon: "icon.png",
 	},
 	"nwjs-packager": {
-		nwVersion: "stable",
+		nwVersion: "0.60.0",
 		nwFlavor: "sdk",
 		appFriendlyName: "VN",
 		appWinIcon: "icon.ico",
 		files: ["./**"],
 		outputDir: "../package",
 		builds: {
-			linux: { "tar.gz": true },
-			osx: { "zip": true },
-			win: { "zip": true },
+			linux: { "tar.gz": false },
+			osx: { "zip": false },
+			win: { "zip": false },
 		},
 	},
 }, undefined, 4);
 
 fs.writeFileSync(path.join(__dirname, "packaging", "package.json"), nwjsJson, "utf-8");
 
+console.log("Building...");
 cp.execSync("npx nwp", {
 	cwd: path.join(__dirname, "packaging"),
 });
+
+console.log("Copying icon...");
+const packageDirectory = `${packageJson.name}-${packageJson.version}-win-x64`;
+fs.copyFileSync(
+	path.join(__dirname, "packaging", "icon.png"),
+	path.join(__dirname, "package", packageDirectory, "icon.png"),
+);
+
+console.log("Zipping...");
+(async () => {
+	const zipStream = fs.createWriteStream(path.join(__dirname, "package", `${packageDirectory}.zip`));
+	const zip = archiver("zip", { zlib: { level: 9 } });
+	zip.pipe(zipStream);
+	zip.directory(path.join(__dirname, "package", packageDirectory), false);
+	await zip.finalize();
+})();
