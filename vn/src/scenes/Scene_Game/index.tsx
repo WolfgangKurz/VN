@@ -344,45 +344,53 @@ const Scene_Game: FunctionalComponent = () => {
 				{
 					const src = `/BGM/${s.name}.mp3`;
 					if (bgm.src() !== src) {
-						if (s.name === "-") {// unload
-							if (s.fadeDuration > 0) {
-								if (scriptLoading) {
-									bgm.fadeOut(0);
-									return unblock();
-								}
+						console.log(`BGM: prev "${bgm.src()}", requested: "${src}"`);
+
+						if (s.name === "-") { // unload
+							console.log(`BGM: Try to unload :: fadeDuration ${s.fadeDuration}s, ${scriptLoading ? "Loading" : "Normal"}`);
+
+							if (s.fadeDuration > 0 && !scriptLoading) { // 불러오고 있는 경우 페이드하지 않음
+								console.log(`BGM: Do fade, ${s.wait ? "Waits" : "Do not waits"}`);
+
 								bgm.fadeOut(s.fadeDuration * 1000);
 
-								if (!s.wait)
+								if (!s.wait) // 대기하지 않는 경우
 									unblock();
 								else
 									addBlock(Wait(s.fadeDuration * 1000, () => {
+										console.log(`BGM: Wait end`);
 										bgm.fadeSkip();
 										bgm.stop();
-										if (s.wait) unblock();
+										unblock();
 									}));
 								return;
-							} else {
-								bgm.fadeSkip();
+							} else { // 페이드하지 않는 경우
+								console.log(`BGM: Do not fade, just stop`);
+
 								bgm.stop();
 								return unblock();
 							}
 						} else {
+							console.log(`BGM: Try to load "${src}" :: fadeDuration ${s.fadeDuration}s, ${scriptLoading ? "Loading" : "Normal"}`);
+
 							bgm.load(src);
 							bgm.play().then(() => {
-								if (s.fadeDuration > 0) {
-									if (scriptLoading) {
-										bgm.fadeIn(0);
-										return unblock();
-									}
+								if (s.fadeDuration > 0 && !scriptLoading) { // 불러오고 있으면 페이드하지 않음
+									console.log(`BGM: Do fade, ${s.wait ? "Waits" : "Do not waits"}`);
+
 									bgm.fadeIn(s.fadeDuration * 1000);
 
-									if (!s.wait)
+									if (!s.wait) // 대기하지 않으면 바로 다음 스크립트로
 										unblock();
-									else
-										addBlock(Wait(s.fadeDuration * 1000, () => unblock()));
+									else // 대기하는 경우
+										addBlock(Wait(s.fadeDuration * 1000, () => {
+											console.log(`BGM: Wait end`);
+											bgm.fadeSkip(); // Fade 완료
+											unblock();
+										}));
 									return;
 								} else {
-									bgm.fadeSkip();
+									console.log(`BGM: Do not fade, just go next`);
 									return unblock();
 								}
 							});
@@ -391,9 +399,14 @@ const Scene_Game: FunctionalComponent = () => {
 					}
 
 					if (s.name !== "-") {
+						console.log(`BGM: Same src requested, not unload`);
+						console.log(`BGM: Skip previous fade (will maximum volume)`);
+
 						sessionSeen("bgm", s.name);
+
 						bgm.fadeSkip();
-						bgm.resetVolume();
+						// bgm.pause();
+						// bgm.resetVolume();
 						bgm.play().then(() => unblock());
 					}
 					return;
@@ -455,7 +468,9 @@ const Scene_Game: FunctionalComponent = () => {
 
 					if (s.name !== "-") {
 						bgs.fadeSkip();
+						bgs.pause();
 						bgs.resetVolume();
+
 						bgs.play().then(() => unblock());
 					}
 					return;

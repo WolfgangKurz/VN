@@ -55,9 +55,11 @@ export default class ManagedAudio {
 	public load (src: string) {
 		this._audio.src = this._src = src;
 
+		this._fading = null;
+		this.fadeCb = null;
 		this.resetVolume();
 	}
-
+	
 	public play (): Promise<void> {
 		if (this._audio.paused)
 			return this._audio.play();
@@ -71,6 +73,9 @@ export default class ManagedAudio {
 	}
 
 	public stop () {
+		this._fading = null;
+		this.fadeCb = null;
+
 		this.pause();
 		this._audio.currentTime = 0;
 	}
