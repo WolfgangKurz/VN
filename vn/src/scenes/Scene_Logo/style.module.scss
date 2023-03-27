@@ -74,7 +74,7 @@ $to-scale: 1;
 
 	&.step-1::before,
 	&.step-1::after {
-		transition: opacity 2s cubic-bezier(0.76, 0, 0.24, 1);
+		transition: opacity 1s cubic-bezier(0.76, 0, 0.24, 1);
 		opacity: 1;
 	}
 	&.step-2,
@@ -87,7 +87,7 @@ $to-scale: 1;
 
 	opacity: 1;
 	&.step-3 {
-		transition: opacity 2s linear;
+		transition: opacity 1s linear;
 		opacity: 0;
 	}
 
@@ -125,14 +125,14 @@ $to-scale: 1;
 	&.layer-a-1 {
 		animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 		animation-name: logo-stroke-1;
-		animation-duration: 2s;
+		animation-duration: 1s;
 
 		stroke: #fff;
 	}
 	&.layer-a-2 {
 		animation-timing-function: linear;
 		animation-name: logo-stroke-2;
-		animation-duration: 1s;
+		animation-duration: 0.5s;
 
 		stroke: #fff;
 		transform: scale($to-scale);

@@ -52,14 +52,33 @@ export default class ManagedAudio {
 		this._volUnsub();
 	}
 
-	public load (src: string) {
-		this._audio.src = this._src = src;
+	public load (src: string): Promise<void> {
+		if (!this._audio.paused)
+			this._audio.pause();
 
 		this._fading = null;
 		this.fadeCb = null;
 		this.resetVolume();
+
+		return new Promise<void>((resolve, reject) => {
+			const onLoad = (() => {
+				this._audio.removeEventListener("canplaythrough", onLoad);
+				this._audio.removeEventListener("error", onError);
+				resolve();
+			}).bind(this);
+			const onError = ((e: Event) => {
+				this._audio.removeEventListener("canplaythrough", onLoad);
+				this._audio.removeEventListener("error", onError);
+				reject(e);
+			}).bind(this);
+
+			this._audio.addEventListener("canplaythrough", onLoad);
+			this._audio.addEventListener("error", onError);
+
+			this._audio.src = this._src = src;
+		});
 	}
-	
+
 	public play (): Promise<void> {
 		if (this._audio.paused)
 			return this._audio.play();

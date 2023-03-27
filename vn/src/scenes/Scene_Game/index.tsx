@@ -79,6 +79,7 @@ interface HistorySelectionData {
 type HistoryData = HistoryTextData | HistorySelectionData;
 
 const autoSprites = new Array(16).fill(0).map((_, i) => `btn_auto_on${(i + 1).toString().padStart(2, "0")}.png`);
+let _script_processed = false; // global switch
 
 const Scene_Game: FunctionalComponent = () => {
 	const [script, setScript] = useState<Script | null>(null);
@@ -193,122 +194,11 @@ const Scene_Game: FunctionalComponent = () => {
 
 	//////////////////////////////
 
-	useEffect(() => { // script load skipper
-		if (!script || !scriptLoading) return;
-
-		if (blocks.length > 0) return unblock(true);
-	}, [scriptCursor, blocks, displayText]);
-
-	useEffect(() => {
-		if (!scriptLoading)
-			config.volatile_Mute.value = false;
-	}, [scriptLoading]);
-
-	useEffect(() => {
-		if (doAuto && textState === TextboxPhase.Done)
-			doAutoFn();
-	}, [textState, doAuto]);
-
-	useEffect(() => { // fx worker
-		let running = true;
-		const begin = Date.now();
-		let latest = -1;
-		const fn = () => {
-			if (!running) return;
-
-			const el = ScreenEl.current;
-			if (!el) return requestAnimationFrame(fn);
-
-			const p = (Date.now() - begin) / (fxDuration * 1000);
-			const cur = Math.floor(p);
-
-			switch (fx) {
-				case "shake":
-					{
-						const loop = fxArgs[1] as number;
-						if (loop >= 0 && p >= loop) {
-							running = false;
-							el.style.transform = "";
-							setFXEnd(true);
-							return;
-						}
-					}
-
-					if (latest !== cur) {
-						latest = cur;
-
-						let x = 0, y = 0;
-						const th = {
-							weak: 3,
-							normal: 6,
-							strong: 10,
-						}[fxArgs[0]] || 0; // strength
-
-						x = (Math.random() - 0.5) * th;
-						y = (Math.random() - 0.5) * th;
-
-						el.style.transitionDuration = `${fxDuration}s`;
-						el.style.transform = `translate(${x}px, ${y}px)`;
-					}
-					break;
-
-				case "shake_fadeout":
-					if (p >= 1) {
-						running = false;
-						el.style.transform = "";
-						setFXEnd(true);
-						return;
-					}
-
-					el.style.transitionDuration = `${fxDuration}s`;
-					el.style.transform = "";
-					break;
-
-				case "charfx":
-					{
-						if (scriptLoading) {
-							running = false;
-							return setFXEnd(true);
-						}
-
-						const target = el.querySelectorAll<HTMLImageElement>(`.${style.Char}.${PosStyles[fxArgs[0].toString()]}`);
-						const charfx = fxArgs[1];
-						const fxClass = style[`charfx-${charfx}`];
-
-						if (p >= 1) {
-							running = false;
-							setFXEnd(true);
-
-							target.forEach(t => {
-								if (t.classList.contains(fxClass)) {
-									t.classList.remove(fxClass);
-									t.style.removeProperty("--charfx-duration");
-								}
-							});
-							return;
-						}
-
-						target.forEach(t => {
-							if (!t.classList.contains(fxClass)) {
-								t.classList.add(fxClass);
-								t.style.setProperty("--charfx-duration", `${fxDuration}s`);
-							}
-						});
-					}
-					break;
-			}
-
-			requestAnimationFrame(fn);
-		};
-		requestAnimationFrame(fn);
-
-		return () => {
-			running = false;
-		};
-	}, [fx, fxDuration, fxArgs]);
-
-	useEffect((): void => { // script processor
+	function processNextScript (): void { // script processor
 		if (!script) return;
+		if (!_script_processed) return;
+
+		_script_processed = false;
 
 		const s = script.next();
 		if (!s) return;
@@ -344,64 +234,48 @@ const Scene_Game: FunctionalComponent = () => {
 				{
 					const src = `/BGM/${s.name}.mp3`;
 					if (bgm.src() !== src) {
-						console.log(`BGM: prev "${bgm.src()}", requested: "${src}"`);
-
 						if (s.name === "-") { // unload
-							console.log(`BGM: Try to unload :: fadeDuration ${s.fadeDuration}s, ${scriptLoading ? "Loading" : "Normal"}`);
-
 							if (s.fadeDuration > 0 && !scriptLoading) { // 불러오고 있는 경우 페이드하지 않음
-								console.log(`BGM: Do fade, ${s.wait ? "Waits" : "Do not waits"}`);
-
 								bgm.fadeOut(s.fadeDuration * 1000);
 
 								if (!s.wait) // 대기하지 않는 경우
 									unblock();
 								else
 									addBlock(Wait(s.fadeDuration * 1000, () => {
-										console.log(`BGM: Wait end`);
 										bgm.fadeSkip();
 										bgm.stop();
 										unblock();
 									}));
 								return;
 							} else { // 페이드하지 않는 경우
-								console.log(`BGM: Do not fade, just stop`);
-
 								bgm.stop();
 								return unblock();
 							}
 						} else {
-							console.log(`BGM: Try to load "${src}" :: fadeDuration ${s.fadeDuration}s, ${scriptLoading ? "Loading" : "Normal"}`);
+							bgm.load(src)
+								.then(() => bgm.play())
+								.then(() => {
+									console.log("!");
+									if (s.fadeDuration > 0 && !scriptLoading) { // 불러오고 있으면 페이드하지 않음
+										bgm.fadeIn(s.fadeDuration * 1000);
 
-							bgm.load(src);
-							bgm.play().then(() => {
-								if (s.fadeDuration > 0 && !scriptLoading) { // 불러오고 있으면 페이드하지 않음
-									console.log(`BGM: Do fade, ${s.wait ? "Waits" : "Do not waits"}`);
-
-									bgm.fadeIn(s.fadeDuration * 1000);
-
-									if (!s.wait) // 대기하지 않으면 바로 다음 스크립트로
-										unblock();
-									else // 대기하는 경우
-										addBlock(Wait(s.fadeDuration * 1000, () => {
-											console.log(`BGM: Wait end`);
-											bgm.fadeSkip(); // Fade 완료
+										if (!s.wait) // 대기하지 않으면 바로 다음 스크립트로
 											unblock();
-										}));
-									return;
-								} else {
-									console.log(`BGM: Do not fade, just go next`);
-									return unblock();
-								}
-							});
+										else // 대기하는 경우
+											addBlock(Wait(s.fadeDuration * 1000, () => {
+												bgm.fadeSkip(); // Fade 완료
+												unblock();
+											}));
+										return;
+									} else {
+										return unblock();
+									}
+								});
 							return;
 						}
 					}
 
 					if (s.name !== "-") {
-						console.log(`BGM: Same src requested, not unload`);
-						console.log(`BGM: Skip previous fade (will maximum volume)`);
-
 						sessionSeen("bgm", s.name);
 
 						bgm.fadeSkip();
@@ -443,33 +317,34 @@ const Scene_Game: FunctionalComponent = () => {
 								return unblock();
 							}
 						} else {
-							bgs.load(src);
-							bgs.play().then(() => {
-								if (s.fadeDuration > 0) {
-									if (scriptLoading) {
-										bgs.fadeIn(0);
+							bgs.load(src)
+								.then(() => bgs.play())
+								.then(() => {
+									if (s.fadeDuration > 0) {
+										if (scriptLoading) {
+											bgs.fadeIn(0);
+											return unblock();
+										}
+										bgs.fadeIn(s.fadeDuration * 1000);
+
+										if (!s.wait)
+											unblock();
+										else
+											addBlock(Wait(s.fadeDuration * 1000, () => unblock()));
+										return;
+									} else {
+										bgs.fadeSkip();
 										return unblock();
 									}
-									bgs.fadeIn(s.fadeDuration * 1000);
-
-									if (!s.wait)
-										unblock();
-									else
-										addBlock(Wait(s.fadeDuration * 1000, () => unblock()));
-									return;
-								} else {
-									bgs.fadeSkip();
-									return unblock();
-								}
-							});
+								});
 							return;
 						}
 					}
 
 					if (s.name !== "-") {
 						bgs.fadeSkip();
-						bgs.pause();
-						bgs.resetVolume();
+						// bgs.pause();
+						// bgs.resetVolume();
 
 						bgs.play().then(() => unblock());
 					}
@@ -484,8 +359,8 @@ const Scene_Game: FunctionalComponent = () => {
 						});
 					} else {
 						const se = new ManagedAudio(false);
-						se.load(`/SE/${s.name}.mp3`);
-						se.play();
+						se.load(`/SE/${s.name}.mp3`)
+							.then(() => se.play());
 
 						setSEs(l => {
 							const arr: ManagedAudio[] = [];
@@ -1030,6 +905,127 @@ const Scene_Game: FunctionalComponent = () => {
 				setTextStyle(s.style);
 				return unblock(true);
 		}
+	}
+
+	//////////////////////////////
+
+	useEffect(() => { // script load skipper
+		if (!script || !scriptLoading) return;
+
+		if (blocks.length > 0) return unblock(true);
+	}, [scriptCursor, blocks, displayText]);
+
+	useEffect(() => {
+		if (!scriptLoading)
+			config.volatile_Mute.value = false;
+	}, [scriptLoading]);
+
+	useEffect(() => {
+		if (doAuto && textState === TextboxPhase.Done)
+			doAutoFn();
+	}, [textState, doAuto]);
+
+	useEffect(() => { // fx worker
+		let running = true;
+		const begin = Date.now();
+		let latest = -1;
+		const fn = () => {
+			if (!running) return;
+
+			const el = ScreenEl.current;
+			if (!el) return requestAnimationFrame(fn);
+
+			const p = (Date.now() - begin) / (fxDuration * 1000);
+			const cur = Math.floor(p);
+
+			switch (fx) {
+				case "shake":
+					{
+						const loop = fxArgs[1] as number;
+						if (loop >= 0 && p >= loop) {
+							running = false;
+							el.style.transform = "";
+							setFXEnd(true);
+							return;
+						}
+					}
+
+					if (latest !== cur) {
+						latest = cur;
+
+						let x = 0, y = 0;
+						const th = {
+							weak: 3,
+							normal: 6,
+							strong: 10,
+						}[fxArgs[0]] || 0; // strength
+
+						x = (Math.random() - 0.5) * th;
+						y = (Math.random() - 0.5) * th;
+
+						el.style.transitionDuration = `${fxDuration}s`;
+						el.style.transform = `translate(${x}px, ${y}px)`;
+					}
+					break;
+
+				case "shake_fadeout":
+					if (p >= 1) {
+						running = false;
+						el.style.transform = "";
+						setFXEnd(true);
+						return;
+					}
+
+					el.style.transitionDuration = `${fxDuration}s`;
+					el.style.transform = "";
+					break;
+
+				case "charfx":
+					{
+						if (scriptLoading) {
+							running = false;
+							return setFXEnd(true);
+						}
+
+						const target = el.querySelectorAll<HTMLImageElement>(`.${style.Char}.${PosStyles[fxArgs[0].toString()]}`);
+						const charfx = fxArgs[1];
+						const fxClass = style[`charfx-${charfx}`];
+
+						if (p >= 1) {
+							running = false;
+							setFXEnd(true);
+
+							target.forEach(t => {
+								if (t.classList.contains(fxClass)) {
+									t.classList.remove(fxClass);
+									t.style.removeProperty("--charfx-duration");
+								}
+							});
+							return;
+						}
+
+						target.forEach(t => {
+							if (!t.classList.contains(fxClass)) {
+								t.classList.add(fxClass);
+								t.style.setProperty("--charfx-duration", `${fxDuration}s`);
+							}
+						});
+					}
+					break;
+			}
+
+			requestAnimationFrame(fn);
+		};
+		requestAnimationFrame(fn);
+
+		return () => {
+			running = false;
+		};
+	}, [fx, fxDuration, fxArgs]);
+
+	useEffect(() => {
+		_script_processed = true;
+		processNextScript();
 	}, [script, scriptRun]);
 
 	useEffect(() => {

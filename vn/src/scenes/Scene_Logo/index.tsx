@@ -10,7 +10,7 @@ import Scene_Base from "../Scene_Base";
 import style from "./style.module.scss";
 
 const Scene_Logo: FunctionalComponent = () => {
-	const animTimes = [1, 2, 2, 2];
+	const animTimes = [0.5, 1, 2, 1];
 
 	const [step, setStep] = useState(0);
 

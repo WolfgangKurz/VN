@@ -3,6 +3,7 @@ import * as fs from "node:fs";
 import * as cp from "node:child_process";
 import rimraf from "rimraf";
 import archiver from "archiver";
+import { blue, bold, cyan, gray, green, lightGreen, lightRed, magenta, red, reset, white, yellow } from "kolorist";
 
 const __dirname = path.resolve();
 
@@ -63,7 +64,9 @@ function copyDir (from, to) { // cp from to/
 	});
 }
 
-console.log("Copying assets...");
+const game = JSON.parse(fs.readFileSync(path.join(__dirname, "public", "game.json"), "utf-8"));
+
+console.log(`${cyan("Copying assets...")} - cp dist/* packaging/`);
 if (fs.existsSync(path.join(__dirname, "packaging"))) rimraf.sync(path.join(__dirname, "packaging"));
 if (fs.existsSync(path.join(__dirname, "package"))) rimraf.sync(path.join(__dirname, "package"));
 
@@ -76,6 +79,7 @@ fs.readdirSync(path.join(__dirname, "dist"))
 	});
 
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf-8"));
+const packageDirectory = `${packageJson.name}-${packageJson.version}-win-x64`;
 const nwjsJson = JSON.stringify({
 	name: packageJson.name,
 	version: packageJson.version,
@@ -89,7 +93,7 @@ const nwjsJson = JSON.stringify({
 		appFriendlyName: "VN",
 		appWinIcon: "icon.ico",
 		files: ["./**"],
-		outputDir: "../package",
+		outputDir: `../package/${packageDirectory}`,
 		builds: {
 			linux: { "tar.gz": false },
 			osx: { "zip": false },
@@ -97,22 +101,33 @@ const nwjsJson = JSON.stringify({
 		},
 	},
 }, undefined, 4);
-
 fs.writeFileSync(path.join(__dirname, "packaging", "package.json"), nwjsJson, "utf-8");
 
-console.log("Building...");
+console.log(`${cyan("Building...")} - npx nwp`);
 cp.execSync("npx nwp", {
 	cwd: path.join(__dirname, "packaging"),
 });
 
-console.log("Copying icon...");
-const packageDirectory = `${packageJson.name}-${packageJson.version}-win-x64`;
-fs.copyFileSync(
-	path.join(__dirname, "packaging", "icon.png"),
-	path.join(__dirname, "package", packageDirectory, "icon.png"),
+console.log(`${cyan("Rename...")} - mv package/${packageDirectory}/${packageDirectory} package/${packageDirectory}/game`);
+fs.renameSync(
+	path.join(__dirname, "package", packageDirectory, packageDirectory),
+	path.join(__dirname, "package", packageDirectory, "game"),
 );
 
-console.log("Zipping...");
+console.log(`${cyan("Copying icon...")} - cp packaging/icon.png package/${packageDirectory}/game/icon.png`);
+fs.copyFileSync(
+	path.join(__dirname, "packaging", "icon.png"),
+	path.join(__dirname, "package", packageDirectory, "game", "icon.png"),
+);
+
+console.log(`${cyan("Creating symbolic...")} - lnk package/${packageDirectory}/game/vn.exe "package/${packageDirectory}/${game.title}"`);
+fs.symlinkSync(
+	path.join(__dirname, "package", packageDirectory, "game", "vn.exe"),
+	path.join(__dirname, "package", packageDirectory, game.title),
+	"file",
+);
+
+console.log(`${cyan("Zipping...")} - archiver.zip package/${packageDirectory}/ package/${packageDirectory}.zip`);
 (async () => {
 	const zipStream = fs.createWriteStream(path.join(__dirname, "package", `${packageDirectory}.zip`));
 	const zip = archiver("zip", { zlib: { level: 9 } });
@@ -120,3 +135,5 @@ console.log("Zipping...");
 	zip.directory(path.join(__dirname, "package", packageDirectory), false);
 	await zip.finalize();
 })();
+
+console.log(`${yellow("Done")} - ${path.resolve(__dirname, "package")} ${packageDirectory}.zip`);
