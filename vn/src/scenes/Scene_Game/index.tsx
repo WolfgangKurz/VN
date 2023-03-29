@@ -87,7 +87,10 @@ const Scene_Game: FunctionalComponent = () => {
 	const [scriptRun, setScriptRun] = useState(0);
 	const scriptLoading = !script || script.cursor < scriptCursor;
 
-	const next = () => setScriptRun(v => (v + 1) % 100000);
+	const next = () => {
+		if (!_script_processed) return;
+		setScriptRun(v => (v + 1) % 100000);
+	};
 	const [assetLoaded, setAssetLoaded] = useState(false);
 
 	const [subwindow, setSubwindow] = useState<preact.VNode | null>(null);
