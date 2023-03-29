@@ -67,8 +67,17 @@ function copyDir (from, to) { // cp from to/
 const game = JSON.parse(fs.readFileSync(path.join(__dirname, "public", "game.json"), "utf-8"));
 
 console.log(`${cyan("Copying assets...")} - cp dist/* packaging/`);
-if (fs.existsSync(path.join(__dirname, "packaging"))) rimraf.sync(path.join(__dirname, "packaging"));
-if (fs.existsSync(path.join(__dirname, "package"))) rimraf.sync(path.join(__dirname, "package"));
+for (let _ = 0; _ < 5; _++) {
+	try {
+		if (fs.existsSync(path.join(__dirname, "packaging"))) rimraf.sync(path.join(__dirname, "packaging"));
+		if (fs.existsSync(path.join(__dirname, "package"))) rimraf.sync(path.join(__dirname, "package"));
+
+		break;
+	} catch {
+		Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000); // 1secs wait
+		continue;
+	}
+}
 
 fs.readdirSync(path.join(__dirname, "dist"))
 	.forEach(r => {
@@ -128,7 +137,7 @@ fs.symlinkSync(
 );
 
 console.log(`${cyan("Zipping...")} - archiver.zip package/${packageDirectory}/ package/${packageDirectory}.zip`);
-(async () => {
+await (async () => {
 	const zipStream = fs.createWriteStream(path.join(__dirname, "package", `${packageDirectory}.zip`));
 	const zip = archiver("zip", { zlib: { level: 9 } });
 	zip.pipe(zipStream);

@@ -56,8 +56,7 @@ export default class ManagedAudio {
 		if (!this._audio.paused)
 			this._audio.pause();
 
-		this._fading = null;
-		this.fadeCb = null;
+		this.fadeSkip(false);
 		this.resetVolume();
 
 		return new Promise<void>((resolve, reject) => {
@@ -92,9 +91,7 @@ export default class ManagedAudio {
 	}
 
 	public stop () {
-		this._fading = null;
-		this.fadeCb = null;
-
+		this.fadeSkip(false);
 		this.pause();
 		this._audio.currentTime = 0;
 	}
@@ -130,10 +127,10 @@ export default class ManagedAudio {
 		this.fade(duration, false);
 	}
 
-	public fadeSkip () {
+	public fadeSkip (callCallback: boolean = true) {
 		if (this._fading !== null) {
 			if (this.fadeCb) {
-				this.fadeCb();
+				if (callCallback) this.fadeCb();
 				this.fadeCb = null;
 			}
 
@@ -168,6 +165,7 @@ export default class ManagedAudio {
 				}
 			}
 
+			const _vol = (this._isBGM ? config.volume_BGM.peek() : config.volume_SFX.peek()) / 100; // real-time config value
 			this._audio.volume = (is_out ? 1 - p : p) * _vol;
 		}, 20);
 	}

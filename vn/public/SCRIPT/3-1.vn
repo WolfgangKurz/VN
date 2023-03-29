@@ -85,6 +85,9 @@
 @clear
 
 @se 3-1_Door
+@wait 5
+@se -
+
 @bgm Moment 1.5 0
 
 @pic 1 cut_07-2 1.5

@@ -79,7 +79,7 @@ interface HistorySelectionData {
 type HistoryData = HistoryTextData | HistorySelectionData;
 
 const autoSprites = new Array(16).fill(0).map((_, i) => `btn_auto_on${(i + 1).toString().padStart(2, "0")}.png`);
-let _script_processed = false; // global switch
+let __selection: boolean = false;
 
 const Scene_Game: FunctionalComponent = () => {
 	const [script, setScript] = useState<Script | null>(null);
@@ -87,10 +87,7 @@ const Scene_Game: FunctionalComponent = () => {
 	const [scriptRun, setScriptRun] = useState(0);
 	const scriptLoading = !script || script.cursor < scriptCursor;
 
-	const next = () => {
-		if (!_script_processed) return;
-		setScriptRun(v => (v + 1) % 100000);
-	};
+	const next = () => setScriptRun(v => (v + 1) % 10000);
 	const [assetLoaded, setAssetLoaded] = useState(false);
 
 	const [subwindow, setSubwindow] = useState<preact.VNode | null>(null);
@@ -143,7 +140,11 @@ const Scene_Game: FunctionalComponent = () => {
 	//////////////////////////////
 
 	const unblock = (force?: boolean) => {
-		if (!script) return;
+		console.debug("unblock");
+		if (!script) {
+			console.debug("unblock -> !script");
+			return;
+		}
 		if (!force && script.current()?.type === "sel") {
 			console.warn("dismiss unblock, not force, selection now");
 			return;
@@ -159,14 +160,22 @@ const Scene_Game: FunctionalComponent = () => {
 
 				b.flush();
 			});
-			if (!flushed) next();
+			if (!flushed) {
+				console.debug("unblock -> not flushed, next()");
+				next();
+			}
 
 			return [];
 		});
 	};
 	const tryNext = useCallback(() => {
-		if (!script) return; // 스크립트를 불러오기 전
+		console.debug("tryNext -> textState is " + (TextboxPhase[textState] || textState));
+		if (!script) {
+			console.debug("tryNext -> !script");
+			return; // 스크립트를 불러오기 전
+		}
 		if (hideUI) {
+			console.debug("tryNext -> !!hideUI");
 			setHideUI(false);
 			return;
 		}
@@ -174,8 +183,10 @@ const Scene_Game: FunctionalComponent = () => {
 		if (textState !== TextboxPhase.None) {
 			if (textState === TextboxPhase.Done) // text fully shown
 				unblock();
-			else
+			else {
+				console.debug("tryNext -> setTextState");
 				setTextState(s => Math.min(s + 1, TextboxPhase.Hide));
+			}
 		} else
 			unblock();
 	}, [script, textState, hideUI]);
@@ -199,9 +210,11 @@ const Scene_Game: FunctionalComponent = () => {
 
 	function processNextScript (): void { // script processor
 		if (!script) return;
-		if (!_script_processed) return;
-
-		_script_processed = false;
+		if (__selection) {
+			console.debug("!__selection");
+			return;
+		}
+		console.debug("!!__selection");
 
 		const s = script.next();
 		if (!s) return;
@@ -249,16 +262,19 @@ const Scene_Game: FunctionalComponent = () => {
 										bgm.stop();
 										unblock();
 									}));
-								return;
 							} else { // 페이드하지 않는 경우
 								bgm.stop();
-								return unblock();
+								unblock();
 							}
 						} else {
+							console.debug("bgm -> try to load " + src);
 							bgm.load(src)
-								.then(() => bgm.play())
 								.then(() => {
-									console.log("!");
+									console.debug("bgm -> " + src + " loaded");
+									bgm.play();
+								})
+								.then(() => {
+									console.debug("bgm -> " + src + " play");
 									if (s.fadeDuration > 0 && !scriptLoading) { // 불러오고 있으면 페이드하지 않음
 										bgm.fadeIn(s.fadeDuration * 1000);
 
@@ -269,22 +285,26 @@ const Scene_Game: FunctionalComponent = () => {
 												bgm.fadeSkip(); // Fade 완료
 												unblock();
 											}));
-										return;
-									} else {
-										return unblock();
-									}
+									} else
+										unblock();
 								});
-							return;
 						}
-					}
-
-					if (s.name !== "-") {
+					} else if (s.name !== "-") {
+						console.debug("bgm -> play same bgm");
 						sessionSeen("bgm", s.name);
 
-						bgm.fadeSkip();
+						bgm.stop();
 						// bgm.pause();
-						// bgm.resetVolume();
-						bgm.play().then(() => unblock());
+						bgm.resetVolume();
+						bgm.play().then(() => {
+							if (!s.wait) // 대기하지 않으면 바로 다음 스크립트로
+								unblock();
+							else // 대기하는 경우
+								addBlock(Wait(s.fadeDuration * 1000, () => {
+									bgm.fadeSkip(); // Fade 완료
+									unblock();
+								}));
+						});
 					}
 					return;
 				}
@@ -355,6 +375,7 @@ const Scene_Game: FunctionalComponent = () => {
 				}
 			case "se":
 				{
+					console.debug("se " + s.name);
 					if (s.name === "-") {
 						setSEs(l => {
 							l.forEach(se => se.destroy());
@@ -690,6 +711,8 @@ const Scene_Game: FunctionalComponent = () => {
 			case "sel":
 				if (scriptLoading) return unblock(true);
 
+				console.debug("set __selection = true");
+				__selection = true;
 				setSelection(s.sels);
 				break;
 
@@ -1026,10 +1049,14 @@ const Scene_Game: FunctionalComponent = () => {
 		};
 	}, [fx, fxDuration, fxArgs]);
 
+	useEffect(() => processNextScript(), [script, scriptRun]);
 	useEffect(() => {
-		_script_processed = true;
-		processNextScript();
-	}, [script, scriptRun]);
+		if (selection.length === 0 && __selection) { // was selection, now selected
+			console.debug("set __selection = false");
+			__selection = false;
+			unblock(true);
+		}
+	}, [selection]);
 
 	useEffect(() => {
 		if (!fxEnd || !fxWaiting) return;
@@ -1134,7 +1161,7 @@ const Scene_Game: FunctionalComponent = () => {
 	useEffect(() => { // Global effect register
 		const fn = (e: KeyboardEvent) => {
 			if (selection.length > 0 || script?.current()?.type === "sel") {
-				console.warn("dismiss key-input, selection now");
+				console.warn("dismiss key-input, selection now", selection.length, script?.current()?.type);
 				return; // Selection
 			}
 
@@ -1248,12 +1275,17 @@ const Scene_Game: FunctionalComponent = () => {
 			onClick={ e => {
 				e.preventDefault();
 
-				if (scriptLoading) return;
+				if (scriptLoading) {
+					console.debug("#click -> scriptLoading");
+					return;
+				}
 
 				if (doAuto) setDoAuto(false);
 
-				if (e.target && (e.target instanceof Element) && (e.target.matches(`.${style.Selection}`) || e.target.matches(`.${style.Sel}`)))
+				if (e.target && (e.target instanceof Element) && (e.target.matches(`.${style.Selection}`) || e.target.matches(`.${style.Sel}`))) {
+					console.debug("#click -> selection element clicked");
 					return; // Selection click
+				}
 
 				static_PlayUISE("dialog");
 				tryNext();
@@ -1449,15 +1481,13 @@ const Scene_Game: FunctionalComponent = () => {
 									selected: id,
 								}]);
 
+								setSelection([]);
 								if (sel.script !== "-") {
 									batch(() => {
 										config.volatile_Script.value = sel.script;
 										config.volatile_ScriptCursor.value = 0;
 									});
-								} else
-									unblock(true);
-
-								setSelection([]);
+								}
 							} }
 						>
 							<SpriteImage
