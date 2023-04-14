@@ -93,7 +93,7 @@ export default class ManagedAudio {
 	public stop () {
 		this.fadeSkip(false);
 		this.pause();
-		this._audio.currentTime = 0;
+		// this._audio.currentTime = 0;
 	}
 
 	public get currentTime () {
