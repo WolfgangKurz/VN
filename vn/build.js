@@ -98,7 +98,8 @@ const nwjsJson = JSON.stringify({
 	},
 	"nwjs-packager": {
 		nwVersion: "0.60.0",
-		nwFlavor: "sdk",
+		// nwFlavor: "sdk",
+		nwFlavor: "release",
 		appFriendlyName: "VN",
 		appWinIcon: "icon.ico",
 		files: ["./**"],
