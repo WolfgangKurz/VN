@@ -23,10 +23,15 @@ interface ScriptLine_Talk extends ScriptLine_Base {
 interface ScriptLine_Clear extends ScriptLine_Base {
 	type: "clear"; // 대화창 닫기, 닫을 때 까지 wait
 }
-interface ScriptLine_Wait extends ScriptLine_Base {
+interface ScriptLine_WaitSkippable extends ScriptLine_Base {
 	type: "wait";
 	wait: number | "fx";
 }
+interface ScriptLine_WaitUnskippable extends ScriptLine_Base {
+	type: "force-wait";
+	wait: number;
+}
+type ScriptLine_Wait = ScriptLine_WaitSkippable | ScriptLine_WaitUnskippable;
 interface ScriptLine_Char extends ScriptLine_Base {
 	type: "char";
 	name: string;
@@ -279,7 +284,17 @@ export default class Script {
 								type: "wait",
 								wait: typeof args[0] === "number"
 									? args[0]
-									: args[0].toLowerCase() as ScriptLine_Wait["wait"],
+									: args[0].toLowerCase() as ScriptLine_WaitSkippable["wait"],
+							};
+						case "force-wait":
+							if (args.length !== 1)
+								throw new Error(`Failed to parse script line, invalid parameter count for "${cmd}"`);
+							if (typeof args[0] !== "number")
+								throw new Error(`Failed to parse script line, invalid paramter type, Number expected but was "${args[0]}" for "${cmd}"`);
+
+							return {
+								type: "force-wait",
+								wait: args[0],
 							};
 
 						case "char":

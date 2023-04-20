@@ -1,6 +1,17 @@
 @chapter "Chapter 6"
 @title ""
 
+@command hide-ui
+@fadeout 0
+@bg Chapter_6
+@fadein 2
+
+@force-wait 3
+
+@fadeout 2
+@bg -
+@command show-ui
+
 @fadeout 0
 @bg 10_Forest_night
 @bgm Nervous2

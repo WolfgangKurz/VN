@@ -1,4 +1,17 @@
 @chapter "Chapter 2"
+@title ""
+
+@command hide-ui
+@fadeout 0
+@bg Chapter_2
+@fadein 2
+
+@force-wait 3
+
+@fadeout 2
+@bg -
+@command show-ui
+
 @title "???"
 
 @wait 2
@@ -75,6 +88,8 @@
 역겹기 짝이 없는 악몽.
 나는 힘겹게 몸을 일으켜 걸어가 가장 가까운 곳에 허리를 숙여 바닥을 짚었다.
 
+@se -
+
 … 부드럽다.
 
 나 -> …?
@@ -120,6 +135,7 @@
 손찌검을 맞고 거의 세 걸음 정도는 날아간 나는 마룻바닥에 주저앉은 채로 10분이 넘는 잔소리를 들어야 했다.
 아니, 오히려 이 정도로 끝난 게 다행인 건가?
 @clear
+@se -
 
 @char STD_03_14
 유미 -> 흥, 뭐… 이해가 안 되는 건 아니에요.

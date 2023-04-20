@@ -8,7 +8,7 @@ import { blue, bold, cyan, gray, green, lightGreen, lightRed, magenta, red, rese
 const __dirname = path.resolve();
 
 
-function copyDir (from, to) { // cp from to/
+function copyDir(from, to) { // cp from to/
 	if (!fs.existsSync(from))
 		throw new Error(`Path "${from}" not exists`);
 
@@ -131,11 +131,17 @@ fs.copyFileSync(
 );
 
 console.log(`${cyan("Creating symbolic...")} - lnk package/${packageDirectory}/game/vn.exe "package/${packageDirectory}/${game.title}"`);
-fs.symlinkSync(
-	path.join(__dirname, "package", packageDirectory, "game", "vn.exe"),
-	path.join(__dirname, "package", packageDirectory, game.title),
-	"file",
-);
+// fs.symlinkSync(
+// 	path.join(__dirname, "package", packageDirectory, "game", "vn.exe"),
+// 	path.join(__dirname, "package", packageDirectory, game.title),
+// 	"file",
+// );
+const arg1 = path.join(__dirname, "package", packageDirectory, `${game.title}.lnk`);
+const arg2 = path.join(__dirname, "package", packageDirectory, "game", "vn.exe");
+cp.execSync(`powershell -file ./lnk.ps1 "${arg1}" "${arg2}"`, {
+	// cwd: path.join(__dirname, "packaging"),
+	cwd: __dirname,
+});
 
 console.log(`${cyan("Zipping...")} - archiver.zip package/${packageDirectory}/ package/${packageDirectory}.zip`);
 await (async () => {

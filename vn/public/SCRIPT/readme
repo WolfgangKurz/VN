@@ -39,6 +39,9 @@
 # wait이 숫자일 경우 해당 초만큼 대기, "fx"일 경우 진행중인 효과가 끝날 때까지 대기
 @wait wait
 
+# 특정 시간 강제 대기 (스킵 불가)
+@force-wait wait
+
 # 스크립트 파일 로드
 @script file
 

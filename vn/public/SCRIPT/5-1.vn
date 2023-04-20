@@ -1,4 +1,17 @@
 @chapter "Chapter 5"
+@title ""
+
+@command hide-ui
+@fadeout 0
+@bg Chapter_5
+@fadein 2
+
+@force-wait 3
+
+@fadeout 2
+@bg -
+@command show-ui
+
 @title "기지국 가는 길"
 
 @fadeout 0

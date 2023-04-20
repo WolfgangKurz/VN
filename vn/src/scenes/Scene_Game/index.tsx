@@ -80,6 +80,8 @@ type HistoryData = HistoryTextData | HistorySelectionData;
 
 const autoSprites = new Array(16).fill(0).map((_, i) => `btn_auto_on${(i + 1).toString().padStart(2, "0")}.png`);
 let __selection: boolean = false;
+let __forceWaiting: boolean = false;
+let __forceHideUI: boolean = false;
 
 const Scene_Game: FunctionalComponent = () => {
 	const [script, setScript] = useState<Script | null>(null);
@@ -143,6 +145,10 @@ const Scene_Game: FunctionalComponent = () => {
 		console.debug("unblock");
 		if (!script) {
 			console.debug("unblock -> !script");
+			return;
+		}
+		if (__forceWaiting) {
+			console.debug("unblock -> forceWaiting");
 			return;
 		}
 		if (!force && script.current()?.type === "sel") {
@@ -684,6 +690,14 @@ const Scene_Game: FunctionalComponent = () => {
 				else
 					setFXWaiting(true);
 				return;
+			case "force-wait":
+				console.log("force-wait");
+				__forceWaiting = true;
+				Wait(s.wait * 1000, () => {
+					__forceWaiting = false;
+					unblock();
+				});
+				return;
 
 			case "text":
 				if (scriptLoading) return unblock();
@@ -924,7 +938,18 @@ const Scene_Game: FunctionalComponent = () => {
 				break;
 
 			case "command":
-				ScriptCommand.run(s.command, s.args);
+				switch (s.command) {
+					case "hide-ui":
+						__forceHideUI = true;
+						break;
+					case "show-ui":
+						__forceHideUI = false;
+						break;
+					default:
+						ScriptCommand.run(s.command, s.args);
+						break;
+				}
+
 				return unblock(true);
 
 			case "style":
@@ -1271,7 +1296,7 @@ const Scene_Game: FunctionalComponent = () => {
 
 	return <>
 		<Scene_Base
-			class={ BuildClass("Scene_Game", style.Scene_Game, hideUI && style.HideUI) }
+			class={ BuildClass("Scene_Game", style.Scene_Game, (hideUI || __forceHideUI) && style.HideUI) }
 			onClick={ e => {
 				e.preventDefault();
 

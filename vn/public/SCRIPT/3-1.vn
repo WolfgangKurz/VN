@@ -1,4 +1,17 @@
 @chapter "Chapter 3"
+@title ""
+
+@command hide-ui
+@fadeout 0
+@bg Chapter_3
+@fadein 2
+
+@force-wait 3
+
+@fadeout 2
+@bg -
+@command show-ui
+
 @title "???"
 
 @fadeout 0

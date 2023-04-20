@@ -1,4 +1,17 @@
 @chapter "Chapter 4"
+@title ""
+
+@command hide-ui
+@fadeout 0
+@bg Chapter_4
+@fadein 2
+
+@force-wait 3
+
+@fadeout 2
+@bg -
+@command show-ui
+
 @title 기지국
 
 @fadeout 0
