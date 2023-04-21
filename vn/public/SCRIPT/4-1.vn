@@ -146,6 +146,7 @@
 @char - center "" 0
 @bg -
 @fx bfilter-circle pic 1 0 -
+@pic 1 - 0
 @fadein 0
 
 @script 4-2

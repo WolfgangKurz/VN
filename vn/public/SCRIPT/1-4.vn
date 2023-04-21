@@ -132,7 +132,7 @@
 의중을 파악하기도 전에 유미가 화들짝 놀라며 방 한쪽을 손가락으로 가리켰다.
 @clear
 
-@se "1-3 Ouch"
+@se 1-3_Ouch
 @fx shake2 strong 0.01 200
 @fadeout 2
 

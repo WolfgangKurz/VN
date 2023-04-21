@@ -570,22 +570,29 @@ const Scene_Game: FunctionalComponent = () => {
 											if (ret[t])
 												ret[t]!.onFrame(null).onEnd(null).stop();
 
-											let step = 0;
-											const filter = new ColorFilter(c[t])
-												.to(input)
-												.onFrame(v => ret.el.current && (ret.el.current.style[cssType] = ColorMatrixToSVGUrl(v)))
-												.onEnd(() => {
-													if (s.args[3] === "-") return; // 종료인 경우
+											const dur = s.args[2] as number;
+											if (dur > 0) {
+												let step = 0;
+												const filter = new ColorFilter(c[t])
+													.to(input)
+													.onFrame(v => ret.el.current && (ret.el.current.style[cssType] = ColorMatrixToSVGUrl(v)))
+													.onEnd(() => {
+														if (s.args[3] === "-") return; // 종료인 경우
 
-													step = (step + 1) % 2;
-													if (step === 1)
-														filter.from(input).to(Matrix4x5Identity).start(s.args[2] as number * 1000);
-													else
-														filter.from(Matrix4x5Identity).to(input).start(s.args[2] as number * 1000);
-												})
-												.start(s.args[2] as number * 1000);
+														step = (step + 1) % 2;
+														if (step === 1)
+															filter.from(input).to(Matrix4x5Identity).start(dur * 1000);
+														else
+															filter.from(Matrix4x5Identity).to(input).start(dur * 1000);
+													})
+													.start(dur * 1000);
 
-											ret[t] = filter;
+												ret[t] = filter;
+											} else { // apply immediately
+												ret[t] = undefined;
+												if (ret.el.current)
+													ret.el.current.style[cssType] = ColorMatrixToSVGUrl(input);
+											}
 											return ret;
 										});
 									});
@@ -606,22 +613,29 @@ const Scene_Game: FunctionalComponent = () => {
 										if (ret[t])
 											ret[t]!.onFrame(null).onEnd(null).stop();
 
-										let step = 0;
-										const filter = new ColorFilter(c[t])
-											.to(input)
-											.onFrame(v => ret.el.current && (ret.el.current.style[cssType] = ColorMatrixToSVGUrl(v)))
-											.onEnd(() => {
-												if (s.args[3] === "-") return; // 종료인 경우
+										const dur = s.args[2] as number;
+										if (dur > 0) {
+											let step = 0;
+											const filter = new ColorFilter(c[t])
+												.to(input)
+												.onFrame(v => ret.el.current && (ret.el.current.style[cssType] = ColorMatrixToSVGUrl(v)))
+												.onEnd(() => {
+													if (s.args[3] === "-") return; // 종료인 경우
 
-												step = (step + 1) % 2;
-												if (step === 1)
-													filter.from(input).to(Matrix4x5Identity).start(s.args[2] as number * 1000);
-												else
-													filter.from(Matrix4x5Identity).to(input).start(s.args[2] as number * 1000);
-											})
-											.start(s.args[2] as number * 1000);
+													step = (step + 1) % 2;
+													if (step === 1)
+														filter.from(input).to(Matrix4x5Identity).start(dur * 1000);
+													else
+														filter.from(Matrix4x5Identity).to(input).start(dur * 1000);
+												})
+												.start(dur * 1000);
 
-										ret[t] = filter;
+											ret[t] = filter;
+										} else { // apply immediately
+											ret[t] = undefined;
+											if (ret.el.current)
+												ret.el.current.style[cssType] = ColorMatrixToSVGUrl(input);
+										}
 										return pics;
 									});
 									unblock();
@@ -831,18 +845,25 @@ const Scene_Game: FunctionalComponent = () => {
 					setPics(_pics => {
 						const pics = [..._pics];
 
-						addBlock(Wait(s.fadeDuration * 1000, () => {
-							setPics(_pics => {
-								const pics = [..._pics];
-								delete pics[s.id];
-								return pics;
-							});
+						if (s.fadeDuration === 0) { // immediately
+							addBlock(Wait(0, () => unblock())); // for skip
 
-							unblock();
-						}));
+							delete pics[s.id];
+							return pics;
+						} else {
+							addBlock(Wait(s.fadeDuration * 1000, () => {
+								setPics(_pics => {
+									const pics = [..._pics];
+									delete pics[s.id];
+									return pics;
+								});
 
-						pics[s.id].fadeDuration = s.fadeDuration;
-						pics[s.id].state = 3;
+								unblock();
+							}));
+
+							pics[s.id].fadeDuration = s.fadeDuration;
+							pics[s.id].state = 3;
+						}
 						return pics;
 					});
 				} else {

@@ -4,6 +4,7 @@ import * as cp from "node:child_process";
 import rimraf from "rimraf";
 import archiver from "archiver";
 import { blue, bold, cyan, gray, green, lightGreen, lightRed, magenta, red, reset, white, yellow } from "kolorist";
+import rcedit from "rcedit";
 
 const __dirname = path.resolve();
 
@@ -120,35 +121,26 @@ cp.execSync("npx nwp", {
 
 console.log(`${cyan("Rename...")} - mv package/${packageDirectory}/${packageDirectory} package/${packageDirectory}/game`);
 fs.renameSync(
+	path.join(__dirname, "package", packageDirectory, packageDirectory, "vn.exe"),
+	path.join(__dirname, "package", packageDirectory, packageDirectory, `${game.title}.exe`),
+);
+fs.renameSync(
 	path.join(__dirname, "package", packageDirectory, packageDirectory),
-	path.join(__dirname, "package", packageDirectory, "game"),
+	path.join(__dirname, "package", packageDirectory, game.title),
 );
 
 console.log(`${cyan("Copying icon...")} - cp packaging/icon.png package/${packageDirectory}/game/icon.png`);
 fs.copyFileSync(
 	path.join(__dirname, "packaging", "icon.png"),
-	path.join(__dirname, "package", packageDirectory, "game", "icon.png"),
+	path.join(__dirname, "package", packageDirectory, game.title, "icon.png"),
 );
-
-console.log(`${cyan("Creating symbolic...")} - lnk package/${packageDirectory}/game/vn.exe "package/${packageDirectory}/${game.title}"`);
-// fs.symlinkSync(
-// 	path.join(__dirname, "package", packageDirectory, "game", "vn.exe"),
-// 	path.join(__dirname, "package", packageDirectory, game.title),
-// 	"file",
-// );
-const arg1 = path.join(__dirname, "package", packageDirectory, `${game.title}.lnk`);
-const arg2 = path.join(__dirname, "package", packageDirectory, "game", "vn.exe");
-cp.execSync(`powershell -file ./lnk.ps1 "${arg1}" "${arg2}"`, {
-	// cwd: path.join(__dirname, "packaging"),
-	cwd: __dirname,
-});
 
 console.log(`${cyan("Zipping...")} - archiver.zip package/${packageDirectory}/ package/${packageDirectory}.zip`);
 await (async () => {
 	const zipStream = fs.createWriteStream(path.join(__dirname, "package", `${packageDirectory}.zip`));
 	const zip = archiver("zip", { zlib: { level: 9 } });
 	zip.pipe(zipStream);
-	zip.directory(path.join(__dirname, "package", packageDirectory), false);
+	zip.directory(path.join(__dirname, "package", packageDirectory, game.title), false);
 	await zip.finalize();
 })();
 
