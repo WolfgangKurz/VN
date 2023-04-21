@@ -4,7 +4,6 @@ import * as cp from "node:child_process";
 import rimraf from "rimraf";
 import archiver from "archiver";
 import { blue, bold, cyan, gray, green, lightGreen, lightRed, magenta, red, reset, white, yellow } from "kolorist";
-import rcedit from "rcedit";
 
 const __dirname = path.resolve();
 
