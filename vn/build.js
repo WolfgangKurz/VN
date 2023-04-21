@@ -137,7 +137,7 @@ fs.copyFileSync(
 
 console.log(`${cyan("Zipping...")} - archiver.zip package/${packageDirectory}/ package/${packageDirectory}.zip`);
 await (async () => {
-	const zipStream = fs.createWriteStream(path.join(__dirname, "package", `${packageDirectory}.zip`));
+	const zipStream = fs.createWriteStream(path.join(__dirname, "package", `${game.title} v${packageJson.version}.zip`));
 	const zip = archiver("zip", { zlib: { level: 9 } });
 	zip.pipe(zipStream);
 	zip.directory(path.join(__dirname, "package", packageDirectory, game.title), false);
