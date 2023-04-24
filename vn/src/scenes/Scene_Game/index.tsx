@@ -191,7 +191,8 @@ const Scene_Game: FunctionalComponent = () => {
 				unblock();
 			else {
 				console.debug("tryNext -> setTextState");
-				setTextState(s => Math.min(s + 1, TextboxPhase.Hide));
+				// setTextState(s => Math.min(s + 1, TextboxPhase.Hide));
+				setTextState(Math.min(textState + 1, TextboxPhase.Hide));
 			}
 		} else
 			unblock();
