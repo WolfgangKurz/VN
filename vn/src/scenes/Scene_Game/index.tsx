@@ -732,8 +732,14 @@ const Scene_Game: FunctionalComponent = () => {
 			case "clear":
 				if (scriptLoading || textState === TextboxPhase.None) return unblock();
 
-				setDisplayTeller("");
-				setTextState(_ => TextboxPhase.FadeOut);
+				if (s.force) {
+					setDisplayTeller("");
+					setDisplayText("");
+					setTextState(_ => TextboxPhase.None);
+				} else {
+					setDisplayTeller("");
+					setTextState(_ => TextboxPhase.FadeOut);
+				}
 				break;
 
 			case "sel":

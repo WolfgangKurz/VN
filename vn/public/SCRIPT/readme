@@ -25,7 +25,8 @@
 @title title
 
 # 대사창 닫기
-@clear
+# force가 1 이라면 애니메이션 없이 즉시 소거
+@clear [force=0]
 
 # 각종 효과
 @fx fxName [fxArg1 fxArg2 ...]

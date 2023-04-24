@@ -6,6 +6,9 @@
 @bg Chapter_6
 @fadein 2
 
+# 표시되던 텍스트 강제 소거
+@clear 1
+
 @force-wait 3
 
 @fadeout 2
