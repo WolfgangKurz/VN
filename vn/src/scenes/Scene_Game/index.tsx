@@ -738,7 +738,7 @@ const Scene_Game: FunctionalComponent = () => {
 					setTextState(_ => TextboxPhase.None);
 				} else {
 					setDisplayTeller("");
-					setTextState(_ => TextboxPhase.FadeOut);
+					setTextState(_ => _ < TextboxPhase.FadeOut ? TextboxPhase.FadeOut : _);
 				}
 				break;
 
@@ -1435,12 +1435,11 @@ const Scene_Game: FunctionalComponent = () => {
 
 				textStyle={ textStyle }
 
-				onShown={ () => setTextState(_ => TextboxPhase.SequencingText) }
-				onTextDone={ () => setTextState(_ => TextboxPhase.Done) }
+				onShown={ () => setTextState(_ => _ === TextboxPhase.FadeIn ? TextboxPhase.SequencingText : _) }
+				onTextDone={ () => setTextState(_ => _ === TextboxPhase.SequencingText ? TextboxPhase.Done : _) }
 				onHidden={ () => {
 					setTextState(_ => TextboxPhase.None);
-
-					if (!scriptLoading) unblock();
+					if (!scriptLoading) unblock(); // @clear
 				} }
 			/>
 

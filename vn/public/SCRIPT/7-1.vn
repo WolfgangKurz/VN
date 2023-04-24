@@ -372,6 +372,9 @@
 @wait 1
 @style normal
 
+# 강제 소거
+@clear 1
+
 @char - center "" 0
 @bg "../IMG/CUT/fin"
 @pic 2 - 2
