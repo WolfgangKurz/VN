@@ -76,7 +76,10 @@ interface HistorySelectionData {
 	selections: string[];
 	selected: number;
 }
-type HistoryData = HistoryTextData | HistorySelectionData;
+interface HistoryChapterData {
+	chapter: string;
+}
+type HistoryData = HistoryTextData | HistorySelectionData | HistoryChapterData;
 
 const autoSprites = new Array(16).fill(0).map((_, i) => `btn_auto_on${(i + 1).toString().padStart(2, "0")}.png`);
 let __selection: boolean = false;
@@ -383,27 +386,39 @@ const Scene_Game: FunctionalComponent = () => {
 			case "se":
 				{
 					console.debug("se " + s.name);
+					if (scriptLoading) return unblock(); // 스크립트 로드중에는 스킵
+
 					if (s.name === "-") {
-						setSEs(l => {
+						setSEs(l => { // destroy all
 							l.forEach(se => se.destroy());
 							return [];
 						});
 					} else {
 						const se = new ManagedAudio(false);
 						se.load(`/SE/${s.name}.mp3`)
-							.then(() => se.play());
+							.then(() => {
+								se.play();
 
-						setSEs(l => {
-							const arr: ManagedAudio[] = [];
-							l.forEach(r => {
-								if (r.playing) arr.push(r);
-								else r.destroy();
+								setSEs(l => {
+									const arr: ManagedAudio[] = [];
+									l.forEach(r => { // except done audios
+										if (r.playing || r.loading)
+											arr.push(r);
+										else
+											r.destroy();
+									});
+									arr.push(se);
+									return arr;
+								});
+								unblock();
+							})
+							.catch(() => {
+								console.error(`Failed to load SE "${s.name}"`);
+
+								se.destroy();
+								unblock();
 							});
-							arr.push(se);
-							return arr;
-						});
 					}
-					unblock();
 				}
 				break;
 
@@ -666,6 +681,8 @@ const Scene_Game: FunctionalComponent = () => {
 
 			case "chapter": // chapter text
 				config.volatile_Chapter.value = s.chapter;
+				setHistory(prev => [...prev, { chapter: `[${s.chapter}]` }]);
+
 				unblock(true);
 				break;
 
@@ -699,6 +716,7 @@ const Scene_Game: FunctionalComponent = () => {
 
 			case "wait":
 				console.log("wait");
+				if (scriptLoading) return unblock();
 
 				if (typeof s.wait === "number")
 					addBlock(Wait(s.wait * 1000, () => unblock()));
@@ -707,6 +725,8 @@ const Scene_Game: FunctionalComponent = () => {
 				return;
 			case "force-wait":
 				console.log("force-wait");
+				if (scriptLoading) return unblock();
+
 				__forceWaiting = true;
 				Wait(s.wait * 1000, () => {
 					__forceWaiting = false;
@@ -1246,6 +1266,15 @@ const Scene_Game: FunctionalComponent = () => {
 		if (doAuto) doAutoFn();
 	}, [doAuto]);
 
+	useEffect(() => { // finallizer
+		return () => {
+			setSEs(l => { // destroy all SEs
+				l.forEach(se => se.destroy());
+				return [];
+			});
+		};
+	}, []);
+
 	const PosStyles = {
 		"<<": style.LeftMin,
 		"<": style.LeftMinOver,
@@ -1600,11 +1629,13 @@ const Scene_Game: FunctionalComponent = () => {
 									{ h.teller && <span class={ style.TellerHistory }>{ h.teller }</span> }
 									{ h.text }
 								</div>
-								: <div class={ style.SelectionHistory }>
-									{ h.selections.map((s, i) => <div class={ BuildClass(style.Selection, i === h.selected && style.Selected) }>
-										{ s }
-									</div>) }
-								</div>
+								: "chapter" in h
+									? <div class={ style.ChapterHistory }>{ h.chapter }</div>
+									: <div class={ style.SelectionHistory }>
+										{ h.selections.map((s, i) => <div class={ BuildClass(style.Selection, i === h.selected && style.Selected) }>
+											{ s }
+										</div>) }
+									</div>
 						) }
 					</SimpleBar>
 				</div>

@@ -6,6 +6,9 @@ export default class ManagedAudio {
 	private _audio: HTMLAudioElement;
 	private _src: string;
 
+	private _loading: boolean = false;
+	private _disposed: boolean = false;
+
 	private _muteUnsub: () => void;
 	private _volUnsub: () => void;
 
@@ -44,30 +47,40 @@ export default class ManagedAudio {
 	}
 
 	public destroy () {
+		if (this._disposed) return;
+
 		if (this._muteUnsub)
 			this._muteUnsub();
 
+		this._volUnsub();
 		this._audio.pause();
 		this._audio.remove();
-		this._volUnsub();
+
+		this._disposed = true;
 	}
 
 	public load (src: string): Promise<void> {
+		if (this._disposed) return Promise.reject(new Error("Already disposed ManagedAudio"));
+
 		if (!this._audio.paused)
 			this._audio.pause();
 
 		this.fadeSkip(false);
 		this.resetVolume();
 
+		this._loading = true;
+
 		return new Promise<void>((resolve, reject) => {
 			const onLoad = (() => {
 				this._audio.removeEventListener("canplaythrough", onLoad);
 				this._audio.removeEventListener("error", onError);
+				this._loading = false;
 				resolve();
 			}).bind(this);
 			const onError = ((e: Event) => {
 				this._audio.removeEventListener("canplaythrough", onLoad);
 				this._audio.removeEventListener("error", onError);
+				this._loading = false;
 				reject(e);
 			}).bind(this);
 
@@ -79,6 +92,8 @@ export default class ManagedAudio {
 	}
 
 	public play (): Promise<void> {
+		if (this._disposed) return Promise.reject(new Error("Already disposed ManagedAudio"));
+
 		if (this._audio.paused)
 			return this._audio.play();
 
@@ -86,21 +101,33 @@ export default class ManagedAudio {
 	}
 
 	public pause () {
+		if (this._disposed) return;
+
 		if (!this._audio.paused)
 			this._audio.pause();
 	}
 
 	public stop () {
+		if (this._disposed) return;
+
 		this.fadeSkip(false);
 		this.pause();
 		// this._audio.currentTime = 0;
 	}
 
 	public get currentTime () {
+		if (this._disposed) return -1;
+
 		return this._audio.currentTime;
 	}
 
+	public get loading () {
+		if (this._disposed) return false;
+		return this._loading;
+	}
+
 	public get playing () {
+		if (this._disposed) return false;
 		return !this._audio.paused && !this._audio.ended;
 	}
 
@@ -109,25 +136,34 @@ export default class ManagedAudio {
 	}
 
 	public loop (loop: boolean) {
+		if (this._disposed) return;
 		this._audio.loop = loop;
 	}
 
 	public resetVolume () {
+		if (this._disposed) return;
+
 		const _vol = (this._isBGM ? config.volume_BGM.peek() : config.volume_SFX.peek()) / 100;
 		this._audio.volume = _vol;
 	}
 
 	/** default `1000` msec */
 	public fadeOut (duration: number = 1000) {
+		if (this._disposed) return;
+
 		this.fade(duration, true);
 	}
 
 	/** default `1000` msec */
 	public fadeIn (duration: number = 1000) {
+		if (this._disposed) return;
+
 		this.fade(duration, false);
 	}
 
 	public fadeSkip (callCallback: boolean = true) {
+		if (this._disposed) return;
+
 		if (this._fading !== null) {
 			if (this.fadeCb) {
 				if (callCallback) this.fadeCb();
@@ -140,6 +176,8 @@ export default class ManagedAudio {
 	}
 
 	protected fade (duration: number, is_out: boolean) {
+		if (this._disposed) return;
+
 		if (this._fading) {
 			console.warn("[ManagedAudio] Already fading, Remove previous fade and Overwrite to new");
 			this.fadeSkip(); // remove previous fade

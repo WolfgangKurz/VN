@@ -395,6 +395,7 @@ $z-loading: 10001;
 			}
 
 			.TextHistory,
+			.ChapterHistory,
 			.SelectionHistory {
 				> * {
 					position: static;
@@ -414,6 +415,12 @@ $z-loading: 10001;
 				display: inline-block;
 				margin-right: 20px;
 				color: #f4cf25;
+			}
+
+			.ChapterHistory {
+				background-color: rgba(0, 0, 0, 0.55);
+				text-align: center;
+				color: #dc3545;
 			}
 
 			.SelectionHistory {
