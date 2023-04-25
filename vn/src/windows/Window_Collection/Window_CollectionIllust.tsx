@@ -6,7 +6,7 @@ import { static_PlayUISE } from "@/static";
 
 import { __dirname } from "@/libs/Const";
 import GlobalStorage from "@/libs/GlobalStorage";
-import Wait from "@/libs/Wait";
+import { Wait } from "@/libs/Blockable";
 import Preloader from "@/libs/Preloader";
 import { BuildClass } from "@/libs/ClassName";
 import { CharTypeNames, Lists as CollectionLists } from "@/libs/Collection";

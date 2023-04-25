@@ -4,7 +4,7 @@ import { static_PlayUISE } from "@/static";
 
 import { __dirname } from "@/libs/Const";
 import { BuildClass } from "@/libs/ClassName";
-import Wait from "@/libs/Wait";
+import { Wait } from "@/libs/Blockable";
 
 import SpriteImage from "@/components/SpriteImage";
 import SpriteButton from "@/components/SpriteButton";

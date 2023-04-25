@@ -14,7 +14,7 @@ import { Matrix4x5Identity } from "@/types/Matrix";
 import GlobalStorage from "@/libs/GlobalStorage";
 import { TRANSPARENT } from "@/libs/Const";
 import { BuildClass } from "@/libs/ClassName";
-import Wait, { WaitData } from "@/libs/Wait";
+import Blockable, { Block, Wait } from "@/libs/Blockable";
 import { input2matrix } from "@/libs/Matrix";
 import ManagedAudio from "@/libs/ManagedAudio";
 import ScriptCommand from "@/libs/ScriptCommand";
@@ -83,7 +83,6 @@ type HistoryData = HistoryTextData | HistorySelectionData | HistoryChapterData;
 
 const autoSprites = new Array(16).fill(0).map((_, i) => `btn_auto_on${(i + 1).toString().padStart(2, "0")}.png`);
 let __selection: boolean = false;
-let __forceWaiting: boolean = false;
 let __forceHideUI: boolean = false;
 
 const Scene_Game: FunctionalComponent = () => {
@@ -111,7 +110,8 @@ const Scene_Game: FunctionalComponent = () => {
 
 	const [bgs, setBGS] = useState<ManagedAudio | undefined>(undefined);
 	const [bgm, setBGM] = useState<ManagedAudio | undefined>(undefined);
-	const [_, setSEs] = useState<ManagedAudio[]>([]);
+	// const [_, setSEs] = useState<ManagedAudio[]>([]);
+	const [se, setSE] = useState<ManagedAudio | undefined>(undefined);
 
 	const [faded, setFaded] = useState(false);
 	const [fadeDuration, setFadeDuration] = useState(0);
@@ -137,21 +137,17 @@ const Scene_Game: FunctionalComponent = () => {
 
 	//////////////////////////////
 
-	const [blocks, setBlocks] = useState<WaitData[]>([]);
-	function addBlock (wait: WaitData) {
-		setBlocks(b => [...b, wait]);
+	const [blocks, setBlocks] = useState<Blockable[]>([]);
+	function addBlock (block: Blockable) {
+		setBlocks(b => [...b, block]);
 	}
 
 	//////////////////////////////
 
-	const unblock = (force?: boolean) => {
+	const unblock = useCallback((force?: boolean) => {
 		console.debug("unblock");
 		if (!script) {
 			console.debug("unblock -> !script");
-			return;
-		}
-		if (__forceWaiting) {
-			console.debug("unblock -> forceWaiting");
 			return;
 		}
 		if (!force && script.current()?.type === "sel") {
@@ -160,23 +156,34 @@ const Scene_Game: FunctionalComponent = () => {
 		}
 
 		// console.log(new Error().stack);
+		if (blocks.length === 0) {
+			console.debug("unblock -> no blocks, next()");
+			return next();
+		}
 
-		let flushed = false;
+		let p = false;
 		setBlocks(blocks => {
+			const arr: Blockable[] = [];
+
 			blocks.forEach(b => {
-				if (!b.isDone())
-					flushed = true;
-
-				b.flush();
+				if (!b.isDone()) {
+					if (!b.flush())
+						arr.push(b);
+					p = true;
+				}
 			});
-			if (!flushed) {
-				console.debug("unblock -> not flushed, next()");
-				next();
-			}
 
-			return [];
+			console.log(`unblock -> blocks are ${blocks.length} => ${arr.length}`);
+
+			if (!p) {
+				console.debug("unblock -> all done, next()");
+				next();
+			} else
+				console.debug("unblock -> some flush required");
+
+			return arr;
 		});
-	};
+	}, [script, blocks]);
 	const tryNext = useCallback(() => {
 		console.debug("tryNext -> textState is " + (TextboxPhase[textState] || textState));
 		if (!script) {
@@ -199,7 +206,7 @@ const Scene_Game: FunctionalComponent = () => {
 			}
 		} else
 			unblock();
-	}, [script, textState, hideUI]);
+	}, [script, textState, hideUI, unblock]);
 
 	const doAutoFn = useCallback(debounce(() => {
 		if (doAuto)
@@ -316,8 +323,8 @@ const Scene_Game: FunctionalComponent = () => {
 								}));
 						});
 					}
-					return;
 				}
+				return;
 			case "bgs":
 				if (!bgs) {
 					console.warn("<BGS> BGS ManagedAudio instance gone");
@@ -381,43 +388,36 @@ const Scene_Game: FunctionalComponent = () => {
 
 						bgs.play().then(() => unblock());
 					}
-					return;
 				}
+				return;
 			case "se":
 				{
 					console.debug("se " + s.name);
 					if (scriptLoading) return unblock(); // 스크립트 로드중에는 스킵
 
 					if (s.name === "-") {
-						setSEs(l => { // destroy all
-							l.forEach(se => se.destroy());
-							return [];
-						});
+						if (se) {
+							se.destroy();
+							setSE(undefined);
+						}
+						// setSEs(l => { // destroy all
+						// 	l.forEach(se => se.destroy());
+						// 	return [];
+						// });
 					} else {
+						let waiting = true;
+						addBlock(Block(() => !waiting));
+
 						const se = new ManagedAudio(false);
 						se.load(`/SE/${s.name}.mp3`)
-							.then(() => {
-								se.play();
-
-								setSEs(l => {
-									const arr: ManagedAudio[] = [];
-									l.forEach(r => { // except done audios
-										if (r.playing || r.loading)
-											arr.push(r);
-										else
-											r.destroy();
-									});
-									arr.push(se);
-									return arr;
-								});
-								unblock();
-							})
-							.catch(() => {
-								console.error(`Failed to load SE "${s.name}"`);
-
-								se.destroy();
+							.then(() => se.play())
+							.catch(() => console.error(`Failed to load SE "${s.name}"`))
+							.finally(() => {
+								waiting = false;
 								unblock();
 							});
+
+						setSE(se);
 					}
 				}
 				break;
@@ -724,14 +724,25 @@ const Scene_Game: FunctionalComponent = () => {
 					setFXWaiting(true);
 				return;
 			case "force-wait":
-				console.log("force-wait");
-				if (scriptLoading) return unblock();
+				{
+					console.log("force-wait");
+					if (scriptLoading) return unblock();
 
-				__forceWaiting = true;
-				Wait(s.wait * 1000, () => {
-					__forceWaiting = false;
-					unblock();
-				});
+					let waiting = true;
+					addBlock(Block(() => {
+						console.log(`force-wait -> check, done ${!waiting}`);
+						return !waiting;
+					}));
+					Wait(s.wait * 1000, () => {
+						console.log("force-wait -> wait end");
+						waiting = false;
+						unblock();
+					});
+					// Wait(s.wait * 1000, () => {
+					// 	__forceWaiting = false;
+					// 	unblock();
+					// });
+				}
 				return;
 
 			case "text":
@@ -1169,7 +1180,7 @@ const Scene_Game: FunctionalComponent = () => {
 			}
 		});
 
-		let lastTitleWait: WaitData | undefined = undefined;
+		let lastTitleWait: Blockable | undefined = undefined;
 
 		const titleUnsub = config.volatile_Title.subscribe(v => {
 			setTitle(v);
@@ -1231,7 +1242,7 @@ const Scene_Game: FunctionalComponent = () => {
 		}
 	}, [pics]);
 
-	useEffect(() => { // Global effect register
+	useLayoutEffect(() => { // Global effect register
 		const fn = (e: KeyboardEvent) => {
 			if (selection.length > 0 || script?.current()?.type === "sel") {
 				console.warn("dismiss key-input, selection now", selection.length, script?.current()?.type);
@@ -1251,7 +1262,7 @@ const Scene_Game: FunctionalComponent = () => {
 		return () => {
 			window.removeEventListener("keydown", fn);
 		};
-	}, [script, selection, textState]);
+	}, [script, selection, textState, tryNext]);
 
 	useEffect(() => {
 		const ref = historyScrollboxRef.current;
@@ -1268,10 +1279,11 @@ const Scene_Game: FunctionalComponent = () => {
 
 	useEffect(() => { // finallizer
 		return () => {
-			setSEs(l => { // destroy all SEs
-				l.forEach(se => se.destroy());
-				return [];
-			});
+			if (se) se.destroy();
+			// setSEs(l => { // destroy all SEs
+			// 	l.forEach(se => se.destroy());
+			// 	return [];
+			// });
 		};
 	}, []);
 

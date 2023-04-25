@@ -3,7 +3,7 @@ import { useEffect, useState } from "preact/hooks";
 import config from "@/config";
 import { static_PlayUISE } from "@/static";
 
-import Wait from "@/libs/Wait";
+import { Wait } from "@/libs/Blockable";
 import { BuildClass } from "@/libs/ClassName";
 import Preloader from "@/libs/Preloader";
 

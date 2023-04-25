@@ -5,7 +5,7 @@ import config from "@/config";
 import withToClassComponent from "@/loader/hoc";
 import { static_PlayUISE } from "@/static";
 
-import Wait from "@/libs/Wait";
+import { Wait } from "@/libs/Blockable";
 import ManagedAudio from "@/libs/ManagedAudio";
 import GlobalStorage from "@/libs/GlobalStorage";
 

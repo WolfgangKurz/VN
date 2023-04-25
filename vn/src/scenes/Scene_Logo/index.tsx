@@ -3,7 +3,7 @@ import { useEffect, useState } from "preact/hooks";
 import config from "@/config";
 
 import { BuildClass } from "@/libs/ClassName";
-import Wait from "@/libs/Wait";
+import { Wait } from "@/libs/Blockable";
 
 import Scene_Base from "../Scene_Base";
 

@@ -23,7 +23,7 @@ export function StartupScript () {
 	batch(() => {
 		// config.session_Data.peek().data.vars["1-4_sel"] = "2";
 
-		config.volatile_Script.value = "4-1";
+		config.volatile_Script.value = "3-1";
 		config.volatile_ScriptCursor.value = 0;
 	});
 }

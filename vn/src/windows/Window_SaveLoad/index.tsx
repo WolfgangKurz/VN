@@ -9,7 +9,7 @@ import config from "@/config";
 import { static_PlayUISE } from "@/static";
 
 import { __dirname } from "@/libs/Const";
-import Wait from "@/libs/Wait";
+import { Wait } from "@/libs/Blockable";
 import { BuildClass } from "@/libs/ClassName";
 import SaveData from "@/libs/SaveData";
 import Preloader from "@/libs/Preloader";

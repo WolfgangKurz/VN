@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 import { static_PlayUISE } from "@/static";
 
 import { __dirname } from "@/libs/Const";
-import Wait from "@/libs/Wait";
+import { Wait } from "@/libs/Blockable";
 import Preloader from "@/libs/Preloader";
 import { Lists as CollectionLists } from "@/libs/Collection";
 import GlobalStorage from "@/libs/GlobalStorage";
