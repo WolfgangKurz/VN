@@ -106,6 +106,7 @@ export const BGMNames: Record<string, string> = {
 	Moment: "잠시 inst. ver",
 	Statlight: "외로운 별의 노래 inst. ver",
 	Daily: "숲속에서의 일상",
+	Mystic: "의구심",
 	Drinking: "술잔에 마음을 담아",
 	Aurora: "가버려, 가지마",
 	Nervous1: "너를 찾아서",
@@ -114,7 +115,6 @@ export const BGMNames: Record<string, string> = {
 	Ending: "기시감",
 	Title1: "남십자성이 보이는 하늘 아래, 혼자",
 	Title2: "남십자성이 보이는 하늘 아래, 함께",
-	Mystic: "Mystic",
 
 	// Battle_03: "Battle 03",
 	// Battle_04: "Battle 04",
