@@ -833,44 +833,59 @@ const Scene_Game: FunctionalComponent = () => {
 							return addBlock(Wait(s.fxDuration * 1000, () => unblock()));
 						}
 
-						const img = new window.Image();
-						img.addEventListener("load", (e) => {
-							e.preventDefault();
+						let loaded = false;
+						addBlock(Block(() => loaded));
+						new Promise<void>((resolve, reject) => {
+							const img = new window.Image();
+							img.addEventListener("load", (e) => {
+								e.preventDefault();
 
-							removeAt(s.position, s.fxDuration);
+								removeAt(s.position, s.fxDuration);
 
-							if (s.fxDuration <= 0) {
-								setChars(_chars => {
-									const key = Math.floor(Math.random() * 100000).toString();
-									const chars = [..._chars, {
-										key,
+								if (s.fxDuration <= 0) {
+									setChars(_chars => {
+										const key = Math.floor(Math.random() * 100000).toString();
+										const chars = [..._chars, {
+											key,
+											pos: s.position,
+											src,
+											fx: s.fx,
+											duration: s.fxDuration,
+											scale: s.scale,
+											state: 2,
+											el: createRef(),
+										} satisfies CharData];
+
+										return chars;
+									});
+								} else {
+									setChars(_chars => [..._chars, {
+										key: Math.floor(Math.random() * 100000).toString(),
 										pos: s.position,
 										src,
 										fx: s.fx,
 										duration: s.fxDuration,
 										scale: s.scale,
-										state: 2,
+										state: 0,
 										el: createRef(),
-									} satisfies CharData];
+									} satisfies CharData]);
+								}
 
-									return chars;
-								});
-								return addBlock(Wait(0, () => unblock()));
-							} else {
-								setChars(_chars => [..._chars, {
-									key: Math.floor(Math.random() * 100000).toString(),
-									pos: s.position,
-									src,
-									fx: s.fx,
-									duration: s.fxDuration,
-									scale: s.scale,
-									state: 0,
-									el: createRef(),
-								} satisfies CharData]);
-								return addBlock(Wait(s.fxDuration * 1000, () => unblock()));
-							}
-						});
-						img.src = `/IMG/SCG/${s.name}.png`;
+								resolve();
+							});
+							img.addEventListener("error", (e) => {
+								reject(e);
+							});
+							img.src = `/IMG/SCG/${s.name}.png`;
+						})
+							.finally(() => {
+								loaded = true;
+
+								if (s.fxDuration <= 0)
+									addBlock(Wait(0, () => unblock()));
+								else
+									addBlock(Wait(s.fxDuration * 1000, () => unblock()));
+							});
 					}
 				}
 				break;
