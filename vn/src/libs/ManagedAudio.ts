@@ -147,6 +147,12 @@ export default class ManagedAudio {
 		this._audio.volume = _vol;
 	}
 
+	/** set volume to 0 */
+	public fadeInPrepare () {
+		if (this._disposed) return;
+		this._audio.volume = 0;
+	}
+
 	/** default `1000` msec */
 	public fadeOut (duration: number = 1000) {
 		if (this._disposed) return;

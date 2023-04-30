@@ -154,6 +154,10 @@ const Scene_Game: FunctionalComponent = () => {
 			console.warn("dismiss unblock, not force, selection now");
 			return;
 		}
+		if (!force && script.current()?.type === "force-wait") {
+			console.warn("dismiss unblock, not force, force-wait now");
+			return;
+		}
 
 		// console.log(new Error().stack);
 		if (blocks.length === 0) {
@@ -288,6 +292,9 @@ const Scene_Game: FunctionalComponent = () => {
 							bgm.load(src)
 								.then(() => {
 									console.debug("bgm -> " + src + " loaded");
+
+									if (s.fadeDuration > 0 && !scriptLoading)  // 페이드 할 예정인 경우
+										bgm.fadeInPrepare();
 									bgm.play();
 								})
 								.then(() => {
@@ -334,59 +341,63 @@ const Scene_Game: FunctionalComponent = () => {
 				{
 					const src = `/SE/${s.name}.mp3`;
 					if (bgs.src() !== src) {
-						if (s.name === "-") {// unload
-							if (s.fadeDuration > 0) {
-								if (scriptLoading) {
-									bgs.fadeOut(0);
-									return unblock();
-								}
+						if (s.name === "-") { // unload
+							if (s.fadeDuration > 0 && !scriptLoading) { // 불러오고 있는 경우 페이드하지 않음
 								bgs.fadeOut(s.fadeDuration * 1000);
 
-								if (!s.wait)
+								if (!s.wait) // 대기하지 않는 경우
 									unblock();
 								else
 									addBlock(Wait(s.fadeDuration * 1000, () => {
 										bgs.fadeSkip();
 										bgs.stop();
-										if (s.wait) unblock();
+										unblock();
 									}));
-								return;
-							} else {
-								bgs.fadeSkip();
+							} else { // 페이드하지 않는 경우
 								bgs.stop();
-								return unblock();
+								unblock();
 							}
 						} else {
+							console.debug("bgs -> try to load " + src);
 							bgs.load(src)
-								.then(() => bgs.play())
 								.then(() => {
-									if (s.fadeDuration > 0) {
-										if (scriptLoading) {
-											bgs.fadeIn(0);
-											return unblock();
-										}
+									console.debug("bgs -> " + src + " loaded");
+
+									if (s.fadeDuration > 0 && !scriptLoading)  // 페이드 할 예정인 경우
+										bgs.fadeInPrepare();
+									bgs.play();
+								})
+								.then(() => {
+									console.debug("bgs -> " + src + " play");
+									if (s.fadeDuration > 0 && !scriptLoading) { // 불러오고 있으면 페이드하지 않음
 										bgs.fadeIn(s.fadeDuration * 1000);
 
-										if (!s.wait)
+										if (!s.wait) // 대기하지 않으면 바로 다음 스크립트로
 											unblock();
-										else
-											addBlock(Wait(s.fadeDuration * 1000, () => unblock()));
-										return;
-									} else {
-										bgs.fadeSkip();
-										return unblock();
-									}
+										else // 대기하는 경우
+											addBlock(Wait(s.fadeDuration * 1000, () => {
+												bgs.fadeSkip(); // Fade 완료
+												unblock();
+											}));
+									} else
+										unblock();
 								});
-							return;
 						}
-					}
+					} else if (s.name !== "-") {
+						console.debug("bgs -> play same bgs");
 
-					if (s.name !== "-") {
-						bgs.fadeSkip();
+						bgs.stop();
 						// bgs.pause();
-						// bgs.resetVolume();
-
-						bgs.play().then(() => unblock());
+						bgs.resetVolume();
+						bgs.play().then(() => {
+							if (!s.wait) // 대기하지 않으면 바로 다음 스크립트로
+								unblock();
+							else // 대기하는 경우
+								addBlock(Wait(s.fadeDuration * 1000, () => {
+									bgs.fadeSkip(); // Fade 완료
+									unblock();
+								}));
+						});
 					}
 				}
 				return;
@@ -726,7 +737,7 @@ const Scene_Game: FunctionalComponent = () => {
 			case "force-wait":
 				{
 					console.log("force-wait");
-					if (scriptLoading) return unblock();
+					if (scriptLoading) return unblock(true);
 
 					let waiting = true;
 					addBlock(Block(() => {
@@ -736,7 +747,7 @@ const Scene_Game: FunctionalComponent = () => {
 					Wait(s.wait * 1000, () => {
 						console.log("force-wait -> wait end");
 						waiting = false;
-						unblock();
+						unblock(true);
 					});
 					// Wait(s.wait * 1000, () => {
 					// 	__forceWaiting = false;
