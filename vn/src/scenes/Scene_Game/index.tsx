@@ -533,6 +533,14 @@ const Scene_Game: FunctionalComponent = () => {
 							}
 							break;
 
+						case "shake_reset":
+							{
+								setFX(null);
+								setFXDuration(0);
+								setFXArgs([]);
+								setFXEnd(true);
+							}
+							break;
 						case "charfx":
 							if (!["left", "center", "right"].includes(s.args[0].toString())) {
 								console.warn("charfx 1st parameter should be 'left' or 'center' or 'right'");
@@ -1147,6 +1155,11 @@ const Scene_Game: FunctionalComponent = () => {
 							}
 						});
 					}
+					break;
+
+				case null: // unset
+					el.style.transitionDuration = "0s";
+					el.style.transform = "";
 					break;
 			}
 

@@ -163,5 +163,6 @@
 @bgm - 2
 @char - center "" 0
 @fadein 0
+@fx shake_reset
 
 @script 1-2

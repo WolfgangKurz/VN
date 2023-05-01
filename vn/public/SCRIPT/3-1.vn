@@ -11,6 +11,9 @@
 
 @force-wait 3
 
+# skip fix
+@wait 0
+
 @fadeout 2
 @bg -
 @command show-ui
