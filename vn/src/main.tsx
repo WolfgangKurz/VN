@@ -8,7 +8,7 @@ import { StartupScript } from "./startup";
 
 import "./index.scss";
 
-StartupScript();
 GlobalStorage.Instance.Read();
+StartupScript();
 
 render(<App />, document.getElementById("app") as HTMLElement);
